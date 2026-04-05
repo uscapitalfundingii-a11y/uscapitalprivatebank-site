@@ -444,12 +444,18 @@ class ManageUsersController extends Controller
         $notifyToUser = User::notifyToUser();
         $users        = User::active()->count();
         $pageTitle    = 'Notification to Verified Accounts';
+        $hasFilteredSelection = request()->has('selectedUsers')
+            || (
+                session()->has('SEND_NOTIFICATION')
+                && data_get(session('SEND_NOTIFICATION'), 'being_sent_to') === 'filtered_users'
+                && session()->has('FILTERED_USERS')
+            );
 
         if (session()->has('SEND_NOTIFICATION') && !request()->email_sent) {
             session()->forget('SEND_NOTIFICATION');
         }
 
-        if (!request()->has('selectedUsers')) {
+        if (!$hasFilteredSelection) {
             session()->forget('FILTERED_USERS');
             $filterTitle = null;
         } else {
