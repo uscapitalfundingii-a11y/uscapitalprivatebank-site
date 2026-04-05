@@ -21,6 +21,7 @@ use App\Rules\FileTypeValidate;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Str;
 
 class UserController extends Controller
 {
@@ -193,12 +194,11 @@ class UserController extends Controller
         $countries    = implode(',', array_column($countryData, 'country'));
 
         $request->validate([
-            'username'     => 'required|unique:users|min:6',
             'country_code' => 'required|in:' . $countryCodes,
             'country'      => 'required|in:' . $countries,
             'mobile_code'  => 'required|in:' . $mobileCodes,
             'mobile'       => ['required', 'regex:/^([0-9]*)$/', Rule::unique('users')->where('dial_code', $request->mobile_code)],
-            'image'        => ['required', 'image', new FileTypeValidate(['jpg', 'jpeg', 'png'])],
+            'image'        => ['nullable', 'image', new FileTypeValidate(['jpg', 'jpeg', 'png'])],
             'address'      => 'required|string',
             'state'        => 'nullable|string',
             'city'         => 'nullable|string',
@@ -217,15 +217,9 @@ class UserController extends Controller
         }
 
 
-        if (preg_match("/[^a-z0-9_]/", trim($request->username))) {
-            $notify[] = ['info', 'Username can contain only small letters, numbers and underscore.'];
-            $notify[] = ['error', 'No special character, space or capital letters in username.'];
-            return back()->withNotify($notify)->withInput($request->all());
-        }
-
         $user->country_code = $request->country_code;
         $user->mobile       = $request->mobile;
-        $user->username     = $request->username;
+        $user->username     = $this->generateAutoUsername($user);
 
 
         $user->address = $request->address;
@@ -239,6 +233,36 @@ class UserController extends Controller
         $user->save();
 
         return to_route('user.home');
+    }
+
+    protected function generateAutoUsername(User $user): string
+    {
+        if ($user->username) {
+            return $user->username;
+        }
+
+        $base = Str::of(trim($user->firstname . '_' . $user->lastname))
+            ->lower()
+            ->replaceMatches('/[^a-z0-9_]+/', '_')
+            ->trim('_')
+            ->value();
+
+        if ($base === '') {
+            $base = 'member';
+        }
+
+        if (strlen($base) < 6) {
+            $base = str_pad($base, 6, 'user');
+        }
+
+        $base = substr($base, 0, 18);
+        $candidate = $base;
+
+        while (User::where('username', $candidate)->where('id', '!=', $user->id)->exists()) {
+            $candidate = substr($base, 0, 18) . random_int(10, 99);
+        }
+
+        return $candidate;
     }
 
 
