@@ -2,6 +2,13 @@
 @section('content')
     <div class="row justify-content-center">
         <div class="col-lg-10">
+            @if($user->accounts->contains(fn($account) => $account->account_type === 'crypto_wallet'))
+                <div class="card-widget section--bg2 mb-4" role="alert">
+                    <h6 class="text--base">@lang('Crypto Wallet Usage')</h6>
+                    <hr>
+                    <p class="mb-0 text-white">@lang('To fund or operate a crypto wallet correctly, switch it to Active first. Deposits, withdrawals, and transaction activity will apply to the account that is currently active.')</p>
+                </div>
+            @endif
             <div class="custom--card">
                 <div class="card-header">
                     <h5 class="mb-0">@lang('My Accounts')</h5>
@@ -34,16 +41,28 @@
                                             @endif
                                         </td>
                                         <td>
-                                            @if($account->is_primary)
-                                                <span class="text-muted">@lang('Current')</span>
-                                            @else
-                                                <form action="{{ route('user.profile.account.switch', $account->id) }}" method="POST">
-                                                    @csrf
-                                                    <button class="btn btn-sm btn--base" type="submit">@lang('Switch')</button>
-                                                </form>
-                                            @endif
+                                            <div class="d-flex flex-wrap gap-2">
+                                                @if($account->is_primary)
+                                                    <span class="text-muted align-self-center">@lang('Current')</span>
+                                                @else
+                                                    <form action="{{ route('user.profile.account.switch', $account->id) }}" method="POST">
+                                                        @csrf
+                                                        <button class="btn btn-sm btn--base" type="submit">@lang('Switch')</button>
+                                                    </form>
+                                                @endif
+                                                <a href="{{ route('user.deposit.index') }}" class="btn btn-sm btn-outline--base">@lang('Deposit')</a>
+                                                <a href="{{ route('user.withdraw') }}" class="btn btn-sm btn-outline--base">@lang('Withdraw')</a>
+                                                <a href="{{ route('user.transaction.history') }}" class="btn btn-sm btn-outline--base">@lang('Transactions')</a>
+                                            </div>
                                         </td>
                                     </tr>
+                                    @if($account->account_type === 'crypto_wallet')
+                                        <tr>
+                                            <td colspan="6" class="bg-light">
+                                                <small class="text-muted">@lang('Crypto wallet operations use your selected payment gateways on the deposit page. Make this wallet active before funding it so the credited balance is applied to this wallet.')</small>
+                                            </td>
+                                        </tr>
+                                    @endif
                                 @empty
                                     <tr>
                                         <td colspan="6" class="text-center">@lang('No accounts found')</td>
