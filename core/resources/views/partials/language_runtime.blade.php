@@ -51,6 +51,17 @@
     .language-reset-button:hover {
         background: #0f1a31;
     }
+
+    .language_switcher {
+        position: relative;
+    }
+
+    .language_switcher__list {
+        max-height: min(70vh, 420px) !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        overscroll-behavior: contain;
+    }
 </style>
 
 <script>
