@@ -16,7 +16,7 @@
         $countryOptions = array_values($countries->toArray());
 
         $columns = collect([
-            prepareTableColumn('account_number', 'Account No.'),
+            prepareTableColumn('account_number', 'Account No.', 'echo $item->account_number . " (" . ($item->account_currency_code ?? gs("cur_text")) . ")"'),
             prepareTableColumn('username', 'Username'),
             prepareTableColumn('fullname', 'Name'),
             prepareTableColumn('email', 'Email'),

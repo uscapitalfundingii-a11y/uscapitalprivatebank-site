@@ -31,7 +31,7 @@
                                             <div>
                                                 <strong>{{ $requestItem->user->fullname }}</strong>
                                                 <div class="small text-muted">{{ '@' . $requestItem->user->username }}</div>
-                                                <div class="small text-muted">{{ $requestItem->user->account_number }}</div>
+                                                <div class="small text-muted">{{ $requestItem->user->account_number }} ({{ optional($requestItem->user->activeAccount)->currency_code ?? gs('cur_text') }})</div>
                                             </div>
                                         </td>
                                         <td>{{ $requestItem->type_label }}</td>

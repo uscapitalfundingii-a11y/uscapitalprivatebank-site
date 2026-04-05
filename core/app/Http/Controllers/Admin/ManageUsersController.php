@@ -104,7 +104,7 @@ class ManageUsersController extends Controller
     public function pendingAccountRequests()
     {
         $pageTitle = 'Pending Account Approvals';
-        $requests = AccountOpeningRequest::with(['user.referrer'])
+        $requests = AccountOpeningRequest::with(['user.referrer', 'user.activeAccount'])
             ->where('status', AccountOpeningRequest::STATUS_PENDING)
             ->when(request('search'), function ($query, $search) {
                 $query->where(function ($inner) use ($search) {
@@ -142,12 +142,16 @@ class ManageUsersController extends Controller
         $request = request();
 
         $fullNameColumn = 'CONCAT(users.firstname, " ", users.lastname)';
-        $users->selectRaw(' users.*, branch_staff.name as staff_name, ' . $fullNameColumn . ' AS fullname, CASE WHEN users.branch_id = 0 THEN "Online" ELSE branches.name END AS branch_name
+        $users->selectRaw(' users.*, branch_staff.name as staff_name, active_user_account.currency_code as account_currency_code, ' . $fullNameColumn . ' AS fullname, CASE WHEN users.branch_id = 0 THEN "Online" ELSE branches.name END AS branch_name
         ')
             ->searchable(['username', 'firstname', 'lastname', 'email', 'mobile', 'account_number', $fullNameColumn])
             ->filterable()
             ->leftJoin('branches', 'users.branch_id', '=', 'branches.id')
             ->leftJoin('branch_staff', 'users.branch_staff_id', '=', 'branch_staff.id')
+            ->leftJoin('user_accounts as active_user_account', function ($join) {
+                $join->on('users.id', '=', 'active_user_account.user_id')
+                    ->where('active_user_account.is_primary', '=', 1);
+            })
             ->orderable();
 
         if ($request->has('notify')) {

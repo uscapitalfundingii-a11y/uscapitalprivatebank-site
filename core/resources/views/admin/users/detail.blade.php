@@ -151,7 +151,7 @@
 
                                 <div class="list-group-item d-flex justify-content-between flex-column flex-wrap border-0">
                                     <small class="text-muted">@lang('Account Number')</small>
-                                    <h6>{{ $user->account_number }} </h6>
+                                    <h6>{{ $user->account_number }} ({{ optional($user->activeAccount)->currency_code ?? gs('cur_text') }})</h6>
                                 </div>
 
                                 <div class="list-group-item d-flex justify-content-between flex-column flex-wrap border-0">
