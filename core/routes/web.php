@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 
 Route::get('/clear', function () {
+    abort_unless(app()->isLocal(), 404);
     \Illuminate\Support\Facades\Artisan::call('optimize:clear');
 });
 
