@@ -241,7 +241,7 @@
             }
 
             function nicPanel() {
-                return $messageField.prev('.nicEdit-main');
+                return $messageField.prevAll('.nicEdit-main').first();
             }
 
             function editorIsRichText() {
@@ -260,7 +260,14 @@
             function setEditorValue(value) {
                 if (editorIsRichText()) {
                     const normalized = (value || '').replace(/\r\n?/g, "\n");
-                    nicPanel().html(normalized.split("\n").join('<br>'));
+                    const htmlValue = normalized.split("\n").join('<br>');
+                    const $panel = nicPanel();
+
+                    if ($panel.length) {
+                        $panel.html(htmlValue);
+                        $messageField.val(htmlValue);
+                        return;
+                    }
                 }
 
                 $messageField.val(value || '');
