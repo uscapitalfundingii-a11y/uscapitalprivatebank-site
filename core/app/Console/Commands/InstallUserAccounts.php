@@ -63,6 +63,7 @@ class InstallUserAccounts extends Command
             Schema::create('account_opening_requests', function (Blueprint $table) {
                 $table->id();
                 $table->unsignedBigInteger('user_id');
+                $table->string('account_type', 40)->default(AccountOpeningRequest::TYPE_MULTI_CURRENCY);
                 $table->string('currency_code', 12);
                 $table->string('currency_name', 120);
                 $table->string('currency_symbol', 20)->nullable();
@@ -80,6 +81,19 @@ class InstallUserAccounts extends Command
             $this->info('Created account_opening_requests table.');
         } else {
             $this->line('account_opening_requests table already exists.');
+        }
+
+        $requestTableUpdated = false;
+
+        Schema::table('account_opening_requests', function (Blueprint $table) use (&$requestTableUpdated) {
+            if (!Schema::hasColumn('account_opening_requests', 'account_type')) {
+                $table->string('account_type', 40)->default(AccountOpeningRequest::TYPE_MULTI_CURRENCY)->after('user_id');
+                $requestTableUpdated = true;
+            }
+        });
+
+        if ($requestTableUpdated) {
+            $this->info('Updated account_opening_requests table with account type column.');
         }
 
         $created = 0;

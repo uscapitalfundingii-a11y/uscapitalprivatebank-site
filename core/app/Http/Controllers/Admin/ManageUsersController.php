@@ -200,7 +200,10 @@ class ManageUsersController extends Controller
         $user = User::with(['accounts', 'accountOpeningRequests'])->findOrFail($id);
         $accountRequest = $user->accountOpeningRequests()->where('status', AccountOpeningRequest::STATUS_PENDING)->findOrFail($requestId);
 
-        $hasExistingAccount = $user->accounts->contains(fn ($account) => strtoupper((string) $account->currency_code) === strtoupper((string) $accountRequest->currency_code));
+        $hasExistingAccount = $user->accounts->contains(function ($account) use ($accountRequest) {
+            return strtoupper((string) $account->currency_code) === strtoupper((string) $accountRequest->currency_code)
+                && (string) $account->account_type === (string) $accountRequest->account_type;
+        });
         if ($hasExistingAccount) {
             $accountRequest->forceFill([
                 'status' => AccountOpeningRequest::STATUS_REJECTED,
@@ -215,8 +218,8 @@ class ManageUsersController extends Controller
         $account = new UserAccount();
         $account->user_id = $user->id;
         $account->account_number = generateAccountNumber();
-        $account->account_type = 'multi_currency';
-        $account->account_name = $accountRequest->currency_code . ' Multi-Currency Account';
+        $account->account_type = $accountRequest->account_type === AccountOpeningRequest::TYPE_CRYPTO_WALLET ? 'crypto_wallet' : 'multi_currency';
+        $account->account_name = $accountRequest->currency_code . ' ' . $accountRequest->type_label;
         $account->currency_code = $accountRequest->currency_code;
         $account->currency_symbol = $accountRequest->currency_symbol ?: $accountRequest->currency_code;
         $account->balance = 0;
@@ -230,7 +233,7 @@ class ManageUsersController extends Controller
             'approved_by' => optional(auth()->guard('admin')->user())->id,
         ])->save();
 
-        $notify[] = ['success', 'Multi-currency account request approved successfully.'];
+        $notify[] = ['success', $accountRequest->type_label . ' request approved successfully.'];
         return to_route('admin.users.detail', $user->id)->withNotify($notify);
     }
 
@@ -245,7 +248,7 @@ class ManageUsersController extends Controller
             'rejected_by' => optional(auth()->guard('admin')->user())->id,
         ])->save();
 
-        $notify[] = ['success', 'Multi-currency account request rejected successfully.'];
+        $notify[] = ['success', $accountRequest->type_label . ' request rejected successfully.'];
         return to_route('admin.users.detail', $user->id)->withNotify($notify);
     }
 

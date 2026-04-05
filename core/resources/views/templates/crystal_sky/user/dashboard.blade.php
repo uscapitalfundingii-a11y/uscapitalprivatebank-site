@@ -138,6 +138,17 @@
                 <h4 class="dashboard-widget__number">@lang('Request')</h4>
             </button>
         </div>
+        <div class="col-xl-4 col-lg-6 col-md-4 col-sm-6 col-xsm-6">
+            <button type="button" class="dashboard-widget text-start border-0 w-100" data-bs-toggle="modal" data-bs-target="#cryptoWalletModal">
+                <div class="dashboard-widget__content flex-align">
+                    <span class="dashboard-widget__icon flex-center">
+                        <i class="las la-coins"></i>
+                    </span>
+                    <span class="dashboard-widget__text">@lang('Open Crypto Wallet')</span>
+                </div>
+                <h4 class="dashboard-widget__number">@lang('Request')</h4>
+            </button>
+        </div>
 
         @if (gs()->modules->referral_system)
             <div class="col-xl-4 col-lg-6 col-md-4 col-sm-6 col-xsm-6">
@@ -170,21 +181,19 @@
                 </a>
             </div>
         @endif
-        @if (gs()->modules->dps)
-            <div class="col-xl-4 col-lg-6 col-md-4 col-sm-6 col-xsm-6">
-                <a href="{{ route('user.dps.list') }}?status={{ Status::FDR_RUNNING }}" class="d-block">
-                    <div class="dashboard-widget">
-                        <div class="dashboard-widget__content flex-align">
-                            <span class="dashboard-widget__icon flex-center">
-                                <i class="las la-box-open"></i>
-                            </span>
-                            <span class="dashboard-widget__text">@lang('Running DPS')</span>
-                        </div>
-                        <h4 class="dashboard-widget__number">{{ @$widget['total_dps'] }}</h4>
+        <div class="col-xl-4 col-lg-6 col-md-4 col-sm-6 col-xsm-6">
+            <a href="{{ route('user.accounts.index') }}" class="d-block">
+                <div class="dashboard-widget">
+                    <div class="dashboard-widget__content flex-align">
+                        <span class="dashboard-widget__icon flex-center">
+                            <i class="las la-university"></i>
+                        </span>
+                        <span class="dashboard-widget__text">@lang('My Accounts')</span>
                     </div>
-                </a>
-            </div>
-        @endif
+                    <h4 class="dashboard-widget__number">{{ $user->accounts->count() }}</h4>
+                </div>
+            </a>
+        </div>
 
         @if (gs()->modules->loan)
             <div class="col-xl-4 col-lg-12 col-md-4 col-sm-12 col-xsm-6">
@@ -252,6 +261,7 @@
                 <table class="table table--responsive--md">
                     <thead>
                         <tr>
+                            <th>@lang('Request')</th>
                             <th>@lang('Currency')</th>
                             <th>@lang('Requested')</th>
                             <th>@lang('Status')</th>
@@ -260,6 +270,7 @@
                     <tbody>
                         @foreach($pendingAccountRequests as $accountRequest)
                             <tr>
+                                <td>{{ $accountRequest->type_label }}</td>
                                 <td>{{ $accountRequest->currency_code }} - {{ $accountRequest->currency_name }}</td>
                                 <td>{{ showDateTime($accountRequest->created_at, 'd M, Y h:i A') }}</td>
                                 <td>
@@ -370,6 +381,35 @@
                             </select>
                         </div>
                         <p class="text-muted mb-0">@lang('Your request will be sent to admin for approval before the new account becomes available in your profile.')</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn--dark" data-bs-dismiss="modal">@lang('Cancel')</button>
+                        <button type="submit" class="btn btn--base">@lang('Submit Request')</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="cryptoWalletModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@lang('Open Crypto Wallet')</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@lang('Close')"></button>
+                </div>
+                <form action="{{ route('user.wallets.request') }}" method="POST">
+                    @csrf
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label class="form-label">@lang('Select Crypto')</label>
+                            <select name="currency_code" class="form-control" required>
+                                <option value="">@lang('Select crypto')</option>
+                                @foreach($availableCryptoCurrencies as $code => $currency)
+                                    <option value="{{ $code }}">{{ $code }} - {{ $currency['name'] }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <p class="text-muted mb-0">@lang('Your crypto wallet request will be sent to admin for approval before it becomes available in your profile.')</p>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn--dark" data-bs-dismiss="modal">@lang('Cancel')</button>

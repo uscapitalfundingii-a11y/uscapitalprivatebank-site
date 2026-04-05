@@ -43,8 +43,9 @@ class UserController extends Controller
         $credits = Transaction::where('user_id', $user->id)->where('trx_type', '+')->latest()->limit(5)->get();
         $debits  = Transaction::where('user_id', $user->id)->where('trx_type', '-')->latest()->limit(5)->get();
         $availableAccountCurrencies = AccountOpeningRequest::currencyOptions();
+        $availableCryptoCurrencies = AccountOpeningRequest::cryptoOptions();
         $pendingAccountRequests = $user->accountOpeningRequests->take(5);
-        return view('Template::user.dashboard', compact('pageTitle', 'user', 'credits', 'debits', 'widget', 'availableAccountCurrencies', 'pendingAccountRequests'));
+        return view('Template::user.dashboard', compact('pageTitle', 'user', 'credits', 'debits', 'widget', 'availableAccountCurrencies', 'availableCryptoCurrencies', 'pendingAccountRequests'));
     }
 
     public function depositHistory(Request $request)
@@ -325,23 +326,50 @@ class UserController extends Controller
 
     public function requestMultiCurrencyAccount(Request $request)
     {
-        $currencyOptions = AccountOpeningRequest::currencyOptions();
+        return $this->storeAccountOpeningRequest(
+            $request,
+            AccountOpeningRequest::TYPE_MULTI_CURRENCY,
+            'Your multi-currency account request was submitted and is now waiting for admin approval.'
+        );
+    }
+
+    public function requestCryptoWallet(Request $request)
+    {
+        return $this->storeAccountOpeningRequest(
+            $request,
+            AccountOpeningRequest::TYPE_CRYPTO_WALLET,
+            'Your crypto wallet request was submitted and is now waiting for admin approval.'
+        );
+    }
+
+    protected function storeAccountOpeningRequest(Request $request, string $requestType, string $successMessage)
+    {
+        $typeOptions = AccountOpeningRequest::accountTypeOptions();
+        $option = $typeOptions[$requestType];
+        $currencyOptions = $option['currencies'];
 
         $request->validate([
             'currency_code' => 'required|in:' . implode(',', array_keys($currencyOptions)),
         ]);
 
         $user = auth()->user()->load(['accounts', 'accountOpeningRequests']);
-        $currencyCode = $request->currency_code;
+        $currencyCode = strtoupper((string) $request->currency_code);
         $currency = $currencyOptions[$currencyCode];
 
-        $hasExistingAccount = $user->accounts->contains(fn ($account) => strtoupper((string) $account->currency_code) === $currencyCode);
+        $hasExistingAccount = $user->accounts->contains(function ($account) use ($currencyCode, $option) {
+            return strtoupper((string) $account->currency_code) === $currencyCode
+                && (string) $account->account_type === (string) $option['account_type'];
+        });
         if ($hasExistingAccount) {
             $notify[] = ['error', 'You already have an account in that currency.'];
             return back()->withNotify($notify);
         }
 
-        $hasPendingRequest = $user->accountOpeningRequests->contains(fn ($accountRequest) => strtoupper((string) $accountRequest->currency_code) === $currencyCode && (int) $accountRequest->status === AccountOpeningRequest::STATUS_PENDING);
+        $hasPendingRequest = $user->accountOpeningRequests->contains(function ($accountRequest) use ($currencyCode, $requestType) {
+            return strtoupper((string) $accountRequest->currency_code) === $currencyCode
+                && (string) $accountRequest->account_type === $requestType
+                && (int) $accountRequest->status === AccountOpeningRequest::STATUS_PENDING;
+        });
         if ($hasPendingRequest) {
             $notify[] = ['error', 'A request for that currency is already pending admin approval.'];
             return back()->withNotify($notify);
@@ -349,13 +377,14 @@ class UserController extends Controller
 
         AccountOpeningRequest::create([
             'user_id' => $user->id,
+            'account_type' => $requestType,
             'currency_code' => $currencyCode,
             'currency_name' => $currency['name'],
             'currency_symbol' => $currency['symbol'],
             'status' => AccountOpeningRequest::STATUS_PENDING,
         ]);
 
-        $notify[] = ['success', 'Your multi-currency account request was submitted and is now waiting for admin approval.'];
+        $notify[] = ['success', $successMessage];
         return back()->withNotify($notify);
     }
 

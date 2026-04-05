@@ -78,6 +78,7 @@ Route::middleware('auth')->name('user.')->group(function () {
                 Route::get('transactions', 'transactions')->name('transaction.history');
                 Route::post('add-device-token', 'addDeviceToken')->name('add.device.token');
                 Route::post('request-multi-currency-account', 'requestMultiCurrencyAccount')->name('accounts.request');
+                Route::post('request-crypto-wallet', 'requestCryptoWallet')->name('wallets.request');
 
                 Route::get('referees', 'referredUsers')->name('referral.users')->middleware('checkModule:referral_system');
             });
@@ -85,6 +86,7 @@ Route::middleware('auth')->name('user.')->group(function () {
 
             //Profile setting
             Route::controller('ProfileController')->group(function () {
+                Route::get('my-accounts', 'accounts')->name('accounts.index');
                 Route::get('profile-setting', 'profile')->name('profile.setting');
                 Route::post('profile-setting', 'submitProfile');
                 Route::post('profile-setting/accounts/{id}/switch', 'switchAccount')->name('profile.account.switch');

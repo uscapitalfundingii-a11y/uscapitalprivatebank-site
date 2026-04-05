@@ -200,6 +200,7 @@
                         <table class="table table--light">
                             <thead>
                                 <tr>
+                                    <th>@lang('Request')</th>
                                     <th>@lang('Currency')</th>
                                     <th>@lang('Requested')</th>
                                     <th>@lang('Status')</th>
@@ -209,6 +210,7 @@
                             <tbody>
                                 @forelse($user->accountOpeningRequests as $accountRequest)
                                     <tr>
+                                        <td>{{ $accountRequest->type_label }}</td>
                                         <td>{{ $accountRequest->currency_code }} - {{ $accountRequest->currency_name }}</td>
                                         <td>{{ showDateTime($accountRequest->created_at, 'd M, Y h:i A') }}</td>
                                         <td>
@@ -239,7 +241,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="4" class="text-center text-muted">@lang('No account requests found')</td>
+                                        <td colspan="5" class="text-center text-muted">@lang('No account requests found')</td>
                                     </tr>
                                 @endforelse
                             </tbody>

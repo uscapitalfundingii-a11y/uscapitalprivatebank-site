@@ -125,6 +125,17 @@
                 </div>
             </button>
         </div>
+        <div class="col-lg-4 col-md-6">
+            <button type="button" class="d-widget section--bg2 d-flex flex-wrap align-items-center rounded-3 bg_img h-100 w-100 border-0 text-start" style="background-image: url(' {{ asset($activeTemplateTrue . 'images/elements/card-bg.png') }} ');" data-bs-toggle="modal" data-bs-target="#cryptoWalletModal">
+                <div class="d-widget__content">
+                    <h3 class="d-number text-white">@lang('Open')</h3>
+                    <span class="caption text-white">@lang('Crypto Wallet')</span>
+                </div>
+                <div class="d-widget__icon border-radius--100">
+                    <i class="las la-coins"></i>
+                </div>
+            </button>
+        </div>
         @if (gs()->modules->referral_system)
             <div class="col-lg-4 col-md-6">
                 <a href="{{ route('user.referral.users') }}" class="w-100 h-100">
@@ -155,21 +166,19 @@
                 </a>
             </div>
         @endif
-        @if (gs()->modules->dps)
-            <div class="col-lg-4 col-md-6">
-                <a href="{{ route('user.dps.list') }}" class="w-100 h-100">
-                    <div class="d-widget section--bg2 d-flex flex-wrap align-items-center rounded-3 bg_img h-100" style="background-image: url('{{ asset($activeTemplateTrue . 'images/elements/card-bg.png') }} ');">
-                        <div class="d-widget__content">
-                            <h3 class="d-number text-white">{{ @$widget['total_dps'] }}</h3>
-                            <span class="caption text-white">@lang('Running DPS')</span>
-                        </div>
-                        <div class="d-widget__icon border-radius--100">
-                            <i class="las la-box-open"></i>
-                        </div>
+        <div class="col-lg-4 col-md-6">
+            <a href="{{ route('user.accounts.index') }}" class="w-100 h-100">
+                <div class="d-widget section--bg2 d-flex flex-wrap align-items-center rounded-3 bg_img h-100" style="background-image: url('{{ asset($activeTemplateTrue . 'images/elements/card-bg.png') }} ');">
+                    <div class="d-widget__content">
+                        <h3 class="d-number text-white">{{ $user->accounts->count() }}</h3>
+                        <span class="caption text-white">@lang('My Accounts')</span>
                     </div>
-                </a>
-            </div>
-        @endif
+                    <div class="d-widget__icon border-radius--100">
+                        <i class="las la-university"></i>
+                    </div>
+                </div>
+            </a>
+        </div>
         @if (gs()->modules->loan)
             <div class="col-lg-4 col-md-6">
                 <a href="{{ route('user.loan.list') }}" class="w-100 h-100">
@@ -264,6 +273,7 @@
                             <table class="table custom--table mb-0">
                                 <thead>
                                     <tr>
+                                        <th>@lang('Request')</th>
                                         <th>@lang('Currency')</th>
                                         <th>@lang('Requested')</th>
                                         <th>@lang('Status')</th>
@@ -272,6 +282,7 @@
                                 <tbody>
                                     @foreach($pendingAccountRequests as $accountRequest)
                                         <tr>
+                                            <td>{{ $accountRequest->type_label }}</td>
                                             <td>{{ $accountRequest->currency_code }} - {{ $accountRequest->currency_name }}</td>
                                             <td>{{ showDateTime($accountRequest->created_at, 'd M, Y h:i A') }}</td>
                                             <td>
@@ -399,6 +410,35 @@
                             </select>
                         </div>
                         <p class="text-muted mb-0">@lang('Your request will be sent to admin for approval before the new account becomes available in your profile.')</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn--dark" data-bs-dismiss="modal">@lang('Cancel')</button>
+                        <button type="submit" class="btn btn--base">@lang('Submit Request')</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="cryptoWalletModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@lang('Open Crypto Wallet')</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@lang('Close')"></button>
+                </div>
+                <form action="{{ route('user.wallets.request') }}" method="POST">
+                    @csrf
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label class="form-label">@lang('Select Crypto')</label>
+                            <select name="currency_code" class="form--control" required>
+                                <option value="">@lang('Select crypto')</option>
+                                @foreach($availableCryptoCurrencies as $code => $currency)
+                                    <option value="{{ $code }}">{{ $code }} - {{ $currency['name'] }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <p class="text-muted mb-0">@lang('Your crypto wallet request will be sent to admin for approval before it becomes available in your profile.')</p>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn--dark" data-bs-dismiss="modal">@lang('Cancel')</button>

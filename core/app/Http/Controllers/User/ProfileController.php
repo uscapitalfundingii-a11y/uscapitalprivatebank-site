@@ -18,6 +18,13 @@ class ProfileController extends Controller
         return view('Template::user.profile_setting', compact('pageTitle', 'user'));
     }
 
+    public function accounts()
+    {
+        $pageTitle = 'My Accounts';
+        $user = auth()->user()->load('accounts');
+        return view('Template::user.accounts', compact('pageTitle', 'user'));
+    }
+
     public function switchAccount($id)
     {
         $user = auth()->user()->load('accounts');
