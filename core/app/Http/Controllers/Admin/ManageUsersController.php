@@ -483,6 +483,21 @@ class ManageUsersController extends Controller
 
     public function sendNotificationAll(Request $request)
     {
+        if (session()->has('SEND_NOTIFICATION')) {
+            $sessionData = session('SEND_NOTIFICATION');
+            $request->merge([
+                'via' => $request->input('via', $sessionData['via'] ?? null),
+                'message' => $request->filled('message') ? $request->message : ($sessionData['message'] ?? null),
+                'subject' => $request->filled('subject') ? $request->subject : ($sessionData['subject'] ?? null),
+                'being_sent_to' => $request->input('being_sent_to', $sessionData['being_sent_to'] ?? null),
+                'start' => $request->input('start', $sessionData['start'] ?? null),
+                'batch' => $request->input('batch', $sessionData['batch'] ?? null),
+                'cooling_time' => $request->input('cooling_time', $sessionData['cooling_time'] ?? null),
+                'number_of_top_deposited_user' => $request->input('number_of_top_deposited_user', $sessionData['number_of_top_deposited_user'] ?? null),
+                'number_of_days' => $request->input('number_of_days', $sessionData['number_of_days'] ?? null),
+            ]);
+        }
+
         $request->validate([
             'via'                          => 'required|in:email,sms,push',
             'message'                      => 'required',
