@@ -1,0 +1,8 @@
+option batch abort
+option confirm off
+open sftp://dh_9a4ezr@iad1-shared-e1-24.dreamhost.com/ -password="1995?+DM=blessing#$" -hostkey="*"
+put "G:\GithubRepos\uscapitalprivatebank-site\core\app\Http\Controllers\User\UserController.php" "/home/dh_9a4ezr/uscapitalprivatebank.com/core/app/Http/Controllers/User/UserController.php"
+put "G:\GithubRepos\uscapitalprivatebank-site\core\resources\views\templates\indigo_fusion\user\user_data.blade.php" "/home/dh_9a4ezr/uscapitalprivatebank.com/core/resources/views/templates/indigo_fusion/user/user_data.blade.php"
+put "G:\GithubRepos\uscapitalprivatebank-site\core\resources\views\templates\crystal_sky\user\user_data.blade.php" "/home/dh_9a4ezr/uscapitalprivatebank.com/core/resources/views/templates/crystal_sky/user/user_data.blade.php"
+call cd /home/dh_9a4ezr/uscapitalprivatebank.com/core && /usr/local/php83/bin/php artisan optimize:clear
+exit
