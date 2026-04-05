@@ -32,6 +32,7 @@
 
     @include('partials.notify')
     @stack('script-lib')
+    @include('partials.language_runtime')
 
     <script src="{{ asset('assets/global/js/nicEdit.js') }}"></script>
 

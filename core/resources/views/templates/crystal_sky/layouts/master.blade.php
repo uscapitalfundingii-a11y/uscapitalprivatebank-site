@@ -51,6 +51,7 @@
     @if (gs('pn'))
         @include('partials.push_script')
     @endif
+    @include('partials.language_runtime')
     @stack('script')
     @include('partials.user_activity')
 

@@ -26,7 +26,6 @@
 
                                 @php
                                     $language = App\Models\Language::all();
-                                    $selectLang = $language->where('code', config('app.locale'))->first();
                                     $currentLang = session('lang') ? $language->where('code', session('lang'))->first() : $language->where('is_default', Status::YES)->first();
                                 @endphp
                                 @if ($language->count())
@@ -35,7 +34,7 @@
                                             <span class="icon">
                                                 <img src="{{ getImage(getFilePath('language') . '/' . @$currentLang->image, getFileSize('language')) }}" alt="@lang('image')">
                                             </span>
-                                            <span class="text"> {{ __(@$selectLang->name) }} </span>
+                                            <span class="text"> {{ __(@$currentLang->name) }} </span>
                                         </div>
                                         <div class="language_switcher__list">
                                             @foreach ($language as $item)
@@ -48,6 +47,14 @@
                                                     </a>
                                                 </div>
                                             @endforeach
+                                            <div class="language_switcher__item">
+                                                <a href="{{ route('lang', 'en') }}" class="thumb notranslate js-language-reset">
+                                                    <span class="icon">
+                                                        <img src="{{ getImage(getFilePath('language') . '/' . optional($language->firstWhere('code', 'en'))->image, getFileSize('language')) }}" alt="@lang('image')">
+                                                    </span>
+                                                    <span class="text notranslate">Back to English</span>
+                                                </a>
+                                            </div>
                                         </div>
                                     </div>
                                 @endif

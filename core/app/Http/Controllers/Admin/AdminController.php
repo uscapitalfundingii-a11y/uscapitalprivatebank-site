@@ -11,6 +11,7 @@ use App\Models\Deposit;
 use App\Models\Dps;
 use App\Models\Fdr;
 use App\Models\Loan;
+use App\Models\NotificationLog;
 use App\Models\SupportTicket;
 use App\Models\Topup;
 use App\Models\Transaction;
@@ -341,9 +342,23 @@ class AdminController extends Controller
         $notification->is_read = Status::YES;
         $notification->save();
         $url = $notification->click_url;
-        if ($url == '#') {
-            $url = url()->previous();
+
+        if (!$url || $url == '#') {
+            $recipient = $notification->extractedRecipient();
+            $user = $recipient ? User::whereRaw('LOWER(email) = ?', [$recipient])->first() : null;
+            $recentEmailLog = null;
+
+            if ($user) {
+                $recentEmailLog = NotificationLog::where('user_id', $user->id)
+                    ->where('notification_type', 'email')
+                    ->latest('id')
+                    ->first();
+            }
+
+            $pageTitle = 'Notification Details';
+            return view('admin.notification_detail', compact('pageTitle', 'notification', 'user', 'recentEmailLog'));
         }
+
         return redirect($url);
     }
 
