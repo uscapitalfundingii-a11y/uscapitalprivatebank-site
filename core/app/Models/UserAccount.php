@@ -12,6 +12,8 @@ class UserAccount extends Model
         'account_number',
         'account_name',
         'account_type',
+        'currency_code',
+        'currency_symbol',
         'balance',
         'status',
         'is_primary',

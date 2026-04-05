@@ -50,6 +50,8 @@ class User extends Authenticatable {
                     'user_id' => $user->id,
                     'account_name' => UserAccount::where('account_number', $user->account_number)->value('account_name') ?: 'Primary Checking',
                     'account_type' => UserAccount::where('account_number', $user->account_number)->value('account_type') ?: 'checking',
+                    'currency_code' => UserAccount::where('account_number', $user->account_number)->value('currency_code') ?: gs('cur_text'),
+                    'currency_symbol' => UserAccount::where('account_number', $user->account_number)->value('currency_symbol') ?: gs('cur_sym'),
                     'balance' => $user->balance,
                     'status' => $user->status == Status::USER_BAN ? Status::DISABLE : Status::ENABLE,
                     'is_primary' => 1,
@@ -106,6 +108,11 @@ class User extends Authenticatable {
     public function activeAccount()
     {
         return $this->hasOne(UserAccount::class)->where('is_primary', 1);
+    }
+
+    public function accountOpeningRequests()
+    {
+        return $this->hasMany(AccountOpeningRequest::class)->latest();
     }
 
     public function branchStaff() {
