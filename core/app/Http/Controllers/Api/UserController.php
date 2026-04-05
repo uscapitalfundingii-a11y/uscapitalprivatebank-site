@@ -58,7 +58,9 @@ class UserController extends Controller {
 
     public function userDataSubmit(Request $request) {
         $user = auth()->user();
-        if ($user->profile_complete == Status::YES) {
+        $user->syncProfileCompletionFlag();
+
+        if (!$user->needsProfileCompletion()) {
             $notify[] = 'You\'ve already completed your profile';
             return responseError('already_completed', $notify);
         }
@@ -72,21 +74,15 @@ class UserController extends Controller {
             'country_code' => 'required|in:' . $countryCodes,
             'country'      => 'required|in:' . $countries,
             'mobile_code'  => 'required|in:' . $mobileCodes,
-            'username'     => 'required|unique:users|min:6',
             'mobile'       => ['required', 'regex:/^([0-9]*)$/', Rule::unique('users')->where('dial_code', $request->mobile_code)],
-            'image'        => ['required', 'image', new FileTypeValidate(['jpg', 'jpeg', 'png'])],
-            'address'      => 'nullable|string',
-            'state'        => 'nullable|string',
-            'city'         => 'nullable|string',
+            'image'        => ['nullable', 'image', new FileTypeValidate(['jpg', 'jpeg', 'png'])],
+            'address'      => 'required|string',
+            'state'        => 'required|string',
+            'city'         => 'required|string',
             'zip'          => 'nullable|string',
         ]);
 
         if ($validator->fails()) return responseError('validation_error', $validator->errors());
-
-        if (preg_match("/[^a-z0-9_]/", trim($request->username))) {
-            $notify[] = 'No special character, space or capital letters in username';
-            return responseError('validation_error', $notify);
-        }
 
         if ($request->hasFile('image')) {
             try {
@@ -100,7 +96,7 @@ class UserController extends Controller {
 
         $user->country_code     = $request->country_code;
         $user->mobile           = $request->mobile;
-        $user->username         = $request->username;
+        $user->username         = $user->generateSystemUsername();
 
         $user->address          = $request->address;
         $user->city             = $request->city;
@@ -111,6 +107,7 @@ class UserController extends Controller {
 
         $user->profile_complete = Status::YES;
         $user->save();
+        $user->syncProfileCompletionFlag();
 
         $notify[] = 'Profile completed successfully';
         return responseSuccess('profile_completed', $notify, ['user' => $user]);

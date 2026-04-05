@@ -126,6 +126,27 @@
     </div>
 @endsection
 
+@push('modal')
+    <div class="modal fade" id="missingProfileInfoModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@lang('Almost there')</h5>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-2">{{ __($courtesyMessage ?? 'Please answer a few quick questions so we can finish setting up your account.') }}</p>
+                    @if (!empty($missingFieldLabels))
+                        <p class="mb-0 text-muted">@lang('Missing now:') {{ implode(', ', $missingFieldLabels) }}.</p>
+                    @endif
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn--base" data-bs-dismiss="modal">@lang('Continue')</button>
+                </div>
+            </div>
+        </div>
+    </div>
+@endpush
+
 @push('style')
     <style>
         .onboarding-card {
@@ -362,6 +383,12 @@
             });
 
             showStep(currentStep);
+
+            const missingProfileModal = document.getElementById('missingProfileInfoModal');
+            if (missingProfileModal) {
+                const modal = new bootstrap.Modal(missingProfileModal);
+                modal.show();
+            }
         })(jQuery);
     </script>
 @endpush

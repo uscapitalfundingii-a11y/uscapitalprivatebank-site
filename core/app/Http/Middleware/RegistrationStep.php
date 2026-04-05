@@ -17,13 +17,18 @@ class RegistrationStep
     public function handle(Request $request, Closure $next)
     {
         $user = auth()->user();
-        if (!$user->profile_complete) {
+        $user->syncProfileCompletionFlag();
+
+        if ($user->needsProfileCompletion()) {
             if ($request->is('api/*')) {
-                $notify[] = 'Please complete your profile to go next';
+                $notify[] = 'Please complete your profile to continue';
                 return response()->json([
                     'remark'=>'profile_incomplete',
                     'status'=>'error',
                     'message'=>['error'=>$notify],
+                    'data' => [
+                        'missing_fields' => array_values($user->missingProfileFields()),
+                    ],
                 ]);
             }else{
                 return to_route('user.data');

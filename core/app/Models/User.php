@@ -160,6 +160,50 @@ class User extends Authenticatable {
         );
     }
 
+    public function missingProfileFields(): array
+    {
+        $requiredFields = [
+            'country_name' => 'country',
+            'country_code' => 'country code',
+            'dial_code'    => 'mobile code',
+            'mobile'       => 'phone number',
+            'address'      => 'address',
+            'city'         => 'city',
+            'state'        => 'state',
+        ];
+
+        $missingFields = [];
+
+        foreach ($requiredFields as $field => $label) {
+            $value = $this->{$field};
+
+            if (is_string($value)) {
+                $value = trim($value);
+            }
+
+            if (blank($value)) {
+                $missingFields[$field] = $label;
+            }
+        }
+
+        return $missingFields;
+    }
+
+    public function needsProfileCompletion(): bool
+    {
+        return $this->profile_complete != Status::YES || !empty($this->missingProfileFields());
+    }
+
+    public function syncProfileCompletionFlag(): void
+    {
+        $shouldBeComplete = empty($this->missingProfileFields());
+        $targetStatus = $shouldBeComplete ? Status::YES : Status::NO;
+
+        if ((int) $this->profile_complete !== (int) $targetStatus) {
+            $this->forceFill(['profile_complete' => $targetStatus])->saveQuietly();
+        }
+    }
+
     // SCOPES
     public function scopeProfileInComplete($query) {
         return $query->where('profile_complete', Status::NO);

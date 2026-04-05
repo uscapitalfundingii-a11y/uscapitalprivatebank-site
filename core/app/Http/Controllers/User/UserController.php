@@ -173,8 +173,9 @@ class UserController extends Controller
     public function userData()
     {
         $user = auth()->user();
+        $user->syncProfileCompletionFlag();
 
-        if ($user->profile_complete == Status::YES) {
+        if (!$user->needsProfileCompletion()) {
             return to_route('user.home');
         }
 
@@ -182,16 +183,21 @@ class UserController extends Controller
         $info       = json_decode(json_encode(getIpInfo()), true);
         $mobileCode = @implode(',', $info['code']);
         $countries  = json_decode(file_get_contents(resource_path('views/partials/country.json')));
+        $missingFieldLabels = array_values($user->missingProfileFields());
+        $courtesyMessage = count($missingFieldLabels)
+            ? 'Please add your ' . implode(', ', $missingFieldLabels) . ' so we can finish setting up your account.'
+            : 'Please answer a few quick questions so we can finish setting up your account.';
 
-        return view('Template::user.user_data', compact('pageTitle', 'user', 'countries', 'mobileCode'));
+        return view('Template::user.user_data', compact('pageTitle', 'user', 'countries', 'mobileCode', 'missingFieldLabels', 'courtesyMessage'));
     }
 
     public function userDataSubmit(Request $request)
     {
 
         $user = auth()->user();
+        $user->syncProfileCompletionFlag();
 
-        if ($user->profile_complete == Status::YES) {
+        if (!$user->needsProfileCompletion()) {
             return to_route('user.home');
         }
 
@@ -207,8 +213,8 @@ class UserController extends Controller
             'mobile'       => ['required', 'regex:/^([0-9]*)$/', Rule::unique('users')->where('dial_code', $request->mobile_code)],
             'image'        => ['nullable', 'image', new FileTypeValidate(['jpg', 'jpeg', 'png'])],
             'address'      => 'required|string',
-            'state'        => 'nullable|string',
-            'city'         => 'nullable|string',
+            'state'        => 'required|string',
+            'city'         => 'required|string',
             'zip'          => 'nullable|string',
 
         ]);
@@ -238,6 +244,7 @@ class UserController extends Controller
 
         $user->profile_complete = Status::YES;
         $user->save();
+        $user->syncProfileCompletionFlag();
 
         return to_route('user.home');
     }
