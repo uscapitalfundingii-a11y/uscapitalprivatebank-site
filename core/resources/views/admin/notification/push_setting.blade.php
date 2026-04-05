@@ -11,6 +11,53 @@
                 </div>
             </div>
         </div>
+        <div class="col-md-12 mb-30">
+            <div class="card border--primary">
+                <div class="card-body">
+                    <div class="row gy-3">
+                        <div class="col-md-3">
+                            <strong>@lang('Push Enabled')</strong>
+                            <div class="mt-1">
+                                @if($pushHealth['enabled'])
+                                    <span class="badge badge--success">@lang('Yes')</span>
+                                @else
+                                    <span class="badge badge--danger">@lang('No')</span>
+                                @endif
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <strong>@lang('Firebase Web Config')</strong>
+                            <div class="mt-1">
+                                @if($pushHealth['configured'])
+                                    <span class="badge badge--success">@lang('Configured')</span>
+                                @else
+                                    <span class="badge badge--warning">@lang('Needs setup')</span>
+                                @endif
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <strong>@lang('Service Account JSON')</strong>
+                            <div class="mt-1">
+                                @if($pushHealth['file_exists'])
+                                    <span class="badge badge--success">@lang('Uploaded')</span>
+                                @else
+                                    <span class="badge badge--danger">@lang('Missing')</span>
+                                @endif
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <strong>@lang('Registered Devices')</strong>
+                            <div class="mt-1">{{ $deviceTokenCount }}</div>
+                        </div>
+                    </div>
+                    @if(!$pushHealth['file_exists'])
+                        <div class="alert alert--danger mt-3 mb-0" role="alert">
+                            @lang('Push notifications cannot send yet because the Firebase service account JSON file has not been uploaded.')
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
         <div class="col-md-12">
             <div class="card">
                 <form action="{{ route('admin.setting.notification.push.update') }}" method="POST">
@@ -177,6 +224,32 @@
             </div>
         </div>
     @endcan
+
+    <div class="modal fade" id="testPushModal" role="dialog" tabindex="-1">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@lang('Send Test Push Notification')</h5>
+                    <button class="close" data-bs-dismiss="modal" type="button" aria-label="Close">
+                        <i class="las la-times"></i>
+                    </button>
+                </div>
+                <form method="POST" action="{{ route('admin.setting.notification.push.test') }}">
+                    @csrf
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label>@lang('Username, Email, or Account Number')</label>
+                            <input type="text" class="form-control" name="user_identifier" placeholder="@lang('Enter a user identifier')" required>
+                            <small class="text-muted mt-2 d-block">@lang('The test notification will be sent to that user if they already have a registered device token.')</small>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn--primary w-100 h-45" type="submit">@lang('Send Test Push')</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @push('breadcrumb-plugins')
@@ -186,6 +259,7 @@
     @can('admin.setting.notification.push.upload')
         <button class="btn btn-outline--primary updateBtn btn-sm" data-bs-toggle="modal" data-bs-target="#pushConfigJson" type="button"><i class="las la-upload"></i>@lang('Upload Config File')</button>
     @endcan
+    <button class="btn btn-outline--primary updateBtn btn-sm" data-bs-toggle="modal" data-bs-target="#testPushModal" type="button"><i class="las la-paper-plane"></i>@lang('Send Test Push')</button>
 
     @can('admin.setting.notification.push.download')
         <a href="{{ route('admin.setting.notification.push.download') }}" class="btn btn-outline--info updateBtn btn-sm  @if (!$fileExists) disabled @endif" @disabled(!$fileExists)>

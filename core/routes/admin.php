@@ -451,6 +451,7 @@ Route::middleware('admin', 'adminPermission')->group(function () {
         Route::post('notification/push/setting', 'pushSettingUpdate')->name('push.update');
         Route::post('notification/push/setting/upload', 'pushSettingUpload')->name('push.upload');
         Route::get('notification/push/setting/download', 'pushSettingDownload')->name('push.download');
+        Route::post('notification/push/test', 'pushTest')->name('push.test');
     });
 
     // Plugin

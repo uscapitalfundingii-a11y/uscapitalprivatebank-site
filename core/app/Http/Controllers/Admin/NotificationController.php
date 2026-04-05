@@ -5,7 +5,10 @@ namespace App\Http\Controllers\Admin;
 use App\Constants\Status;
 use App\Http\Controllers\Controller;
 use App\Lib\RequiredConfig;
+use App\Models\DeviceToken;
 use App\Models\NotificationTemplate;
+use App\Models\User;
+use App\Notify\Push;
 use App\Notify\Sms;
 use App\Rules\FileTypeValidate;
 use Illuminate\Http\Request;
@@ -226,7 +229,14 @@ class NotificationController extends Controller
     public  function smsSetting()
     {
         $pageTitle = 'SMS Notification Settings';
-        return view('admin.notification.sms_setting', compact('pageTitle'));
+        $smsConfig = gs('sms_config');
+        $configured = !empty($smsConfig?->name);
+        $smsHealth = [
+            'enabled'    => (bool) gs('sn'),
+            'configured' => $configured,
+            'provider'   => $smsConfig?->name,
+        ];
+        return view('admin.notification.sms_setting', compact('pageTitle', 'smsHealth'));
     }
 
 
@@ -333,7 +343,14 @@ class NotificationController extends Controller
     {
         $pageTitle = 'Push Notification Settings';
         $fileExists = file_exists(getFilePath('pushConfig') . '/push_config.json');
-        return view('admin.notification.push_setting', compact('pageTitle', 'fileExists'));
+        $deviceTokenCount = DeviceToken::count();
+        $pushHealth = [
+            'enabled' => (bool) gs('pn'),
+            'configured' => !empty((array) gs('firebase_config')),
+            'file_exists' => $fileExists,
+            'device_tokens' => $deviceTokenCount,
+        ];
+        return view('admin.notification.push_setting', compact('pageTitle', 'fileExists', 'deviceTokenCount', 'pushHealth'));
     }
 
     public function pushSettingUpdate(Request $request)
@@ -398,5 +415,52 @@ class NotificationController extends Controller
             return back()->withNotify($notify);
         }
         return response()->download($filePath);
+    }
+
+    public function pushTest(Request $request)
+    {
+        $request->validate([
+            'user_identifier' => 'required|string',
+        ]);
+
+        if (!gs('pn')) {
+            $notify[] = ['error', 'Push notifications are disabled in general settings.'];
+            return back()->withNotify($notify);
+        }
+
+        $filePath = getFilePath('pushConfig') . '/push_config.json';
+        if (!file_exists($filePath)) {
+            $notify[] = ['error', 'Firebase service account file is missing. Upload the JSON config file first.'];
+            return back()->withNotify($notify);
+        }
+
+        $identifier = trim($request->user_identifier);
+        $user = User::where('username', $identifier)
+            ->orWhere('email', $identifier)
+            ->orWhere('account_number', $identifier)
+            ->first();
+
+        if (!$user) {
+            $notify[] = ['error', 'No user was found for that username, email, or account number.'];
+            return back()->withNotify($notify);
+        }
+
+        if (!$user->deviceTokens()->exists()) {
+            $notify[] = ['error', 'That user does not have any registered push device tokens yet.'];
+            return back()->withNotify($notify);
+        }
+
+        notify($user, 'DEFAULT', [
+            'subject' => 'Push Configuration Success',
+            'message' => 'Your push notification setting is configured successfully for ' . gs('site_name'),
+        ], ['push'], false);
+
+        if (session('firebase_error')) {
+            $notify[] = ['error', session('firebase_error')];
+        } else {
+            $notify[] = ['success', 'Push notification sent to ' . $user->username . ' successfully'];
+        }
+
+        return back()->withNotify($notify);
     }
 }

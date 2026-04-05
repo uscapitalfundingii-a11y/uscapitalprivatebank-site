@@ -4,6 +4,38 @@
         @include('admin.notification.top_bar')
     @endpush
     <div class="row">
+        <div class="col-md-12 mb-3">
+            <div class="card border--primary">
+                <div class="card-body">
+                    <div class="row gy-3">
+                        <div class="col-md-4">
+                            <strong>@lang('SMS Enabled')</strong>
+                            <div class="mt-1">
+                                @if($smsHealth['enabled'])
+                                    <span class="badge badge--success">@lang('Yes')</span>
+                                @else
+                                    <span class="badge badge--danger">@lang('No')</span>
+                                @endif
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <strong>@lang('Selected Provider')</strong>
+                            <div class="mt-1">{{ $smsHealth['provider'] ? ucfirst($smsHealth['provider']) : __('Not set') }}</div>
+                        </div>
+                        <div class="col-md-4">
+                            <strong>@lang('Settings Status')</strong>
+                            <div class="mt-1">
+                                @if($smsHealth['configured'])
+                                    <span class="badge badge--success">@lang('Configured')</span>
+                                @else
+                                    <span class="badge badge--warning">@lang('Needs setup')</span>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
         <div class="col-md-12">
             <div class="card">
                 <form method="POST" action="{{ route('admin.setting.notification.sms.update') }}">
@@ -46,7 +78,7 @@
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label>@lang('Password') </label>
-                                    <input type="text" class="form-control" placeholder="@lang('Password')" name="infobip_password" value="{{ @gs('sms_config')->infobip->password }}">
+                                    <input type="password" class="form-control" placeholder="@lang('Password')" name="infobip_password" value="{{ @gs('sms_config')->infobip->password }}">
                                 </div>
                             </div>
                         </div>

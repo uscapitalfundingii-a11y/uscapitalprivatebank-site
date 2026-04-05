@@ -43,16 +43,25 @@ class SmsGateway{
      */
     public $config;
 
+    protected function ensureGatewayResponse($response, string $gateway): void
+    {
+        if ($response === false || $response === null || $response === '') {
+            throw new \Exception($gateway . ' did not return a valid response.');
+        }
+    }
+
 	public function clickatell()
 	{
 		$message = urlencode($this->message);
 		$api_key = $this->config->clickatell->api_key;
-		@file_get_contents("https://platform.clickatell.com/messages/http/send?apiKey=$api_key&to=$this->to&content=$message");
+		$response = @file_get_contents("https://platform.clickatell.com/messages/http/send?apiKey=$api_key&to=$this->to&content=$message");
+        $this->ensureGatewayResponse($response, 'Clickatell');
 	}
 
 	public function infobip(){
 		$message = urlencode($this->message);
-		@file_get_contents("https://api.infobip.com/api/v3/sendsms/plain?user=".$this->config->infobip->username."&password=".$this->config->infobip->password."&sender=$this->from&SMSText=$message&GSM=$this->to&type=longSMS");
+		$response = @file_get_contents("https://api.infobip.com/api/v3/sendsms/plain?user=".$this->config->infobip->username."&password=".$this->config->infobip->password."&sender=$this->from&SMSText=$message&GSM=$this->to&type=longSMS");
+        $this->ensureGatewayResponse($response, 'Infobip');
 	}
 
 	public function messageBird(){
@@ -75,7 +84,8 @@ class SmsGateway{
 
 	public function smsBroadcast(){
 		$message = urlencode($this->message);
-		@file_get_contents("https://api.smsbroadcast.com.au/api-adv.php?username=".$this->config->sms_broadcast->username."&password=".$this->config->sms_broadcast->password."&to=$this->to&from=$this->from&message=$message&ref=112233&maxsplit=5&delay=15");
+		$response = @file_get_contents("https://api.smsbroadcast.com.au/api-adv.php?username=".$this->config->sms_broadcast->username."&password=".$this->config->sms_broadcast->password."&to=$this->to&from=$this->from&message=$message&ref=112233&maxsplit=5&delay=15");
+        $this->ensureGatewayResponse($response, 'SMS Broadcast');
 	}
 
 	public function twilio(){
@@ -118,9 +128,10 @@ class SmsGateway{
 		$header = array_combine($credential->headers->name,$credential->headers->value);
 		if ($method == 'get') {
 			$credential->url = $credential->url.'?'.http_build_query($body);
-			CurlRequest::curlContent($credential->url,$header);
+			$response = CurlRequest::curlContent($credential->url,$header);
 		}else{
-			CurlRequest::curlPostContent($credential->url,$body,$header);
+			$response = CurlRequest::curlPostContent($credential->url,$body,$header);
 		}
+        $this->ensureGatewayResponse($response, 'Custom SMS API');
 	}
 }
