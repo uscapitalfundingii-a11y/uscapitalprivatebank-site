@@ -105,6 +105,20 @@
                                 </div>
                             </div>
                             <div class="col-md-12">
+                                @if($savedPresets->count())
+                                    <div class="form-group">
+                                        <label>@lang('Saved Broadcast Messages')</label>
+                                        <select class="form-control select2 saved-broadcast-presets" data-minimum-results-for-search="1">
+                                            <option value="">@lang('Choose a saved message')</option>
+                                            @foreach ($savedPresets as $preset)
+                                                <option value="{{ $preset->id }}" data-via="{{ $preset->via }}" data-subject="{{ $preset->subject }}" data-message="{{ $preset->message }}">
+                                                    {{ $preset->name }} ({{ strtoupper($preset->via) }})
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        <small class="text-muted">@lang('Broadcast messages you send are automatically saved here for reuse.')</small>
+                                    </div>
+                                @endif
 
                                 @if (!request()->has('selectedUsers'))
                                     <div class="form-group">
@@ -205,6 +219,7 @@
             const $status = $('.notificationDraftStatus');
             const $dictateButton = $('.dictateNotificationBtn');
             const $polishButton = $('.polishNotificationBtn');
+            const $savedPresets = $('.saved-broadcast-presets');
             const SpeechRecognitionApi = window.SpeechRecognition || window.webkitSpeechRecognition;
             let recognition = null;
             let isListening = false;
@@ -292,6 +307,23 @@
                 $('.input-append').empty();
 
             }).change();
+
+            $savedPresets.on('change', function() {
+                const $selected = $(this).find(':selected');
+                const presetVia = $selected.data('via');
+
+                if (!$selected.val()) {
+                    return;
+                }
+
+                if (presetVia) {
+                    $(`.notification-via[data-method="${presetVia}"]`).trigger('click');
+                }
+
+                $subjectField.val($selected.data('subject') || '');
+                setEditorValue($selected.data('message') || '');
+                $status.removeClass('d-none text-danger').addClass('text-success').text('@lang("Saved broadcast message loaded into the form.")');
+            });
 
             function fetchUserList() {
 
