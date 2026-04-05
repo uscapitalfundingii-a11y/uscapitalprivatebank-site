@@ -73,6 +73,7 @@
                                 <div class="form-group">
                                     <label class="form-label" for="email">@lang('Email Address')</label>
                                     <input type="email" name="email" id="email" class="form--control checkUser" value="{{ old('email') }}" required>
+                                    <small class="text--danger invalid-email-message d-none"></small>
                                 </div>
                             </div>
 
@@ -167,19 +168,39 @@
 
             $('.checkUser').on('focusout', function(e) {
                 var url = "{{ route('user.checkUser') }}";
-                var value = $(this).val();
+                var input = $(this);
+                var value = input.val();
                 var token = '{{ csrf_token() }}';
+                var submitButton = $('button[type="submit"]');
+                var invalidEmailMessage = input.closest('.form-group').find('.invalid-email-message');
 
                 var data = {
                     email: value,
                     _token: token
                 }
 
+                invalidEmailMessage.addClass('d-none').text('');
+
                 $.post(url, data, function(response) {
                     if (response.data != false) {
+                        submitButton.prop('disabled', false);
                         $('#existModalCenter').modal('show');
+                        return;
                     }
+
+                    if (response.invalid) {
+                        invalidEmailMessage.text(response.message).removeClass('d-none');
+                        submitButton.prop('disabled', true);
+                        return;
+                    }
+
+                    submitButton.prop('disabled', false);
                 });
+            });
+
+            $('.checkUser').on('input', function() {
+                $(this).closest('.form-group').find('.invalid-email-message').addClass('d-none').text('');
+                $('button[type="submit"]').prop('disabled', false);
             });
         })(jQuery);
     </script>

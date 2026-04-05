@@ -14,6 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\Validation\ValidationException;
 
 class RegisterController extends Controller
 {
@@ -70,6 +71,12 @@ class RegisterController extends Controller
         }
 
         $this->validator($request->all())->validate();
+
+        if (!$this->isEmailRegistrable($request->email)) {
+            throw ValidationException::withMessages([
+                'email' => 'The email address that you are registering with is not valid.'
+            ]);
+        }
 
         $request->session()->regenerateToken();
 
@@ -159,10 +166,17 @@ class RegisterController extends Controller
     {
         $exist['data'] = false;
         $exist['type'] = null;
+        $exist['invalid'] = false;
+        $exist['message'] = null;
         if ($request->email) {
-            $exist['data'] = User::where('email', $request->email)->exists();
+            $email = strtolower(trim($request->email));
+            $exist['data'] = User::where('email', $email)->exists();
             $exist['type'] = 'email';
             $exist['field'] = 'Email';
+            if (!$exist['data'] && !$this->isEmailRegistrable($email)) {
+                $exist['invalid'] = true;
+                $exist['message'] = 'The email address that you are registering with is not valid.';
+            }
         }
         if ($request->mobile) {
             $exist['data'] = User::where('mobile', $request->mobile)->where('dial_code', $request->mobile_code)->exists();
@@ -175,6 +189,25 @@ class RegisterController extends Controller
             $exist['field'] = 'Username';
         }
         return response($exist);
+    }
+
+    protected function isEmailRegistrable(?string $email): bool
+    {
+        $email = strtolower(trim((string) $email));
+
+        if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return false;
+        }
+
+        $domain = substr(strrchr($email, "@"), 1);
+
+        if (!$domain) {
+            return false;
+        }
+
+        return checkdnsrr($domain, 'MX')
+            || checkdnsrr($domain, 'A')
+            || checkdnsrr($domain, 'AAAA');
     }
 
     public function registered()
