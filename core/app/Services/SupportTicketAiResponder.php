@@ -36,11 +36,8 @@ class SupportTicketAiResponder
             return $existingReply;
         }
 
-        $replyText = $this->requestReplyText($ticket, $incomingMessage);
-
-        if (!$replyText) {
-            return null;
-        }
+        $replyText = $this->requestReplyText($ticket, $incomingMessage)
+            ?: $this->fallbackAutoReply($ticket, $incomingMessage);
 
         $reply = new SupportMessage();
         $reply->support_ticket_id = $ticket->id;
@@ -71,10 +68,6 @@ class SupportTicketAiResponder
 
     public function draftForAdmin(SupportTicket $ticket): ?string
     {
-        if (!$this->enabled()) {
-            throw new \RuntimeException('AI ticket drafts are not enabled on this server.');
-        }
-
         $latestCustomerMessage = SupportMessage::query()
             ->where('support_ticket_id', $ticket->id)
             ->where('admin_id', 0)
@@ -83,6 +76,10 @@ class SupportTicketAiResponder
 
         if (!$latestCustomerMessage) {
             throw new \RuntimeException('There is no customer message available to draft a reply from.');
+        }
+
+        if (!$this->enabled()) {
+            return $this->fallbackAdminDraft($ticket, $latestCustomerMessage);
         }
 
         $response = Http::baseUrl(rtrim(config('openai.base_url'), '/'))
@@ -102,10 +99,11 @@ class SupportTicketAiResponder
             ]);
 
         if (!$response->successful()) {
-            throw new \RuntimeException($this->apiErrorMessage($response->json(), 'AI draft could not be generated right now.'));
+            report(new \RuntimeException($this->apiErrorMessage($response->json(), 'AI draft could not be generated right now.')));
+            return $this->fallbackAdminDraft($ticket, $latestCustomerMessage);
         }
 
-        return $this->extractText($response->json());
+        return $this->extractText($response->json()) ?: $this->fallbackAdminDraft($ticket, $latestCustomerMessage);
     }
 
     protected function schemaReady(): bool
@@ -250,5 +248,75 @@ class SupportTicketAiResponder
         }
 
         return $message !== '' ? $message : $fallback;
+    }
+
+    protected function fallbackAdminDraft(SupportTicket $ticket, SupportMessage $latestCustomerMessage): string
+    {
+        $summary = $this->summarizeCustomerNeed($ticket, $latestCustomerMessage);
+        $requestMoreInfo = $this->needsMoreInformation($latestCustomerMessage->message);
+
+        $lines = [
+            'Hello ' . ($ticket->name ?: 'there') . ',',
+            '',
+            'Thank you for contacting ' . gs('site_name') . '. We have reviewed your message regarding ' . $summary . '.',
+        ];
+
+        if ($requestMoreInfo) {
+            $lines[] = 'To help you properly, please reply with any additional details you can share about the request, including the exact service or device you need and how you plan to use it.';
+        } else {
+            $lines[] = 'Your request has been noted and will be reviewed by the appropriate team. We will follow up with the next steps and any requirements as soon as possible.';
+        }
+
+        $lines[] = '';
+        $lines[] = 'Best regards,';
+        $lines[] = gs('site_name') . ' Support';
+
+        return implode("\n", $lines);
+    }
+
+    protected function fallbackAutoReply(SupportTicket $ticket, SupportMessage $incomingMessage): string
+    {
+        $summary = $this->summarizeCustomerNeed($ticket, $incomingMessage);
+
+        return implode("\n", [
+            'Hello ' . ($ticket->name ?: 'there') . ',',
+            '',
+            'Thank you for contacting ' . gs('site_name') . '. We received your message regarding ' . $summary . '.',
+            'A member of our support team will review it and follow up with you as soon as possible.',
+            '',
+            'Best regards,',
+            gs('site_name') . ' Support',
+        ]);
+    }
+
+    protected function summarizeCustomerNeed(SupportTicket $ticket, SupportMessage $message): string
+    {
+        $text = strtolower(trim($ticket->subject . ' ' . $message->message));
+
+        $map = [
+            'device' => 'your device request',
+            'protocol' => 'your protocol/device request',
+            'pos' => 'your POS device request',
+            'account' => 'your account request',
+            'kyc' => 'your KYC request',
+            'transfer' => 'your transfer request',
+            'wire' => 'your wire transfer request',
+            'card' => 'your card-related request',
+            'login' => 'your login issue',
+            'verification' => 'your verification request',
+        ];
+
+        foreach ($map as $needle => $summary) {
+            if (str_contains($text, $needle)) {
+                return $summary;
+            }
+        }
+
+        return 'your recent support request';
+    }
+
+    protected function needsMoreInformation(string $message): bool
+    {
+        return str_word_count(trim($message)) < 18;
     }
 }
