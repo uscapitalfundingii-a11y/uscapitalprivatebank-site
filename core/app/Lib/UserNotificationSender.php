@@ -5,6 +5,8 @@ namespace App\Lib;
 use App\Constants\Status;
 use App\Models\NotificationTemplate;
 use App\Models\User;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Class UserNotificationSender
@@ -34,16 +36,17 @@ class UserNotificationSender
             return $this->redirectWithNotify('error', "Ensure that the user field is populated when sending an email to the designated user group");
         }
 
-        $userQuery      = $this->getUserQuery($request);
-  
-        $totalUserCount = $this->getTotalUserCount($userQuery, $request);
+        $userQuery = $this->getUserQuery($request);
+        $filteredSelection = $this->getFilteredSelection($request);
+
+        $totalUserCount = $this->getTotalUserCount($userQuery, $request, $filteredSelection);
 
         if ($totalUserCount <= 0) {
             return $this->redirectWithNotify('error', "Notification recipients were not found among the selected user base.");
         }
 
         $imageUrl = $this->handlePushNotificationImage($request);
-        $users    = $this->getUsers($userQuery, $request->start, $request->batch);
+        $users = $this->getUsers($userQuery, $request->start, $request->batch, $filteredSelection);
 
         $this->sendNotifications($users, $request, $imageUrl);
 
@@ -120,8 +123,8 @@ class UserNotificationSender
     private function getUserQuery($request)
     {
         $scope = $request->being_sent_to;
-        if($request->being_sent_to == 'filtered_users'){
-            return User::oldest()->emailUnverified();
+        if ($request->being_sent_to == 'filtered_users') {
+            return null;
         }
         return User::oldest()->active()->$scope();
     }
@@ -133,9 +136,11 @@ class UserNotificationSender
      * @param \Illuminate\Http\Request $request
      * @return int
      */
-    private function getTotalUserCount($userQuery, $request)
+    private function getTotalUserCount($userQuery, $request, ?array $filteredSelection = null)
     {
-        if (session()->has("SEND_NOTIFICATION")) {
+        if ($filteredSelection) {
+            $totalUserCount = $filteredSelection['count'];
+        } elseif (session()->has("SEND_NOTIFICATION")) {
             $totalUserCount = session('SEND_NOTIFICATION')['total_user'];
         } else {
             $totalUserCount = (clone $userQuery)->count() - ($request->start - 1);
@@ -170,9 +175,57 @@ class UserNotificationSender
      * @param int $batch
      * @return \Illuminate\Support\Collection
      */
-    private function getUsers($userQuery, $start, $batch)
+    private function getUsers($userQuery, $start, $batch, ?array $filteredSelection = null)
     {
+        if ($filteredSelection) {
+            return $this->getFilteredUsers($filteredSelection, $start, $batch);
+        }
+
         return (clone $userQuery)->skip($start - 1)->limit($batch)->get();
+    }
+
+    private function getFilteredSelection($request): ?array
+    {
+        if ($request->being_sent_to !== 'filtered_users' || !session()->has('FILTERED_USERS')) {
+            return null;
+        }
+
+        $selection = decrypt(session('FILTERED_USERS'));
+
+        if (!is_array($selection) || empty($selection['query']) || !array_key_exists('bindings', $selection)) {
+            return null;
+        }
+
+        return $selection;
+    }
+
+    private function getFilteredUsers(array $filteredSelection, int $start, int $batch): Collection
+    {
+        $offset = max($start - 1, 0);
+        $sql = $filteredSelection['query'];
+
+        if (!preg_match('/\border by\b/i', $sql)) {
+            $sql .= ' order by users.id asc';
+        }
+
+        $sql .= ' limit ? offset ?';
+        $rows = DB::select($sql, array_merge($filteredSelection['bindings'], [$batch, $offset]));
+
+        $userIds = collect($rows)
+            ->pluck('id')
+            ->filter()
+            ->map(fn ($id) => (int) $id)
+            ->values();
+
+        if ($userIds->isEmpty()) {
+            return collect();
+        }
+
+        $users = User::whereIn('id', $userIds)->get()->keyBy('id');
+
+        return $userIds->map(function ($id) use ($users) {
+            return $users->get($id);
+        })->filter()->values();
     }
 
     /**
