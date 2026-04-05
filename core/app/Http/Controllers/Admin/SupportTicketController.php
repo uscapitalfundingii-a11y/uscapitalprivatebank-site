@@ -74,6 +74,29 @@ class SupportTicketController extends Controller
         ]);
     }
 
+    public function polishAiDraft(Request $request, $id)
+    {
+        $request->validate([
+            'message' => 'required|string',
+        ]);
+
+        $ticket = SupportTicket::with('user')->findOrFail($id);
+
+        try {
+            $draft = app(SupportTicketAiResponder::class)->polishAdminDraft($ticket, $request->message);
+        } catch (\Throwable $exception) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $exception->getMessage(),
+            ], 422);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'draft' => $draft,
+        ]);
+    }
+
 
     private function supportTicketData($scope = null){
         $accountNumberField  = 'CASE WHEN support_tickets.user_id != 0 THEN users.account_number ELSE "N/A" END';

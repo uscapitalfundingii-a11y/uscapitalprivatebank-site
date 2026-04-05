@@ -31,7 +31,13 @@
 
                             <div class="row ">
                                 <div class="col-md-12">
-                                    <div class="d-flex justify-content-end mb-2">
+                                    <div class="d-flex justify-content-end flex-wrap gap-2 mb-2">
+                                        <button class="btn btn--dark btn-sm dictateReplyBtn" type="button" id="dictateReplyBtn">
+                                            <i class="las la-microphone"></i> @lang('Dictate')
+                                        </button>
+                                        <button class="btn btn--warning btn-sm polishAiDraftBtn" type="button" data-url="{{ route('admin.ticket.ai.polish', $ticket->id) }}">
+                                            <i class="las la-magic"></i> @lang('Revise with AI')
+                                        </button>
                                         <button class="btn btn--info btn-sm generateAiDraftBtn" type="button" data-url="{{ route('admin.ticket.ai.draft', $ticket->id) }}">
                                             <i class="las la-robot"></i> @lang('Reply with AI')
                                         </button>
@@ -191,8 +197,13 @@
         "use strict";
         (function($) {
             const $draftButton = $('.generateAiDraftBtn');
+            const $polishButton = $('.polishAiDraftBtn');
+            const $dictateButton = $('#dictateReplyBtn');
             const $messageField = $('#inputMessage');
             const $draftStatus = $('#aiDraftStatus');
+            const SpeechRecognitionApi = window.SpeechRecognition || window.webkitSpeechRecognition;
+            let recognition = null;
+            let isListening = false;
 
             $('.delete-message').on('click', function(e) {
                 $('.message_id').val($(this).data('id'));
@@ -253,6 +264,96 @@
                     }
                 });
             });
+
+            $polishButton.on('click', function() {
+                const $button = $(this);
+                const originalHtml = $button.html();
+                const currentDraft = $messageField.val().trim();
+
+                if (!currentDraft) {
+                    $draftStatus.removeClass('d-none text-success').addClass('text-danger').text('@lang("Please enter or dictate a reply before asking AI to revise it.")');
+                    return;
+                }
+
+                $button.prop('disabled', true).html('<i class="las la-spinner la-spin"></i> @lang("Revising...")');
+                $draftStatus.removeClass('d-none text-danger text-success').text('@lang("Revising your draft...")');
+
+                $.ajax({
+                    url: $button.data('url'),
+                    method: 'POST',
+                    data: {
+                        _token: '{{ csrf_token() }}',
+                        message: currentDraft
+                    },
+                    success: function(response) {
+                        if (response.draft) {
+                            $messageField.val(response.draft).trigger('focus');
+                            $draftStatus.addClass('text-success').text('@lang("Your reply was revised and updated in the reply box.")');
+                            return;
+                        }
+
+                        $draftStatus.addClass('text-danger').text('@lang("AI revision could not be generated right now.")');
+                    },
+                    error: function(xhr) {
+                        const message = xhr.responseJSON?.message || '@lang("AI revision could not be generated right now.")';
+                        $draftStatus.addClass('text-danger').text(message);
+                    },
+                    complete: function() {
+                        $button.prop('disabled', false).html(originalHtml);
+                        $draftStatus.removeClass('d-none');
+                    }
+                });
+            });
+
+            if (!SpeechRecognitionApi) {
+                $dictateButton.prop('disabled', true).attr('title', '@lang("Dictation is not supported in this browser.")');
+            } else {
+                recognition = new SpeechRecognitionApi();
+                recognition.lang = 'en-US';
+                recognition.interimResults = true;
+                recognition.continuous = true;
+
+                recognition.onstart = function() {
+                    isListening = true;
+                    $dictateButton.html('<i class="las la-microphone-slash"></i> @lang("Stop Dictation")');
+                    $draftStatus.removeClass('d-none text-danger text-success').text('@lang("Listening... speak to fill the reply box.")');
+                };
+
+                recognition.onresult = function(event) {
+                    let transcript = '';
+                    for (let i = event.resultIndex; i < event.results.length; i++) {
+                        transcript += event.results[i][0].transcript;
+                    }
+
+                    const existing = $messageField.val().trim();
+                    const spacer = existing && !existing.endsWith(' ') ? ' ' : '';
+                    $messageField.val((existing + spacer + transcript).trimStart());
+                };
+
+                recognition.onerror = function(event) {
+                    $draftStatus.removeClass('d-none text-success').addClass('text-danger').text(event.error === 'not-allowed'
+                        ? '@lang("Microphone permission was denied.")'
+                        : '@lang("Dictation stopped because the browser reported an error.")');
+                };
+
+                recognition.onend = function() {
+                    isListening = false;
+                    $dictateButton.html('<i class="las la-microphone"></i> @lang("Dictate")');
+                };
+
+                $dictateButton.on('click', function() {
+                    if (!recognition) {
+                        return;
+                    }
+
+                    if (isListening) {
+                        recognition.stop();
+                        return;
+                    }
+
+                    recognition.start();
+                });
+            }
         })(jQuery);
     </script>
 @endpush

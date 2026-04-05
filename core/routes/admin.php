@@ -339,6 +339,7 @@ Route::middleware('admin', 'adminPermission')->group(function () {
         Route::get('answered', 'answeredTicket')->name('answered');
         Route::get('view/{id}', 'ticketReply')->name('view');
         Route::post('ai-draft/{id}', 'generateAiDraft')->name('ai.draft');
+        Route::post('ai-polish/{id}', 'polishAiDraft')->name('ai.polish');
         Route::post('reply/{id}', 'replyTicket')->name('reply');
         Route::post('close/{id}', 'closeTicket')->name('close');
         Route::get('download/{attachment_id}', 'ticketDownload')->name('download');

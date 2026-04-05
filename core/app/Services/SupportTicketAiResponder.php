@@ -106,6 +106,54 @@ class SupportTicketAiResponder
         return $this->extractText($response->json()) ?: $this->fallbackAdminDraft($ticket, $latestCustomerMessage);
     }
 
+    public function polishAdminDraft(SupportTicket $ticket, string $draft): string
+    {
+        $draft = trim($draft);
+
+        if ($draft === '') {
+            throw new \RuntimeException('Please enter or dictate a reply before asking AI to revise it.');
+        }
+
+        if (!$this->enabled()) {
+            return $this->fallbackPolishDraft($ticket, $draft);
+        }
+
+        $response = Http::baseUrl(rtrim(config('openai.base_url'), '/'))
+            ->acceptJson()
+            ->withToken(config('openai.api_key'))
+            ->timeout(config('openai.support_ticket.timeout'))
+            ->post('/responses', [
+                'model' => config('openai.support_ticket.model'),
+                'instructions' => $this->adminPolishInstructions(),
+                'input' => [[
+                    'role' => 'user',
+                    'content' => [[
+                        'type' => 'input_text',
+                        'text' => trim(implode("\n", [
+                            'Ticket subject: ' . $ticket->subject,
+                            'Customer name: ' . $ticket->name,
+                            'Customer email: ' . $ticket->email,
+                            'Draft reply to revise:',
+                            $draft,
+                        ])),
+                    ]],
+                ]],
+                'max_output_tokens' => config('openai.support_ticket.max_output_tokens'),
+                'metadata' => [
+                    'feature' => 'support_ticket_admin_polish',
+                    'ticket_id' => (string) $ticket->ticket,
+                    'support_ticket_id' => (string) $ticket->id,
+                ],
+            ]);
+
+        if (!$response->successful()) {
+            report(new \RuntimeException($this->apiErrorMessage($response->json(), 'AI revision could not be generated right now.')));
+            return $this->fallbackPolishDraft($ticket, $draft);
+        }
+
+        return $this->extractText($response->json()) ?: $this->fallbackPolishDraft($ticket, $draft);
+    }
+
     protected function schemaReady(): bool
     {
         return Schema::hasTable('support_messages')
@@ -211,6 +259,16 @@ class SupportTicketAiResponder
             'Keep the draft under 180 words.';
     }
 
+    protected function adminPolishInstructions(): string
+    {
+        return 'You are revising a support agent draft for a bank ticket reply. ' .
+            'Rewrite the text to sound professional, clear, calm, and customer-friendly while keeping the meaning intact. ' .
+            'Do not mention being an AI. ' .
+            'Do not add promises of completed actions unless they are already stated in the draft. ' .
+            'Do not ask for passwords, PINs, full card numbers, SSNs, or full account numbers. ' .
+            'Return only the revised reply text, ready to send.';
+    }
+
     protected function extractText(array $payload): ?string
     {
         $chunks = [];
@@ -287,6 +345,21 @@ class SupportTicketAiResponder
             'Best regards,',
             gs('site_name') . ' Support',
         ]);
+    }
+
+    protected function fallbackPolishDraft(SupportTicket $ticket, string $draft): string
+    {
+        $draft = preg_replace('/\s+/', ' ', trim($draft));
+
+        if (!str_starts_with(strtolower($draft), 'hello') && !str_starts_with(strtolower($draft), 'hi ')) {
+            $draft = 'Hello ' . ($ticket->name ?: 'there') . ",\n\n" . ucfirst($draft);
+        }
+
+        if (!str_contains(strtolower($draft), 'best regards') && !str_contains(strtolower($draft), 'sincerely')) {
+            $draft .= "\n\nBest regards,\n" . gs('site_name') . ' Support';
+        }
+
+        return $draft;
     }
 
     protected function summarizeCustomerNeed(SupportTicket $ticket, SupportMessage $message): string
