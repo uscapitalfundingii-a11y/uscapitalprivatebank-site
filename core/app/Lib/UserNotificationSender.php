@@ -9,6 +9,7 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * Class UserNotificationSender
@@ -293,7 +294,7 @@ class UserNotificationSender
 
     private function saveBroadcastPreset($request): void
     {
-        if (session()->has('SEND_NOTIFICATION') || !SchemaHasBroadcastPresetTable()) {
+        if (session()->has('SEND_NOTIFICATION') || !Schema::hasTable('broadcast_message_presets')) {
             return;
         }
 
