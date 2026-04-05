@@ -71,19 +71,32 @@
     @push('script')
         <script>
             $('.notifyDetail').on('click', function() {
-                var message = ''
+                let message = ''
                 if ($(this).data('image')) {
                     message += `<img src="${$(this).data('image')}" class="w-100 mb-2" alt="image">`;
                 }
-                message += $(this).data('message');
+                const rawMessage = $(this).data('message') || '';
                 var sent_to = $(this).data('sent_to');
                 var modal = $('#notifyDetailModal');
                 if ($(this).data('type') == 'email') {
-                    var message = `<iframe src="${message}" height="500" width="100%" title="Iframe Example"></iframe>`
+                    message += `<iframe src="${rawMessage}" height="500" width="100%" title="Iframe Example"></iframe>`;
+                } else {
+                    const escapedMessage = $('<div>').text(rawMessage).html();
+                    message += `<div class="notification-detail-message">${escapedMessage}</div>`;
                 }
                 $('.detail').html(message)
                 $('.sent_to').text(sent_to)
                 modal.modal('show');
             });
         </script>
+    @endpush
+
+    @push('style')
+        <style>
+            .notification-detail-message {
+                white-space: pre-wrap;
+                word-break: break-word;
+                color: #24364b;
+            }
+        </style>
     @endpush
