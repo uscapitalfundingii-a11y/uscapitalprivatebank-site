@@ -54,7 +54,7 @@ class UserNotificationSender
         $this->sendNotifications($users, $request, $imageUrl);
         $this->saveBroadcastPreset($request);
 
-        return $this->manageSessionForNotification($totalUserCount, $request);
+        return $this->manageSessionForNotification($totalUserCount, $request, $users->count());
     }
 
     /**
@@ -143,7 +143,7 @@ class UserNotificationSender
     private function getTotalUserCount($userQuery, $request, ?array $filteredSelection = null)
     {
         if ($filteredSelection) {
-            $totalUserCount = $filteredSelection['count'];
+            $totalUserCount = max(((int) $filteredSelection['count']) - (((int) $request->start) - 1), 0);
         } elseif (session()->has("SEND_NOTIFICATION")) {
             $totalUserCount = session('SEND_NOTIFICATION')['total_user'];
         } else {
@@ -265,18 +265,18 @@ class UserNotificationSender
      * @param \Illuminate\Http\Request $request
      * @return \Illuminate\Http\RedirectResponse
      */
-    private function manageSessionForNotification($totalUserCount, $request)
+    private function manageSessionForNotification($totalUserCount, $request, int $sentCount)
     {
         if (session()->has('SEND_NOTIFICATION')) {
-            $sessionData                = session("SEND_NOTIFICATION");
-            $sessionData['total_sent'] += $sessionData['batch'];
+            $sessionData = session("SEND_NOTIFICATION");
+            $sessionData['total_sent'] += $sentCount;
+            $sessionData['start'] = ((int) $sessionData['start']) + $sentCount;
         } else {
-            $sessionData               = $request->except('_token', 'image');
-            $sessionData['total_sent'] = $request->batch;
+            $sessionData = $request->except('_token', 'image');
+            $sessionData['total_sent'] = $sentCount;
             $sessionData['total_user'] = $totalUserCount;
+            $sessionData['start'] = ((int) $request->start) + $sentCount;
         }
-
-        $sessionData['start'] = $sessionData['total_sent'] + 1;
 
         if ($sessionData['total_sent'] >= $totalUserCount) {
             session()->forget("SEND_NOTIFICATION");
