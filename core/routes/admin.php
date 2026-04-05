@@ -75,6 +75,7 @@ Route::middleware('admin', 'adminPermission')->group(function () {
         Route::post('{id}/accounts', 'storeAccount')->name('accounts.store');
         Route::post('{id}/accounts/{accountId}/switch', 'switchAccount')->name('accounts.switch');
         Route::post('add-sub-balance/{id}', 'addSubBalance')->name('add.sub.balance');
+        Route::post('send-notification/ai-revise', 'notificationAiPolish')->name('notification.ai.revise');
         Route::get('send-notification/{id}', 'showNotificationSingleForm')->name('notification.single');
         Route::post('send-notification/{id}', 'sendNotificationSingle')->name('notification.single');
         Route::get('login/{id}', 'login')->name('login');

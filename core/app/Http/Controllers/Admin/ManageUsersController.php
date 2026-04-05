@@ -17,6 +17,7 @@ use App\Models\Transaction;
 use App\Models\User;
 use App\Models\UserAccount;
 use App\Models\Withdrawal;
+use App\Services\AdminNotificationAiAssistant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Rules\FileTypeValidate;
@@ -403,6 +404,33 @@ class ManageUsersController extends Controller
         }
 
         return (new UserNotificationSender())->notificationToSingle($request, $id);
+    }
+
+    public function notificationAiPolish(Request $request)
+    {
+        $request->validate([
+            'message' => 'required|string',
+            'via'     => 'required|in:email,sms,push',
+            'subject' => 'nullable|string',
+        ]);
+
+        try {
+            $draft = app(AdminNotificationAiAssistant::class)->polishDraft(
+                $request->message,
+                $request->subject,
+                $request->via
+            );
+        } catch (\Throwable $exception) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => $exception->getMessage(),
+            ], 422);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'draft'  => $draft,
+        ]);
     }
 
     public function showNotificationAllForm()
