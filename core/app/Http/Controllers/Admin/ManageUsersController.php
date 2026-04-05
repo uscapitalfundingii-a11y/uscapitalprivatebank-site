@@ -163,9 +163,12 @@ class ManageUsersController extends Controller
 
     public function storeAccount(Request $request, $id)
     {
+        $availableCurrencies = AccountOpeningRequest::currencyOptions();
+
         $request->validate([
             'account_type' => 'required|in:checking,savings,business_checking',
             'account_name' => 'nullable|string|max:140',
+            'currency_code' => 'nullable|in:' . implode(',', array_keys($availableCurrencies)),
         ]);
 
         $user = User::with('accounts')->findOrFail($id);
@@ -175,8 +178,10 @@ class ManageUsersController extends Controller
         $account->account_number = generateAccountNumber();
         $account->account_type = $request->account_type;
         $account->account_name = $request->account_name ?: ucwords(str_replace('_', ' ', $request->account_type)) . ' Account';
-        $account->currency_code = gs('cur_text');
-        $account->currency_symbol = gs('cur_sym');
+        $selectedCurrencyCode = strtoupper((string) ($request->currency_code ?: gs('cur_text')));
+        $selectedCurrency = $availableCurrencies[$selectedCurrencyCode] ?? ['symbol' => gs('cur_sym')];
+        $account->currency_code = $selectedCurrencyCode;
+        $account->currency_symbol = $selectedCurrency['symbol'] ?? $selectedCurrencyCode;
         $account->balance = 0;
         $account->status = Status::ENABLE;
         $account->is_primary = $user->accounts->isEmpty() ? 1 : 0;

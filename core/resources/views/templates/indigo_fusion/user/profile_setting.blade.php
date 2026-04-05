@@ -40,6 +40,12 @@
                             <span class="caption">@lang('Country')</span>
                             <span class="value">{{ __($user->country_name) }}</span>
                         </li>
+                        @if ($user->referrer)
+                            <li>
+                                <span class="caption">@lang('Referred By')</span>
+                                <span class="value">{{ '@' . $user->referrer->username }}</span>
+                            </li>
+                        @endif
 
                     </ul>
 
@@ -52,7 +58,7 @@
                                     <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap">
                                         <div>
                                             <div class="fw-bold">{{ $account->account_number }}</div>
-                                            <small>{{ ucwords(str_replace('_', ' ', $account->account_type)) }} • {{ showAmount($account->balance) }}</small>
+                                            <small>{{ $account->currency_code ?? gs('cur_text') }} • {{ ucwords(str_replace('_', ' ', $account->account_type)) }} • {{ showAmount($account->balance) }}</small>
                                         </div>
                                         @if($account->is_primary)
                                             <span class="badge badge--success">@lang('Active')</span>

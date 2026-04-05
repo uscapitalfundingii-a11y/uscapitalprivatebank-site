@@ -33,6 +33,12 @@
                         <p class="user-info-card__name">@lang('Country')</p>
                         <p class="user-info-card__value fs-16 ms-auto">{{ __($user->country_name) }}</p>
                     </li>
+                    @if ($user->referrer)
+                        <li class="user-info-card__list flex-align">
+                            <p class="user-info-card__name">@lang('Referred By')</p>
+                            <p class="user-info-card__value fs-16 ms-auto">{{ '@' . $user->referrer->username }}</p>
+                        </li>
+                    @endif
                 </ul>
 
                 <div class="mt-4">
@@ -44,7 +50,7 @@
                                 <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap">
                                     <div>
                                         <div class="fw-bold">{{ $account->account_number }}</div>
-                                        <small>{{ ucwords(str_replace('_', ' ', $account->account_type)) }} • {{ showAmount($account->balance) }}</small>
+                                        <small>{{ $account->currency_code ?? gs('cur_text') }} • {{ ucwords(str_replace('_', ' ', $account->account_type)) }} • {{ showAmount($account->balance) }}</small>
                                     </div>
                                     @if($account->is_primary)
                                         <span class="badge badge--success">@lang('Active')</span>

@@ -192,6 +192,63 @@
 
         <div class="col-xl-9 col-lg-7 col-md-7">
             <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">@lang('Account Requests')</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table--light">
+                            <thead>
+                                <tr>
+                                    <th>@lang('Currency')</th>
+                                    <th>@lang('Requested')</th>
+                                    <th>@lang('Status')</th>
+                                    <th>@lang('Action')</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($user->accountOpeningRequests as $accountRequest)
+                                    <tr>
+                                        <td>{{ $accountRequest->currency_code }} - {{ $accountRequest->currency_name }}</td>
+                                        <td>{{ showDateTime($accountRequest->created_at, 'd M, Y h:i A') }}</td>
+                                        <td>
+                                            @if($accountRequest->status === \App\Models\AccountOpeningRequest::STATUS_PENDING)
+                                                <span class="badge badge--warning">@lang('Pending Approval')</span>
+                                            @elseif($accountRequest->status === \App\Models\AccountOpeningRequest::STATUS_APPROVED)
+                                                <span class="badge badge--success">@lang('Approved')</span>
+                                            @else
+                                                <span class="badge badge--danger">@lang('Rejected')</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @if($accountRequest->status === \App\Models\AccountOpeningRequest::STATUS_PENDING)
+                                                <div class="d-flex flex-wrap gap-2">
+                                                    <form action="{{ route('admin.users.account.requests.approve', [$user->id, $accountRequest->id]) }}" method="POST">
+                                                        @csrf
+                                                        <button type="submit" class="btn btn-sm btn--success">@lang('Approve')</button>
+                                                    </form>
+                                                    <form action="{{ route('admin.users.account.requests.reject', [$user->id, $accountRequest->id]) }}" method="POST">
+                                                        @csrf
+                                                        <button type="submit" class="btn btn-sm btn--danger">@lang('Reject')</button>
+                                                    </form>
+                                                </div>
+                                            @else
+                                                <span class="text-muted">@lang('Completed')</span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="4" class="text-center text-muted">@lang('No account requests found')</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">@lang('Linked Accounts')</h5>
                     <button type="button" class="btn btn--primary btn-sm" data-bs-toggle="modal" data-bs-target="#addAccountModal">
@@ -204,6 +261,7 @@
                             <thead>
                                 <tr>
                                     <th>@lang('Account Number')</th>
+                                    <th>@lang('Currency')</th>
                                     <th>@lang('Type')</th>
                                     <th>@lang('Name')</th>
                                     <th>@lang('Balance')</th>
@@ -215,6 +273,7 @@
                                 @forelse($user->accounts as $account)
                                     <tr>
                                         <td>{{ $account->account_number }}</td>
+                                        <td>{{ $account->currency_code ?? gs('cur_text') }}</td>
                                         <td>{{ ucwords(str_replace('_', ' ', $account->account_type)) }}</td>
                                         <td>{{ $account->account_name }}</td>
                                         <td>{{ showAmount($account->balance) }}</td>
@@ -238,7 +297,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="6" class="text-center text-muted">@lang('No linked accounts found')</td>
+                                        <td colspan="7" class="text-center text-muted">@lang('No linked accounts found')</td>
                                     </tr>
                                 @endforelse
                             </tbody>
@@ -382,6 +441,14 @@
                                 <option value="checking">@lang('Checking')</option>
                                 <option value="savings">@lang('Savings')</option>
                                 <option value="business_checking">@lang('Business Checking')</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>@lang('Currency')</label>
+                            <select name="currency_code" class="form-control">
+                                @foreach($availableAccountCurrencies as $code => $currency)
+                                    <option value="{{ $code }}">{{ $code }} - {{ $currency['name'] }}</option>
+                                @endforeach
                             </select>
                         </div>
                         <div class="form-group">
