@@ -11,6 +11,7 @@ use App\Models\Page;
 use App\Models\Subscriber;
 use App\Models\SupportMessage;
 use App\Models\SupportTicket;
+use App\Services\SupportTicketAiResponder;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cookie;
@@ -93,6 +94,12 @@ class SiteController extends Controller
         $message->support_ticket_id = $ticket->id;
         $message->message           = $request->message;
         $message->save();
+
+        try {
+            app(SupportTicketAiResponder::class)->autoReply($ticket, $message);
+        } catch (\Throwable $exception) {
+            report($exception);
+        }
 
         $notify[] = ['success', 'Ticket created successfully!'];
 

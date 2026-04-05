@@ -50,7 +50,26 @@
                     @endcan
 
                     @foreach ($messages as $message)
-                        @if ($message->admin_id == 0)
+                        @if ($message->is_ai_response)
+                            <div class="row border border-info border-radius-3 my-3 mx-0 ai-bg-reply">
+
+                                <div class="col-md-3 border-end text-md-end text-start">
+                                    <h5 class="my-3">{{ $message->author_label }}</h5>
+                                    <p class="lead text-muted">@lang('Automated Reply')</p>
+                                    @can('admin.ticket.delete')
+                                        <button class="btn btn--danger btn-sm my-3 confirmationBtn" data-question="@lang('Are you sure to delete this message?')" data-action="{{ route('admin.ticket.delete', $message->id) }}"><i class="la la-trash"></i> @lang('Delete')</button>
+                                    @endcan
+                                </div>
+                                <div class="col-md-9">
+                                    <p class="text-muted fw-bold my-3">
+                                        @lang('Posted on') {{ showDateTime($message->created_at, 'l, dS F Y @ h:i a') }}</p>
+                                    <p>{{ $message->message }}</p>
+                                    @if ($message->ai_model)
+                                        <p class="text-muted mb-0"><small>@lang('Model'): {{ $message->ai_model }}</small></p>
+                                    @endif
+                                </div>
+                            </div>
+                        @elseif ($message->admin_id == 0)
                             <div class="row border border--primary border-radius-3 my-3 mx-0">
 
                                 <div class="col-md-3 border-end text-md-end text-start">
@@ -152,6 +171,14 @@
     <x-back route="{{ route('admin.ticket.index') }}" />
 @endpush
 @endcan
+
+@push('style')
+    <style>
+        .ai-bg-reply {
+            background-color: rgba(13, 202, 240, 0.08);
+        }
+    </style>
+@endpush
 
 @push('script')
     <script>

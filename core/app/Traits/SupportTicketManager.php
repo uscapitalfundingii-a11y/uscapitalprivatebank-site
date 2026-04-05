@@ -7,6 +7,7 @@ use App\Models\AdminNotification;
 use App\Models\SupportAttachment;
 use App\Models\SupportMessage;
 use App\Models\SupportTicket;
+use App\Services\SupportTicketAiResponder;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -83,6 +84,7 @@ trait SupportTicketManager {
         $message->support_ticket_id   = $ticket->id;
         $message->message             = $request->message;
         $message->save();
+        $aiReply = $this->createAiReply($ticket, $message);
 
         $adminNotification            = new AdminNotification();
         $adminNotification->$column   = $user->id;
@@ -104,7 +106,8 @@ trait SupportTicketManager {
         if ($this->apiRequest) {
             $notify[] = 'Ticket opened successfully';
             return responseSuccess('ticket_open', $notify, [
-                'ticket' => $ticket
+                'ticket' => $ticket,
+                'ai_reply' => $aiReply,
             ]);
         }
 
@@ -209,6 +212,11 @@ trait SupportTicketManager {
 
         $message->message = $request->message;
         $message->save();
+        $aiReply = null;
+
+        if ($this->userType != 'admin') {
+            $aiReply = $this->createAiReply($ticket, $message);
+        }
 
         if ($request->hasFile('attachments')) {
             $uploadAttachments = $this->storeSupportAttachments($message->id);
@@ -243,7 +251,8 @@ trait SupportTicketManager {
             $notify[] = 'Ticket replied successfully';
             return responseSuccess('ticket_replied', $notify, [
                 'ticket' => $ticket,
-                'message' => $message
+                'message' => $message,
+                'ai_reply' => $aiReply,
             ]);
         }
 
@@ -291,6 +300,16 @@ trait SupportTicketManager {
             'priority'  => 'required_without:ticket_reply|in:1,2,3',
             'message'   => 'required',
         ];
+    }
+
+    protected function createAiReply(SupportTicket $ticket, SupportMessage $message): ?SupportMessage {
+        try {
+            return app(SupportTicketAiResponder::class)->autoReply($ticket, $message);
+        } catch (\Throwable $exception) {
+            report($exception);
+
+            return null;
+        }
     }
 
     private function convertToMb($value) {

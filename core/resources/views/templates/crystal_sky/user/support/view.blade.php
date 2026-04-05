@@ -48,7 +48,22 @@
             <div class="card custom--card mt-4">
                 <div class="card-body">
                     @forelse ($messages as $message)
-                        @if ($message->admin_id == 0)
+                        @if ($message->is_ai_response)
+                            <div class="row border-info my-3 mx-2 border py-3 ai-bg-reply">
+                                <div class="col-md-3 border-end text-end">
+                                    <h5 class="my-3">{{ $message->author_label }}</h5>
+                                    <p class="lead text-muted">@lang('Automated Reply')</p>
+                                </div>
+                                <div class="col-md-9">
+                                    <p class="fw-bold my-3">
+                                        @lang('Posted on') {{ $message->created_at->format('l, dS F Y @ H:i') }}</p>
+                                    <p>{{ $message->message }}</p>
+                                    @if ($message->ai_model)
+                                        <p class="text-muted mb-0"><small>@lang('Model'): {{ $message->ai_model }}</small></p>
+                                    @endif
+                                </div>
+                            </div>
+                        @elseif ($message->admin_id == 0)
                             <div class="row border-primary my-3 mx-2 border py-3">
                                 <div class="col-md-3 border-end text-end">
                                     <h5 class="my-3">{{ $message->ticket->name }}</h5>
@@ -109,6 +124,10 @@
         }
         .btn[type=submit] {
             height: unset !important;
+        }
+
+        .ai-bg-reply {
+            background-color: rgba(13, 202, 240, 0.08);
         }
 
         .btn {
