@@ -1,7 +1,49 @@
+@push('style')
+    <style>
+        @media (min-width: 992px) {
+            .header .header__bottom .container {
+                max-width: 100%;
+                padding-left: 1.25rem;
+                padding-right: 1.5rem;
+            }
+
+            .header .site-logo {
+                display: flex;
+                align-items: center;
+                flex: 0 0 auto;
+                margin-right: 1.5rem;
+            }
+
+            .header .site-logo img {
+                display: block;
+                max-height: 74px;
+                width: auto;
+            }
+
+            .header .navbar-collapse {
+                align-items: center;
+                flex-grow: 1;
+                min-width: 0;
+            }
+
+            .header .main-menu {
+                flex-wrap: nowrap;
+                margin-left: 0 !important;
+                margin-right: auto !important;
+            }
+
+            .header .nav-right {
+                flex: 0 0 auto;
+                white-space: nowrap;
+            }
+        }
+    </style>
+@endpush
+
 <header class="header">
     <div class="header__bottom">
         <div class="container">
-            <nav class="navbar navbar-expand-lg flex-wrap align-items-center justify-content-between p-0">
+            <nav class="navbar navbar-expand-lg flex-nowrap align-items-center justify-content-between p-0">
                 <a class="site-logo site-title" href="{{ route('home') }}">
                     <img src="{{ siteLogo() }}" alt="logo">
                 </a>
@@ -10,7 +52,7 @@
                 </button>
                 <div class="collapse navbar-collapse mt-lg-0 mt-3" id="navbarSupportedContent">
 
-                    <ul class="navbar-nav main-menu m-auto" id="linkItem">
+                    <ul class="navbar-nav main-menu mb-0" id="linkItem">
                         @if (auth()->user() && request()->routeIs('ticket*'))
                             @include($activeTemplate . 'partials.auth_header')
                         @elseif (!request()->routeIs('user.*') || !auth()->user())
