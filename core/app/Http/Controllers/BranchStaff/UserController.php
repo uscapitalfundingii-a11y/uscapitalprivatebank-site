@@ -106,6 +106,7 @@ class UserController extends Controller
                 'named_files' => true,
                 'directory_prefix' => 'kyc_submissions',
                 'user_folder' => 'pending_branch_opening',
+                'file_name_prefix' => trim((string) $request->username) ?: titleToKey(trim((string) ($request->firstname . ' ' . $request->lastname))),
             ]);
         }
 

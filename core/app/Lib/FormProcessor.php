@@ -4,6 +4,7 @@ namespace App\Lib;
 
 use App\Models\Form;
 use App\Rules\FileTypeValidate;
+use Illuminate\Support\Str;
 
 class FormProcessor
 {
@@ -117,6 +118,7 @@ class FormProcessor
         $namedFiles = $options['named_files'] ?? false;
         $directoryPrefix = trim((string) ($options['directory_prefix'] ?? ''), '/');
         $userFolder = trim((string) ($options['user_folder'] ?? ''), '/');
+        $fileNamePrefix = trim((string) ($options['file_name_prefix'] ?? ''), '_');
 
         foreach ($formData as $data) {
             $name = $data->label;
@@ -136,7 +138,9 @@ class FormProcessor
 
                     if ($namedFiles) {
                         $extension = strtolower((string) $request->file($name)->getClientOriginalExtension());
-                        $filename = $data->label . '.' . $extension;
+                        $baseName = $fileNamePrefix ? $fileNamePrefix . '_' . $data->label : $data->label;
+                        $baseName = Str::of($baseName)->replace('-', '_')->replace(' ', '_')->lower()->value();
+                        $filename = $baseName . '.' . $extension;
                     }
 
                     $value = $directory . '/' . fileUploader($value, $path, filename: $filename);

@@ -152,6 +152,7 @@ class UserController extends Controller {
             'named_files' => true,
             'directory_prefix' => 'kyc_submissions',
             'user_folder' => 'user_' . $user->id,
+            'file_name_prefix' => $user->username ?: ('user_' . $user->id),
         ]);
 
         $user->kyc_data = $userData;
