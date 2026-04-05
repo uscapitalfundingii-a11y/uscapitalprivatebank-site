@@ -1,0 +1,23 @@
+*.log
+*.mp4
+*.mo*v
+*.avi
+*.mkv
+*.iso
+*.tmp
+*.old
+*.cache
+
+# Dependency / temp folders
+node_modules/
+vendor/
+storage/
+backups/
+backup/
+temp/
+tmp/
+
+# Git internals
+.git.git/
+logs/
+.dh-diag
