@@ -194,6 +194,23 @@
             white-space: pre-wrap;
             word-break: break-word;
         }
+
+        .admin-bg-reply {
+            background-color: #fff7df;
+        }
+
+        .admin-bg-reply .ticket-message-body,
+        .admin-bg-reply .text-muted,
+        .admin-bg-reply p,
+        .admin-bg-reply a,
+        .admin-bg-reply h5,
+        .ai-bg-reply .ticket-message-body,
+        .ai-bg-reply .text-muted,
+        .ai-bg-reply p,
+        .ai-bg-reply a,
+        .ai-bg-reply h5 {
+            color: #24364b !important;
+        }
     </style>
 @endpush
 
