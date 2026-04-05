@@ -8,6 +8,7 @@ use App\Lib\FormProcessor;
 use App\Models\Beneficiary;
 use App\Models\OtherBank;
 use App\Models\User;
+use App\Models\UserAccount;
 use Illuminate\Http\Request;
 
 class BeneficiaryController extends Controller
@@ -45,15 +46,16 @@ class BeneficiaryController extends Controller
         }
 
 
-        $beneficiaryUser = User::where('account_number', $request->account_number)->where('username', $request->account_name)->first();
+        $beneficiaryAccount = UserAccount::with('user')->where('account_number', $request->account_number)->first();
+        $beneficiaryUser    = $beneficiaryAccount?->user;
 
-        if (!$beneficiaryUser) {
+        if (!$beneficiaryUser || $beneficiaryUser->username !== $request->account_name) {
             $notify[] = ['error', 'Beneficiary account doesn\'t exists'];
             return back()->withNotify($notify)->withInput();
         }
 
         if (!$request->id) {
-            $beneficiaryExist = Beneficiary::where('user_id', auth()->id())->where('beneficiary_type', User::class)->where('beneficiary_id', $beneficiaryUser->id)->exists();
+            $beneficiaryExist = Beneficiary::where('user_id', auth()->id())->where('beneficiary_type', User::class)->where('account_number', $request->account_number)->exists();
             if ($beneficiaryExist) {
                 $notify[] = ['error', 'This beneficiary already added'];
                 return back()->withNotify($notify);
@@ -175,17 +177,15 @@ class BeneficiaryController extends Controller
 
     public function checkAccountNumber(Request $request)
     {
-        if ($request->edit) {
-            $user = User::where('account_number', $request->account_number)->first();
-        } else {
-            $user = User::where('account_number', $request->account_number)->orWhere('username', $request->account_name)->first();
-        }
+        $account = UserAccount::with('user')->where('account_number', $request->account_number)->first();
+        $user = $account?->user;
+
         if (!$user || @$user->id == auth()->id()) {
             return response()->json(['error' => true, 'message' => 'No such account found']);
         }
 
         $data = [
-            'account_number' => $user->account_number,
+            'account_number' => $account->account_number,
             'account_name' => $user->username,
         ];
 

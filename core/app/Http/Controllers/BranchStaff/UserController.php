@@ -5,6 +5,7 @@ namespace App\Http\Controllers\BranchStaff;
 use DateTime;
 use App\Models\Form;
 use App\Models\User;
+use App\Models\UserAccount;
 use App\Models\Branch;
 use App\Constants\Status;
 use App\Lib\FormProcessor;
@@ -59,6 +60,11 @@ class UserController extends Controller
         $user    = User::where('username', $account)->orWhere('account_number', $account)->first();
 
         if (!$user) {
+            $matchedAccount = UserAccount::where('account_number', $account)->first();
+            $user = $matchedAccount?->user;
+        }
+
+        if (!$user) {
             $notify[] = ['error', 'Account not found'];
             return back()->withNotify($notify)->withInput();
         }
@@ -73,7 +79,8 @@ class UserController extends Controller
         $countries = json_decode(file_get_contents(resource_path('views/partials/country.json')));
 
         if ($account) {
-            $account   = User::where('account_number', $account)->firstOrFail();
+            $accountRecord = UserAccount::where('account_number', $account)->first();
+            $account   = $accountRecord ? $accountRecord->user : User::where('account_number', $account)->firstOrFail();
             $action    = route('staff.account.update', @$account->id);
             $pageTitle = 'Edit Account Details';
         } else {

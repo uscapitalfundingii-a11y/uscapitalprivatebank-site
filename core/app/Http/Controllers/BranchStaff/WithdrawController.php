@@ -8,6 +8,7 @@ use App\Models\AdminNotification;
 use App\Models\Branch;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Models\UserAccount;
 use App\Models\Withdrawal;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -35,8 +36,9 @@ class WithdrawController extends Controller
     public function save(Request $request, $accountNumber)
     {
 
-        $user = User::where('account_number', $accountNumber)->firstOrFail();
-        $this->validation($request, $user);
+        $account = UserAccount::where('account_number', $accountNumber)->first();
+        $user = $account?->user ?? User::where('account_number', $accountNumber)->firstOrFail();
+        $this->validation($request, $user, $account);
 
         $amount = $request->amount;
         $staff  = authStaff();
@@ -57,13 +59,21 @@ class WithdrawController extends Controller
         $withdraw->trx             = getTrx();
         $withdraw->save();
 
-        $user->balance -= $withdraw->amount;
-        $user->save();
+        if ($account) {
+            $account->balance -= $withdraw->amount;
+            $account->save();
+            $account->syncLegacyUserBalance();
+        } else {
+            $user->balance -= $withdraw->amount;
+            $user->save();
+        }
+
+        $postBalance = $account?->balance ?? $user->balance;
 
         $transaction                  = new Transaction();
         $transaction->user_id         = $withdraw->user_id;
         $transaction->amount          = $withdraw->amount;
-        $transaction->post_balance    = $user->balance;
+        $transaction->post_balance    = $postBalance;
         $transaction->charge          = $withdraw->charge;
         $transaction->trx_type        = '-';
         $transaction->details         = showAmount($withdraw->final_amount) . ' ' . $withdraw->currency . ' Withdraw Via Branch';
@@ -84,14 +94,14 @@ class WithdrawController extends Controller
             'amount'       => showAmount($withdraw->amount,currencyFormat:false),
             'charge'       => showAmount($withdraw->charge,currencyFormat:false),
             'trx'          => $withdraw->trx,
-            'post_balance' => showAmount($user->balance,currencyFormat:false),
+            'post_balance' => showAmount($postBalance,currencyFormat:false),
         ]);
 
         $notify[] = ['success', 'Withdrawn successfully'];
         return back()->withNotify($notify);
     }
 
-    private function validation($request, $user)
+    private function validation($request, $user, $account = null)
     {
         $request->validate([
             'amount' => 'required|numeric|gt:0',
@@ -105,7 +115,9 @@ class WithdrawController extends Controller
             throw ValidationException::withMessages(['error' => 'This account is not completed yet']);
         }
 
-        if ($request->amount > $user->balance) {
+        $availableBalance = $account?->balance ?? $user->balance;
+
+        if ($request->amount > $availableBalance) {
             throw ValidationException::withMessages(['error' => 'User don\'t have sufficient balance']);
         }
     }

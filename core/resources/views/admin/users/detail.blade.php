@@ -34,6 +34,10 @@
                 <div class="col-xxl-3 col-xl-4 col-sm-6">
                     <x-widget style="2" color="info" icon="la la-user-friends" title="Beneficiaries" value="{{ $widget['total_beneficiaries'] }}" link="admin.users.beneficiaries" parameters="{{ $user->id }}" overlay_icon=0 icon_style=solid />
                 </div>
+
+                <div class="col-xxl-3 col-xl-4 col-sm-6">
+                    <x-widget style="2" color="secondary" icon="la la-wallet" title="Linked Accounts" value="{{ $user->accounts->count() }}" overlay_icon=0 icon_style=solid />
+                </div>
             </div>
         </div>
 
@@ -187,6 +191,62 @@
         </div>
 
         <div class="col-xl-9 col-lg-7 col-md-7">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">@lang('Linked Accounts')</h5>
+                    <button type="button" class="btn btn--primary btn-sm" data-bs-toggle="modal" data-bs-target="#addAccountModal">
+                        <i class="las la-plus"></i> @lang('Add Account')
+                    </button>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table--light">
+                            <thead>
+                                <tr>
+                                    <th>@lang('Account Number')</th>
+                                    <th>@lang('Type')</th>
+                                    <th>@lang('Name')</th>
+                                    <th>@lang('Balance')</th>
+                                    <th>@lang('Status')</th>
+                                    <th>@lang('Action')</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($user->accounts as $account)
+                                    <tr>
+                                        <td>{{ $account->account_number }}</td>
+                                        <td>{{ ucwords(str_replace('_', ' ', $account->account_type)) }}</td>
+                                        <td>{{ $account->account_name }}</td>
+                                        <td>{{ showAmount($account->balance) }}</td>
+                                        <td>
+                                            @if($account->is_primary)
+                                                <span class="badge badge--success">@lang('Active')</span>
+                                            @else
+                                                <span class="badge badge--dark">@lang('Secondary')</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @if(!$account->is_primary)
+                                                <form action="{{ route('admin.users.accounts.switch', [$user->id, $account->id]) }}" method="POST">
+                                                    @csrf
+                                                    <button type="submit" class="btn btn-sm btn--primary">@lang('Make Active')</button>
+                                                </form>
+                                            @else
+                                                <span class="text-muted">@lang('Current')</span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="6" class="text-center text-muted">@lang('No linked accounts found')</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
             <div class="card">
                 <div class="card-header">
                     <h5 class="card-title mb-0">@lang('Information of') {{ $user->fullname }}</h5>
@@ -300,6 +360,40 @@
                         </div>
                     </form>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="addAccountModal" class="modal fade" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@lang('Add Linked Account')</h5>
+                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="las la-times"></i>
+                    </button>
+                </div>
+                <form action="{{ route('admin.users.accounts.store', $user->id) }}" method="POST">
+                    @csrf
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label>@lang('Account Type')</label>
+                            <select name="account_type" class="form-control" required>
+                                <option value="checking">@lang('Checking')</option>
+                                <option value="savings">@lang('Savings')</option>
+                                <option value="business_checking">@lang('Business Checking')</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>@lang('Account Name')</label>
+                            <input type="text" name="account_name" class="form-control" placeholder="@lang('Optional label')">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn--dark" data-bs-dismiss="modal">@lang('Cancel')</button>
+                        <button type="submit" class="btn btn--primary">@lang('Create Account')</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

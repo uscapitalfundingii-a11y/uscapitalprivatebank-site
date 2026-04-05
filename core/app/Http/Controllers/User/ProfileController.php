@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
+use App\Models\UserAccount;
 use App\Rules\FileTypeValidate;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -13,8 +14,19 @@ class ProfileController extends Controller
     public function profile()
     {
         $pageTitle = "Profile Setting";
-        $user = auth()->user();
+        $user = auth()->user()->load('accounts');
         return view('Template::user.profile_setting', compact('pageTitle', 'user'));
+    }
+
+    public function switchAccount($id)
+    {
+        $user = auth()->user()->load('accounts');
+        $account = $user->accounts()->findOrFail($id);
+
+        $user->switchToAccount($account);
+
+        $notify[] = ['success', 'Active account switched successfully'];
+        return back()->withNotify($notify);
     }
 
     public function submitProfile(Request $request)

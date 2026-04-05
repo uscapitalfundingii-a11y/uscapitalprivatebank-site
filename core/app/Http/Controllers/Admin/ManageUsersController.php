@@ -15,6 +15,7 @@ use App\Models\NotificationLog;
 use App\Models\NotificationTemplate;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Models\UserAccount;
 use App\Models\Withdrawal;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -143,7 +144,7 @@ class ManageUsersController extends Controller
 
     public function detail($id)
     {
-        $user                          = User::findOrFail($id);
+        $user                          = User::with('accounts')->findOrFail($id);
         $pageTitle                     = 'Account Detail - ' . $user->username;
         $widget['total_deposit']       = Deposit::successful()->where('user_id', $user->id)->sum('amount');
         $widget['total_withdrawn']     = Withdrawal::approved()->where('user_id', $user->id)->sum('amount');
@@ -154,6 +155,44 @@ class ManageUsersController extends Controller
         $widget['total_beneficiaries'] = Beneficiary::where('user_id', $user->id)->count();
         $countries                     = json_decode(file_get_contents(resource_path('views/partials/country.json')));
         return view('admin.users.detail', compact('pageTitle', 'user', 'widget', 'countries'));
+    }
+
+    public function storeAccount(Request $request, $id)
+    {
+        $request->validate([
+            'account_type' => 'required|in:checking,savings,business_checking',
+            'account_name' => 'nullable|string|max:140',
+        ]);
+
+        $user = User::with('accounts')->findOrFail($id);
+
+        $account = new UserAccount();
+        $account->user_id = $user->id;
+        $account->account_number = generateAccountNumber();
+        $account->account_type = $request->account_type;
+        $account->account_name = $request->account_name ?: ucwords(str_replace('_', ' ', $request->account_type)) . ' Account';
+        $account->balance = 0;
+        $account->status = Status::ENABLE;
+        $account->is_primary = $user->accounts->isEmpty() ? 1 : 0;
+        $account->save();
+
+        if ($account->is_primary) {
+            $user->switchToAccount($account);
+        }
+
+        $notify[] = ['success', 'Additional account created successfully'];
+        return to_route('admin.users.detail', $user->id)->withNotify($notify);
+    }
+
+    public function switchAccount($id, $accountId)
+    {
+        $user = User::with('accounts')->findOrFail($id);
+        $account = $user->accounts()->findOrFail($accountId);
+
+        $user->switchToAccount($account);
+
+        $notify[] = ['success', 'Active account updated successfully'];
+        return to_route('admin.users.detail', $user->id)->withNotify($notify);
     }
 
 

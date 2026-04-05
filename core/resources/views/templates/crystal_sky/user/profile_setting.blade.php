@@ -34,6 +34,28 @@
                         <p class="user-info-card__value fs-16 ms-auto">{{ __($user->country_name) }}</p>
                     </li>
                 </ul>
+
+                <div class="mt-4">
+                    <h6 class="mb-3">@lang('My Accounts')</h6>
+                    <div class="d-grid gap-2">
+                        @foreach($user->accounts as $account)
+                            <form action="{{ route('user.profile.account.switch', $account->id) }}" method="POST" class="border rounded p-2">
+                                @csrf
+                                <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap">
+                                    <div>
+                                        <div class="fw-bold">{{ $account->account_number }}</div>
+                                        <small>{{ ucwords(str_replace('_', ' ', $account->account_type)) }} • {{ showAmount($account->balance) }}</small>
+                                    </div>
+                                    @if($account->is_primary)
+                                        <span class="badge badge--success">@lang('Active')</span>
+                                    @else
+                                        <button class="btn btn-sm btn--base" type="submit">@lang('Switch')</button>
+                                    @endif
+                                </div>
+                            </form>
+                        @endforeach
+                    </div>
+                </div>
             </div>
         </div>
         <div class="col-xxl-9 col-xl-8 col-lg-7 col-md-7 ">

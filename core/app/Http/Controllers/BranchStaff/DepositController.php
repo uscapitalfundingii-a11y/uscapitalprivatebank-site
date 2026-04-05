@@ -9,6 +9,7 @@ use App\Models\Branch;
 use App\Models\Deposit;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Models\UserAccount;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
@@ -31,7 +32,8 @@ class DepositController extends Controller {
     }
 
     public function save(Request $request, $accountNumber) {
-        $user = User::where('account_number', $accountNumber)->firstOrFail();
+        $account = UserAccount::where('account_number', $accountNumber)->first();
+        $user = $account?->user ?? User::where('account_number', $accountNumber)->firstOrFail();
         $this->validation($request, $user);
 
         $amount  = $request->amount;
@@ -54,15 +56,23 @@ class DepositController extends Controller {
         $deposit->branch_id       = $branch->id;
         $deposit->save();
 
-        $user->balance += $amount;
-        $user->save();
+        if ($account) {
+            $account->balance += $amount;
+            $account->save();
+            $account->syncLegacyUserBalance();
+        } else {
+            $user->balance += $amount;
+            $user->save();
+        }
+
+        $postBalance = $account?->balance ?? $user->balance;
 
         $transaction                   = new Transaction();
         $transaction->user_id          = $user->id;
         $transaction->branch_id        = $branch->id;
         $transaction->branch_staff_id  = $staff->id;
         $transaction->amount           = $amount;
-        $transaction->post_balance     = $user->balance;
+        $transaction->post_balance     = $postBalance;
         $transaction->charge           = $deposit->charge;
         $transaction->trx_type         = '+';
         $transaction->details          = 'Deposited from ' . $branch->name . ' branch';
@@ -78,7 +88,7 @@ class DepositController extends Controller {
             'branch_name'   => @$branch->name,
             'charge'        => showAmount($deposit->charge, currencyFormat: false),
             'trx'           => $deposit->trx,
-            'post_balance'  => showAmount($user->balance, currencyFormat: false)
+            'post_balance'  => showAmount($postBalance, currencyFormat: false)
         ]);
 
         $notify[] = ['success', 'Deposited successfully'];

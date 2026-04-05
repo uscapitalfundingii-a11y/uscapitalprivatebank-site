@@ -6,6 +6,7 @@ use App\Constants\Status;
 use App\Traits\UserNotify;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Support\Facades\Schema;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable {
@@ -35,6 +36,32 @@ class User extends Authenticatable {
         'kyc_data' => 'object',
         'ver_code_send_at' => 'datetime'
     ];
+
+    protected static function booted()
+    {
+        static::saved(function (self $user) {
+            if (!Schema::hasTable('user_accounts') || !$user->account_number) {
+                return;
+            }
+
+            $account = UserAccount::updateOrCreate(
+                ['account_number' => $user->account_number],
+                [
+                    'user_id' => $user->id,
+                    'account_name' => UserAccount::where('account_number', $user->account_number)->value('account_name') ?: 'Primary Checking',
+                    'account_type' => UserAccount::where('account_number', $user->account_number)->value('account_type') ?: 'checking',
+                    'balance' => $user->balance,
+                    'status' => $user->status == Status::USER_BAN ? Status::DISABLE : Status::ENABLE,
+                    'is_primary' => 1,
+                ]
+            );
+
+            UserAccount::where('user_id', $user->id)
+                ->where('id', '!=', $account->id)
+                ->where('is_primary', 1)
+                ->update(['is_primary' => 0]);
+        });
+    }
 
 
     public function loginLogs() {
@@ -69,6 +96,16 @@ class User extends Authenticatable {
 
     public function branch() {
         return $this->belongsTo(Branch::class, 'branch_id');
+    }
+
+    public function accounts()
+    {
+        return $this->hasMany(UserAccount::class)->orderByDesc('is_primary')->orderBy('created_at');
+    }
+
+    public function activeAccount()
+    {
+        return $this->hasOne(UserAccount::class)->where('is_primary', 1);
     }
 
     public function branchStaff() {
@@ -162,5 +199,22 @@ class User extends Authenticatable {
 
     public function deviceTokens() {
         return $this->hasMany(DeviceToken::class);
+    }
+
+    public function switchToAccount(UserAccount $account): void
+    {
+        abort_if($account->user_id !== $this->id, 403);
+
+        $this->accounts()->update(['is_primary' => 0]);
+
+        $account->forceFill([
+            'is_primary' => 1,
+            'status' => Status::ENABLE,
+        ])->save();
+
+        $this->forceFill([
+            'account_number' => $account->account_number,
+            'balance' => $account->balance,
+        ])->saveQuietly();
     }
 }

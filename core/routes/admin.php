@@ -72,6 +72,8 @@ Route::middleware('admin', 'adminPermission')->group(function () {
         Route::post('kyc-approve/{id}', 'kycApprove')->name('kyc.approve');
         Route::post('kyc-reject/{id}', 'kycReject')->name('kyc.reject');
         Route::post('update/{id}', 'update')->name('update');
+        Route::post('{id}/accounts', 'storeAccount')->name('accounts.store');
+        Route::post('{id}/accounts/{accountId}/switch', 'switchAccount')->name('accounts.switch');
         Route::post('add-sub-balance/{id}', 'addSubBalance')->name('add.sub.balance');
         Route::get('send-notification/{id}', 'showNotificationSingleForm')->name('notification.single');
         Route::post('send-notification/{id}', 'sendNotificationSingle')->name('notification.single');

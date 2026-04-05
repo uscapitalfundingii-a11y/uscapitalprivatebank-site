@@ -10,6 +10,7 @@ use App\Models\Beneficiary;
 use App\Models\OtpVerification;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Models\UserAccount;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
@@ -74,15 +75,24 @@ class OwnBankTransferController extends Controller
         $this->sendingTransaction($transfer, $sender); // Insert Sending Transaction
 
         $recipient = $beneficiary->beneficiaryOf;
-        $recipient->balance += $transfer->amount;
-        $recipient->save();
+        $recipientAccount = UserAccount::where('account_number', $beneficiary->account_number)->first();
 
-        $this->receivingTransaction($transfer, $recipient); // Insert Receiving Transaction
+        if ($recipientAccount) {
+            $recipientAccount->balance += $transfer->amount;
+            $recipientAccount->save();
+            $recipientAccount->syncLegacyUserBalance();
+        } else {
+            $recipient->balance += $transfer->amount;
+            $recipient->save();
+        }
 
-        $shortCodes = $this->shortCodes($transfer, $sender, $recipient, $sender->balance);
+        $recipientPostBalance = $recipientAccount?->balance ?? $recipient->balance;
+        $this->receivingTransaction($transfer, $recipient, $recipientPostBalance); // Insert Receiving Transaction
+
+        $shortCodes = $this->shortCodes($transfer, $sender, $recipient, $sender->balance, $beneficiary->account_number);
         notify($sender, 'OWN_BANK_TRANSFER_MONEY_SEND', $shortCodes);
 
-        $shortCodes = $this->shortCodes($transfer, $sender, $recipient, $recipient->balance);
+        $shortCodes = $this->shortCodes($transfer, $sender, $recipient, $recipientPostBalance, $beneficiary->account_number);
         notify($recipient, 'OWN_BANK_TRANSFER_MONEY_RECEIVE', $shortCodes);
 
         session()->forget('otp_id');
@@ -106,12 +116,12 @@ class OwnBankTransferController extends Controller
         $transaction->save();
     }
 
-    private function receivingTransaction($transfer, $user)
+    private function receivingTransaction($transfer, $user, $postBalance)
     {
         $transaction               = new Transaction();
         $transaction->user_id      = $user->id;
         $transaction->amount       = $transfer->amount;
-        $transaction->post_balance = $user->balance;
+        $transaction->post_balance = $postBalance;
         $transaction->charge       = 0;
         $transaction->trx_type     = '+';
         $transaction->details      = 'Received transferred money';
@@ -164,11 +174,12 @@ class OwnBankTransferController extends Controller
         $request->validate($rules);
     }
 
-    private function shortCodes($transfer, $sender, $recipient, $postBalance)
+    private function shortCodes($transfer, $sender, $recipient, $postBalance, $recipientAccountNumber = null)
     {
         return [
             'sender'       => $sender->username,
             'recipient'    => $recipient->username,
+            'recipient_account' => $recipientAccountNumber ?: $recipient->account_number,
             'amount'       => showAmount($transfer->amount,currencyFormat:false),
             'charge'       => showAmount($transfer->charge,currencyFormat:false),
             'final_amount' => showAmount($transfer->final_amount,currencyFormat:false),
