@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Lib\UserNotificationSender;
 use App\Models\BalanceTransfer;
 use App\Models\Beneficiary;
+use App\Models\BroadcastMessagePreset;
 use App\Models\Deposit;
 use App\Models\Dps;
 use App\Models\Fdr;
@@ -456,7 +457,11 @@ class ManageUsersController extends Controller
             $filterTitle = $this->makeFilterTitle(decrypt(session('FILTERED_USERS')));
         }
 
-        return view('admin.users.notification_all', compact('pageTitle', 'users', 'notifyToUser', 'filterTitle'));
+        $savedPresets = class_exists(BroadcastMessagePreset::class) && \Illuminate\Support\Facades\Schema::hasTable('broadcast_message_presets')
+            ? BroadcastMessagePreset::query()->orderByDesc('last_used_at')->orderByDesc('id')->limit(25)->get()
+            : collect();
+
+        return view('admin.users.notification_all', compact('pageTitle', 'users', 'notifyToUser', 'filterTitle', 'savedPresets'));
     }
 
     private function makeFilterTitle($selectedData)
