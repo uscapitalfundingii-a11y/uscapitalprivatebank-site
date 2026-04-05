@@ -4,6 +4,15 @@
         $sessionData = session('SEND_NOTIFICATION') ?? [];
         $viaName = $sessionData['via'] ?? 'email';
         $viaText = @$sessionData['via'] == 'push' ? 'Push notification ' : ucfirst($viaName);
+        $savedPresetPayload = $savedPresets->mapWithKeys(function ($preset) {
+            return [
+                $preset->id => [
+                    'via' => $preset->via,
+                    'subject' => $preset->subject,
+                    'message' => $preset->message,
+                ]
+            ];
+        });
     @endphp
 
     @empty(!$sessionData)
@@ -111,7 +120,7 @@
                                         <select class="form-control select2 saved-broadcast-presets" data-minimum-results-for-search="1">
                                             <option value="">@lang('Choose a saved message')</option>
                                             @foreach ($savedPresets as $preset)
-                                                <option value="{{ $preset->id }}" data-via="{{ $preset->via }}" data-subject="{{ $preset->subject }}" data-message="{{ $preset->message }}">
+                                                <option value="{{ $preset->id }}">
                                                     {{ $preset->name }} ({{ strtoupper($preset->via) }}{{ $preset->audience_label ? ' - ' . $preset->audience_label : '' }})
                                                 </option>
                                             @endforeach
@@ -213,6 +222,7 @@
 
         (function($) {
             "use strict"
+            const savedPresetPayload = @json($savedPresetPayload);
 
             const $messageField = $('.notificationMessageField');
             const $subjectField = $('[name=subject]');
@@ -309,19 +319,19 @@
             }).change();
 
             $savedPresets.on('change', function() {
-                const $selected = $(this).find(':selected');
-                const presetVia = $selected.data('via');
+                const presetId = $(this).val();
+                const selectedPreset = savedPresetPayload[presetId];
 
-                if (!$selected.val()) {
+                if (!presetId || !selectedPreset) {
                     return;
                 }
 
-                if (presetVia) {
-                    $(`.notification-via[data-method="${presetVia}"]`).trigger('click');
+                if (selectedPreset.via) {
+                    $(`.notification-via[data-method="${selectedPreset.via}"]`).trigger('click');
                 }
 
-                $subjectField.val($selected.data('subject') || '');
-                setEditorValue($selected.data('message') || '');
+                $subjectField.val(selectedPreset.subject || '');
+                setEditorValue(selectedPreset.message || '');
                 $status.removeClass('d-none text-danger').addClass('text-success').text('@lang("Saved broadcast message loaded into the form.")');
             });
 
