@@ -10,6 +10,7 @@
                     'via' => $preset->via,
                     'subject' => $preset->subject,
                     'message' => $preset->message,
+                    'revision' => $preset->revision,
                 ]
             ];
         });
@@ -120,9 +121,9 @@
                                         <select class="form-control select2 saved-broadcast-presets" data-minimum-results-for-search="1">
                                             <option value="">@lang('Choose a saved message')</option>
                                             @foreach ($savedPresets as $preset)
-                                                <option value="{{ $preset->id }}">
-                                                    {{ $preset->name }} ({{ strtoupper($preset->via) }}{{ $preset->audience_label ? ' - ' . $preset->audience_label : '' }})
-                                                </option>
+                                            <option value="{{ $preset->id }}">
+                                                    {{ $preset->name }} (Revision {{ $preset->revision ?? 1 }}) ({{ strtoupper($preset->via) }}{{ $preset->audience_label ? ' - ' . $preset->audience_label : '' }})
+                                            </option>
                                             @endforeach
                                         </select>
                                         <small class="text-muted">@lang('Broadcast messages you send are automatically saved here for reuse.')</small>
@@ -244,6 +245,15 @@
                 return $messageField.prevAll('.nicEdit-main').first();
             }
 
+            function editorInstance() {
+                if (!window.nicEditors || typeof window.nicEditors.findEditor !== 'function') {
+                    return null;
+                }
+
+                const editorId = $messageField.attr('id');
+                return editorId ? window.nicEditors.findEditor(editorId) : null;
+            }
+
             function editorIsRichText() {
                 return activeVia() === 'email';
             }
@@ -260,14 +270,24 @@
             function setEditorValue(value) {
                 if (editorIsRichText()) {
                     const normalized = (value || '').replace(/\r\n?/g, "\n");
-                    const htmlValue = normalized.split("\n").join('<br>');
+                    const htmlValue = /<[^>]+>/.test(normalized) ? normalized : normalized.split("\n").join('<br>');
                     const $panel = nicPanel();
+                    const editor = editorInstance();
+
+                    if (editor) {
+                        if (typeof editor.setContent === 'function') {
+                            editor.setContent(htmlValue);
+                        } else if (editor.elm) {
+                            editor.elm.innerHTML = htmlValue;
+                        }
+                    }
 
                     if ($panel.length) {
                         $panel.html(htmlValue);
-                        $messageField.val(htmlValue);
-                        return;
                     }
+
+                    $messageField.val(htmlValue);
+                    return;
                 }
 
                 $messageField.val(value || '');
@@ -338,8 +358,13 @@
                 }
 
                 $subjectField.val(selectedPreset.subject || '');
-                setEditorValue(selectedPreset.message || '');
-                $status.removeClass('d-none text-danger').addClass('text-success').text('@lang("Saved broadcast message loaded into the form.")');
+                setTimeout(function() {
+                    setEditorValue(selectedPreset.message || '');
+                    syncEditorValue();
+                }, 50);
+
+                const revisionText = selectedPreset.revision ? ` @lang("Revision") ${selectedPreset.revision}` : '';
+                $status.removeClass('d-none text-danger').addClass('text-success').text(`@lang("Saved broadcast message loaded into the form.")${revisionText}`);
             });
 
             function fetchUserList() {

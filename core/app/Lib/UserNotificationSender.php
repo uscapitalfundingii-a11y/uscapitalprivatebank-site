@@ -315,21 +315,29 @@ class UserNotificationSender
         $via = trim((string) $request->via);
         $audienceKey = trim((string) $request->being_sent_to);
         $audienceLabel = $this->resolveAudienceLabel($request, $audienceKey);
+        $presetName = $subject !== '' ? $subject : str($message)->squish()->limit(80, '...')->value();
 
-        if ($message === '' || $via === '') {
+        if ($message === '' || $via === '' || $presetName === '') {
             return;
         }
 
         $preset = BroadcastMessagePreset::query()
             ->where('via', $via)
             ->where('audience_key', $audienceKey !== '' ? $audienceKey : null)
-            ->where('subject', $subject !== '' ? $subject : null)
+            ->where('name', $presetName)
             ->where('message', $message)
             ->first();
 
         if (!$preset) {
+            $nextRevision = (int) BroadcastMessagePreset::query()
+                ->where('via', $via)
+                ->where('audience_key', $audienceKey !== '' ? $audienceKey : null)
+                ->where('name', $presetName)
+                ->max('revision') + 1;
+
             $preset = new BroadcastMessagePreset();
-            $preset->name = $subject !== '' ? $subject : str($message)->squish()->limit(80, '...')->value();
+            $preset->name = $presetName;
+            $preset->revision = max($nextRevision, 1);
             $preset->via = $via;
             $preset->audience_key = $audienceKey !== '' ? $audienceKey : null;
             $preset->audience_label = $audienceLabel;
@@ -338,8 +346,11 @@ class UserNotificationSender
             $preset->created_by = optional(auth()->guard('admin')->user())->id;
         }
 
+        $preset->name = $presetName;
         $preset->audience_key = $audienceKey !== '' ? $audienceKey : null;
         $preset->audience_label = $audienceLabel;
+        $preset->subject = $subject !== '' ? $subject : null;
+        $preset->message = $message;
         $preset->last_used_at = Carbon::now();
         $preset->save();
     }
