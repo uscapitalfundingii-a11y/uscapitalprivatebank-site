@@ -506,8 +506,8 @@ class ManageUsersController extends Controller
             'batch'                        => 'required|integer|gte:1',
             'being_sent_to'                => 'required',
             'cooling_time'                 => 'required|integer|gte:1',
-            'number_of_top_deposited_user' => 'required_if:being_sent_to,topDepositedUsers|integer|gte:0',
-            'number_of_days'               => 'required_if:being_sent_to,notLoginUsers|integer|gte:0',
+            'number_of_top_deposited_user' => 'nullable|required_if:being_sent_to,topDepositedUsers|integer|gte:0',
+            'number_of_days'               => 'nullable|required_if:being_sent_to,notLoginUsers|integer|gte:0',
             'image'                        => ["nullable", 'image', new FileTypeValidate(['jpg', 'jpeg', 'png'])],
         ], [
             'number_of_days.required_if'               => "Number of days field is required",
