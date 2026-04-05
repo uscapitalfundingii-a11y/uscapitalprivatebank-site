@@ -1,6 +1,0 @@
-option batch abort
-option confirm off
-open sftp://dh_9a4ezr:1995%3F+DM%3Dblessing%23$@iad1-shared-e1-24.dreamhost.com/ -hostkey="*"
-put "G:\GithubRepos\uscapitalprivatebank-site\core\resources\views\admin\partials\sidenav.blade.php" "/home/dh_9a4ezr/uscapitalprivatebank.com/core/resources/views/admin/partials/sidenav.blade.php"
-call cd /home/dh_9a4ezr/uscapitalprivatebank.com/core && /usr/local/php83/bin/php artisan optimize:clear
-exit
