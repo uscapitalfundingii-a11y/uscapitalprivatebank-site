@@ -43,14 +43,6 @@
                             <li class="sidebar-menu-item sidebar-dropdown">
                                 <a href="javascript:void(0)" class="{{ menuActive(@$data->menu_active, 3) }}">
                                     <i class="menu-icon {{ @$data->icon }}"></i>
-                                    @foreach (@$data->counters ?? [] as $counter)
-                                        @if ($$counter > 0)
-                                            <span class="menu-badge menu-badge-level-one bg--warning me-2">
-                                                <i class="fas fa-exclamation"></i>
-                                            </span>
-                                        @break
-                                    @endif
-                                @endforeach
                                     <span class="menu-title">{{ __(@$data->title) }}</span>
                             </a>
                             <div class="sidebar-submenu {{ menuActive(@$data->menu_active, 2) }}">
