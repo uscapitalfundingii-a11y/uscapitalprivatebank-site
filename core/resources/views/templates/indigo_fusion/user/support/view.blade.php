@@ -61,7 +61,7 @@
                                     <div class="col-md-9">
                                         <p class="text-muted fw-bold my-3">
                                             @lang('Posted on') {{ $message->created_at->format('l, dS F Y @ H:i') }}</p>
-                                        <p>{{ $message->message }}</p>
+                                        <div class="ticket-message-body">{{ $message->message }}</div>
                                         @if ($message->ai_model)
                                             <p class="text-muted mb-0"><small>@lang('Model'): {{ $message->ai_model }}</small></p>
                                         @endif
@@ -75,7 +75,7 @@
                                     <div class="col-md-9">
                                         <p class="text-muted fw-bold my-3">
                                             @lang('Posted on') {{ $message->created_at->format('l, dS F Y @ H:i') }}</p>
-                                        <p>{{ $message->message }}</p>
+                                        <div class="ticket-message-body">{{ $message->message }}</div>
                                         @if ($message->attachments->count() > 0)
                                             <div class="mt-2">
                                                 @foreach ($message->attachments as $k => $image)
@@ -94,7 +94,7 @@
                                     <div class="col-md-9">
                                         <p class="text-muted fw-bold my-3">
                                             @lang('Posted on') {{ $message->created_at->format('l, dS F Y @ H:i') }}</p>
-                                        <p>{{ $message->message }}</p>
+                                        <div class="ticket-message-body">{{ $message->message }}</div>
                                         @if ($message->attachments->count() > 0)
                                             <div class="mt-2">
                                                 @foreach ($message->attachments as $k => $image)
@@ -131,6 +131,11 @@
 
         .ai-bg-reply {
             background-color: rgba(13, 202, 240, 0.08);
+        }
+
+        .ticket-message-body {
+            white-space: pre-wrap;
+            word-break: break-word;
         }
 
         .empty-message img {
