@@ -281,15 +281,27 @@ class UserNotificationSender
         if ($sessionData['total_sent'] >= $totalUserCount) {
             session()->forget("SEND_NOTIFICATION");
             $message = ucfirst($request->via) . " notifications were sent successfully";
-            $url     = route("admin.users.notification.all");
+            $url = route("admin.users.notification.all", $this->notificationAllRouteParameters($sessionData));
         } else {
             session()->put('SEND_NOTIFICATION', $sessionData);
             $message = $sessionData['total_sent'] . " " . $sessionData['via'] . "  notifications were sent successfully";
-            $url     = route("admin.users.notification.all") . "?email_sent=yes";
+            $url = route("admin.users.notification.all", array_merge(
+                ['email_sent' => 'yes'],
+                $this->notificationAllRouteParameters($sessionData)
+            ));
         }
 
         $notify[] = ['success', $message];
         return redirect($url)->withNotify($notify);
+    }
+
+    private function notificationAllRouteParameters(array $sessionData): array
+    {
+        if (($sessionData['being_sent_to'] ?? null) === 'filtered_users' && session()->has('FILTERED_USERS')) {
+            return ['selectedUsers' => 1];
+        }
+
+        return [];
     }
 
     private function saveBroadcastPreset($request): void
