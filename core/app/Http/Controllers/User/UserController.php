@@ -161,7 +161,11 @@ class UserController extends Controller
                 fileManager()->removeFile(getFilePath('verify') . '/' . $kycData->value);
             }
         }
-        $userData = $formProcessor->processFormData($request, $formData);
+        $userData = $formProcessor->processFormData($request, $formData, [
+            'named_files' => true,
+            'directory_prefix' => 'kyc_submissions',
+            'user_folder' => 'user_' . $user->id,
+        ]);
         $user->kyc_data = $userData;
         $user->kyc_rejection_reason = null;
         $user->kv = Status::KYC_PENDING;

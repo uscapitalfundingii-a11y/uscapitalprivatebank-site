@@ -111,17 +111,35 @@ class FormProcessor
         return $validationRule;
     }
 
-    public function processFormData($request, $formData)
+    public function processFormData($request, $formData, array $options = [])
     {
         $requestForm = [];
+        $namedFiles = $options['named_files'] ?? false;
+        $directoryPrefix = trim((string) ($options['directory_prefix'] ?? ''), '/');
+        $userFolder = trim((string) ($options['user_folder'] ?? ''), '/');
+
         foreach ($formData as $data) {
             $name = $data->label;
             $value = $request->$name;
             if ($data->type == 'file') {
                 if ($request->hasFile($name)) {
-                    $directory = date("Y") . "/" . date("m") . "/" . date("d");
+                    $directoryParts = array_filter([
+                        $directoryPrefix,
+                        date("Y"),
+                        date("m"),
+                        date("d"),
+                        $userFolder,
+                    ]);
+                    $directory = implode('/', $directoryParts);
                     $path = getFilePath('verify') . '/' . $directory;
-                    $value = $directory . '/' . fileUploader($value, $path);
+                    $filename = null;
+
+                    if ($namedFiles) {
+                        $extension = strtolower((string) $request->file($name)->getClientOriginalExtension());
+                        $filename = $data->label . '.' . $extension;
+                    }
+
+                    $value = $directory . '/' . fileUploader($value, $path, filename: $filename);
                 } else {
                     $value = null;
                 }

@@ -102,7 +102,11 @@ class UserController extends Controller
             $kycValidationRule = $formProcessor->valueValidation($formData);
             $request->validate($kycValidationRule);
 
-            $kycData = $formProcessor->processFormData($request, $formData);
+            $kycData = $formProcessor->processFormData($request, $formData, [
+                'named_files' => true,
+                'directory_prefix' => 'kyc_submissions',
+                'user_folder' => 'pending_branch_opening',
+            ]);
         }
 
         $password = getTrx(8);
