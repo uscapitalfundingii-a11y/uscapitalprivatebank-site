@@ -104,8 +104,11 @@ class OwnBankTransferController extends Controller
 
     private function sendingTransaction($transfer, $user)
     {
+        $activeAccount = $user->activeAccount;
         $transaction               = new Transaction();
         $transaction->user_id      = $user->id;
+        $transaction->user_account_id = $activeAccount?->id;
+        $transaction->account_number = $activeAccount?->account_number ?: $user->account_number;
         $transaction->amount       = $transfer->final_amount;
         $transaction->post_balance = $user->balance;
         $transaction->charge       = $transfer->charge;
@@ -118,8 +121,13 @@ class OwnBankTransferController extends Controller
 
     private function receivingTransaction($transfer, $user, $postBalance)
     {
+        $recipientAccount = UserAccount::where('user_id', $user->id)
+            ->where('account_number', $transfer->beneficiary->account_number)
+            ->first();
         $transaction               = new Transaction();
         $transaction->user_id      = $user->id;
+        $transaction->user_account_id = $recipientAccount?->id;
+        $transaction->account_number = $recipientAccount?->account_number ?: $user->account_number;
         $transaction->amount       = $transfer->amount;
         $transaction->post_balance = $postBalance;
         $transaction->charge       = 0;

@@ -87,6 +87,8 @@ Route::middleware('auth')->name('user.')->group(function () {
             //Profile setting
             Route::controller('ProfileController')->group(function () {
                 Route::get('my-accounts', 'accounts')->name('accounts.index');
+                Route::get('my-accounts/{id}', 'accountTransactions')->name('accounts.show');
+                Route::get('my-accounts/{accountId}/transactions/{transactionId}', 'accountTransactionDetail')->name('accounts.transactions.show');
                 Route::get('profile-setting', 'profile')->name('profile.setting');
                 Route::post('profile-setting', 'submitProfile');
                 Route::post('profile-setting/accounts/{id}/switch', 'switchAccount')->name('profile.account.switch');

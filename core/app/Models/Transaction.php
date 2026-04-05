@@ -3,10 +3,53 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Schema;
 
 class Transaction extends Model {
+    protected static function booted()
+    {
+        static::creating(function (self $transaction) {
+            if (!Schema::hasColumn('transactions', 'user_account_id') || !Schema::hasColumn('transactions', 'account_number')) {
+                return;
+            }
+
+            if ($transaction->user_account_id && $transaction->account_number) {
+                return;
+            }
+
+            if ($transaction->user_account_id && !$transaction->account_number) {
+                $account = UserAccount::find($transaction->user_account_id);
+                $transaction->account_number = $account?->account_number;
+                return;
+            }
+
+            if (!$transaction->user_id) {
+                return;
+            }
+
+            $user = User::with('activeAccount')->find($transaction->user_id);
+            if (!$user) {
+                return;
+            }
+
+            $account = $user->activeAccount;
+            if (!$account && $user->account_number) {
+                $account = UserAccount::where('user_id', $user->id)
+                    ->where('account_number', $user->account_number)
+                    ->first();
+            }
+
+            $transaction->user_account_id = $account?->id;
+            $transaction->account_number = $account?->account_number ?: $user->account_number;
+        });
+    }
+
     public function user() {
         return $this->belongsTo(User::class);
+    }
+
+    public function account() {
+        return $this->belongsTo(UserAccount::class, 'user_account_id');
     }
 
     public function card() {

@@ -39,9 +39,12 @@ class ReferralCommission {
             $commissionAmount = ($amount * $commission->percent) / 100;
             $referer->balance += $commissionAmount;
             $referer->save();
+            $activeAccount = $referer->activeAccount;
 
             $transactions[] = [
                 'user_id'      => $referer->id,
+                'user_account_id' => $activeAccount?->id,
+                'account_number' => $activeAccount?->account_number ?: $referer->account_number,
                 'amount'       => $commissionAmount,
                 'post_balance' => $referer->balance,
                 'charge'       => 0,

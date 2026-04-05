@@ -69,6 +69,8 @@ class DepositController extends Controller {
 
         $transaction                   = new Transaction();
         $transaction->user_id          = $user->id;
+        $transaction->user_account_id  = $account?->id;
+        $transaction->account_number   = $account?->account_number ?: $user->account_number;
         $transaction->branch_id        = $branch->id;
         $transaction->branch_staff_id  = $staff->id;
         $transaction->amount           = $amount;

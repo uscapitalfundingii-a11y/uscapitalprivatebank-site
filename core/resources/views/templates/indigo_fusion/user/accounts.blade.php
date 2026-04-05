@@ -29,7 +29,7 @@
                             <tbody>
                                 @forelse($user->accounts as $account)
                                     <tr>
-                                        <td>{{ $account->account_number }}</td>
+                                        <td><a href="{{ route('user.accounts.show', $account->id) }}">{{ $account->account_number }}</a></td>
                                         <td>{{ ucwords(str_replace('_', ' ', $account->account_type)) }}</td>
                                         <td>{{ $account->currency_code ?? gs('cur_text') }}</td>
                                         <td>{{ showAmount($account->balance) }}</td>
@@ -52,7 +52,7 @@
                                                 @endif
                                                 <a href="{{ route('user.deposit.index') }}" class="btn btn-sm btn-outline--base">@lang('Deposit')</a>
                                                 <a href="{{ route('user.withdraw') }}" class="btn btn-sm btn-outline--base">@lang('Withdraw')</a>
-                                                <a href="{{ route('user.transaction.history') }}" class="btn btn-sm btn-outline--base">@lang('Transactions')</a>
+                                                <a href="{{ route('user.accounts.show', $account->id) }}" class="btn btn-sm btn-outline--base">@lang('Transactions')</a>
                                             </div>
                                         </td>
                                     </tr>

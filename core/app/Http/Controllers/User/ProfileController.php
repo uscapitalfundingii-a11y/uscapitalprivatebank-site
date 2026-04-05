@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
+use App\Models\Transaction;
 use App\Models\UserAccount;
 use App\Rules\FileTypeValidate;
 use Illuminate\Http\Request;
@@ -23,6 +24,44 @@ class ProfileController extends Controller
         $pageTitle = 'My Accounts';
         $user = auth()->user()->load('accounts');
         return view('Template::user.accounts', compact('pageTitle', 'user'));
+    }
+
+    public function accountTransactions($id)
+    {
+        $user = auth()->user()->load('accounts');
+        $account = $user->accounts()->findOrFail($id);
+        $pageTitle = 'Account Transactions';
+        $transactions = $this->accountTransactionsQuery($user, $account)
+            ->searchable(['trx'])
+            ->orderBy('id', 'desc')
+            ->paginate(getPaginate());
+
+        return view('Template::user.account_transactions', compact('pageTitle', 'user', 'account', 'transactions'));
+    }
+
+    public function accountTransactionDetail($accountId, $transactionId)
+    {
+        $user = auth()->user()->load('accounts');
+        $account = $user->accounts()->findOrFail($accountId);
+        $pageTitle = 'Transaction Details';
+        $transaction = $this->accountTransactionsQuery($user, $account)->where('id', $transactionId)->firstOrFail();
+
+        return view('Template::user.account_transaction_detail', compact('pageTitle', 'user', 'account', 'transaction'));
+    }
+
+    protected function accountTransactionsQuery($user, UserAccount $account)
+    {
+        return Transaction::where('user_id', $user->id)
+            ->where(function ($query) use ($user, $account) {
+                $query->where('user_account_id', $account->id)
+                    ->orWhere('account_number', $account->account_number);
+
+                if ($user->accounts->count() === 1) {
+                    $query->orWhere(function ($legacy) {
+                        $legacy->whereNull('user_account_id')->whereNull('account_number');
+                    });
+                }
+            });
     }
 
     public function switchAccount($id)

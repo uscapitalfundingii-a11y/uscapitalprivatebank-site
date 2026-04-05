@@ -96,6 +96,24 @@ class InstallUserAccounts extends Command
             $this->info('Updated account_opening_requests table with account type column.');
         }
 
+        $transactionTableUpdated = false;
+
+        Schema::table('transactions', function (Blueprint $table) use (&$transactionTableUpdated) {
+            if (!Schema::hasColumn('transactions', 'user_account_id')) {
+                $table->unsignedBigInteger('user_account_id')->nullable()->after('user_id');
+                $transactionTableUpdated = true;
+            }
+
+            if (!Schema::hasColumn('transactions', 'account_number')) {
+                $table->string('account_number', 140)->nullable()->after('user_account_id');
+                $transactionTableUpdated = true;
+            }
+        });
+
+        if ($transactionTableUpdated) {
+            $this->info('Updated transactions table with account tracking columns.');
+        }
+
         $created = 0;
         $updated = 0;
 
