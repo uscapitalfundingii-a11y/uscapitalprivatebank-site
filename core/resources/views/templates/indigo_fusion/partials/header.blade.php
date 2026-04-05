@@ -7,11 +7,17 @@
                 padding-right: 1.5rem;
             }
 
+            .header .navbar {
+                position: relative;
+            }
+
             .header .site-logo {
                 display: flex;
                 align-items: center;
                 flex: 0 0 auto;
                 margin-right: 1.5rem;
+                position: relative;
+                z-index: 2;
             }
 
             .header .site-logo img {
@@ -28,13 +34,20 @@
 
             .header .main-menu {
                 flex-wrap: nowrap;
-                margin-left: 0 !important;
-                margin-right: auto !important;
+                left: 50%;
+                margin: 0 !important;
+                position: absolute;
+                transform: translateX(-50%);
+                white-space: nowrap;
+                z-index: 1;
             }
 
             .header .nav-right {
                 flex: 0 0 auto;
+                margin-left: auto;
+                position: relative;
                 white-space: nowrap;
+                z-index: 2;
             }
         }
     </style>
