@@ -8,6 +8,7 @@ class BroadcastMessagePreset extends Model
 {
     protected $fillable = [
         'name',
+        'revision',
         'via',
         'audience_key',
         'audience_label',
@@ -18,6 +19,7 @@ class BroadcastMessagePreset extends Model
     ];
 
     protected $casts = [
+        'revision'     => 'integer',
         'last_used_at' => 'datetime',
     ];
 

@@ -18,6 +18,7 @@ class InstallBroadcastMessagePresets extends Command
             Schema::create('broadcast_message_presets', function (Blueprint $table) {
                 $table->id();
                 $table->string('name', 160);
+                $table->unsignedInteger('revision')->default(1);
                 $table->string('via', 20)->default('email');
                 $table->string('audience_key', 120)->nullable();
                 $table->string('audience_label', 255)->nullable();
@@ -37,6 +38,11 @@ class InstallBroadcastMessagePresets extends Command
         $updated = false;
 
         Schema::table('broadcast_message_presets', function (Blueprint $table) use (&$updated) {
+            if (!Schema::hasColumn('broadcast_message_presets', 'revision')) {
+                $table->unsignedInteger('revision')->default(1)->after('name');
+                $updated = true;
+            }
+
             if (!Schema::hasColumn('broadcast_message_presets', 'audience_key')) {
                 $table->string('audience_key', 120)->nullable()->after('via');
                 $updated = true;
