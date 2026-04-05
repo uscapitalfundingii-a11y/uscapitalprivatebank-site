@@ -69,6 +69,46 @@ class SupportTicketAiResponder
         return $reply;
     }
 
+    public function draftForAdmin(SupportTicket $ticket): ?string
+    {
+        if (!$this->enabled()) {
+            return null;
+        }
+
+        $latestCustomerMessage = SupportMessage::query()
+            ->where('support_ticket_id', $ticket->id)
+            ->where('admin_id', 0)
+            ->orderByDesc('id')
+            ->first();
+
+        if (!$latestCustomerMessage) {
+            return null;
+        }
+
+        $response = Http::baseUrl(rtrim(config('openai.base_url'), '/'))
+            ->acceptJson()
+            ->withToken(config('openai.api_key'))
+            ->timeout(config('openai.support_ticket.timeout'))
+            ->post('/responses', [
+                'model' => config('openai.support_ticket.model'),
+                'instructions' => $this->adminDraftInstructions(),
+                'input' => $this->buildAdminDraftInput($ticket),
+                'max_output_tokens' => config('openai.support_ticket.max_output_tokens'),
+                'metadata' => [
+                    'feature' => 'support_ticket_admin_draft',
+                    'ticket_id' => (string) $ticket->ticket,
+                    'support_ticket_id' => (string) $ticket->id,
+                ],
+            ]);
+
+        if (!$response->successful()) {
+            report(new \RuntimeException('OpenAI support ticket draft failed: ' . $response->body()));
+            return null;
+        }
+
+        return $this->extractText($response->json());
+    }
+
     protected function schemaReady(): bool
     {
         return Schema::hasTable('support_messages')
@@ -122,6 +162,56 @@ class SupportTicketAiResponder
                 ])),
             ]],
         ]];
+    }
+
+    protected function buildAdminDraftInput(SupportTicket $ticket): array
+    {
+        $messages = SupportMessage::query()
+            ->where('support_ticket_id', $ticket->id)
+            ->with('admin')
+            ->orderBy('id')
+            ->limit(12)
+            ->get();
+
+        $history = $messages->map(function ($message) {
+            if ($message->is_ai_response) {
+                $author = 'AI assistant';
+            } elseif ((int) $message->admin_id === 0) {
+                $author = 'Customer';
+            } else {
+                $author = 'Admin ' . ($message->admin?->name ?: 'staff');
+            }
+
+            return $author . ': ' . trim($message->message);
+        })->implode("\n");
+
+        return [[
+            'role' => 'user',
+            'content' => [[
+                'type' => 'input_text',
+                'text' => trim(implode("\n", [
+                    'Draft a reply for this support ticket.',
+                    'Ticket subject: ' . $ticket->subject,
+                    'Ticket number: ' . $ticket->ticket,
+                    'Customer name: ' . $ticket->name,
+                    'Customer email: ' . $ticket->email,
+                    'Conversation:',
+                    $history,
+                ])),
+            ]],
+        ]];
+    }
+
+    protected function adminDraftInstructions(): string
+    {
+        return 'You are drafting a reply for a bank support agent. ' .
+            'Write a professional, concise customer-service response that the admin can edit before sending. ' .
+            'Do not claim any action has been completed unless the ticket explicitly confirms it. ' .
+            'Do not mention being an AI. ' .
+            'Do not ask for passwords, PINs, full card numbers, SSNs, or full account numbers. ' .
+            'If the ticket asks for unsupported hardware, account opening, KYC review, fraud review, wire edits, or specialist help, ' .
+            'say the matter will be reviewed by the appropriate team. ' .
+            'Keep the draft under 180 words.';
     }
 
     protected function extractText(array $payload): ?string

@@ -31,8 +31,14 @@
 
                             <div class="row ">
                                 <div class="col-md-12">
+                                    <div class="d-flex justify-content-end mb-2">
+                                        <button class="btn btn--info btn-sm generateAiDraftBtn" type="button" data-url="{{ route('admin.ticket.ai.draft', $ticket->id) }}">
+                                            <i class="las la-robot"></i> @lang('Reply with AI')
+                                        </button>
+                                    </div>
                                     <div class="form-group">
                                         <textarea class="form-control" name="message" rows="5" required id="inputMessage" placeholder="@lang('Enter reply here')"></textarea>
+                                        <small class="text-muted d-none mt-2" id="aiDraftStatus"></small>
                                     </div>
                                 </div>
                                 <div class="col-md-9">
@@ -184,6 +190,10 @@
     <script>
         "use strict";
         (function($) {
+            const $draftButton = $('.generateAiDraftBtn');
+            const $messageField = $('#inputMessage');
+            const $draftStatus = $('#aiDraftStatus');
+
             $('.delete-message').on('click', function(e) {
                 $('.message_id').val($(this).data('id'));
             })
@@ -209,6 +219,39 @@
                 $('.addAttachment').removeAttr('disabled', true)
                 fileAdded--;
                 $(this).closest('.removeFileInput').remove();
+            });
+
+            $draftButton.on('click', function() {
+                const $button = $(this);
+                const originalHtml = $button.html();
+
+                $button.prop('disabled', true).html('<i class="las la-spinner la-spin"></i> @lang("Generating...")');
+                $draftStatus.removeClass('d-none text-danger text-success').text('@lang("Generating AI draft...")');
+
+                $.ajax({
+                    url: $button.data('url'),
+                    method: 'POST',
+                    data: {
+                        _token: '{{ csrf_token() }}'
+                    },
+                    success: function(response) {
+                        if (response.draft) {
+                            $messageField.val(response.draft).trigger('focus');
+                            $draftStatus.addClass('text-success').text('@lang("AI draft added to the reply box. You can edit it before sending.")');
+                            return;
+                        }
+
+                        $draftStatus.addClass('text-danger').text('@lang("AI draft could not be generated right now.")');
+                    },
+                    error: function(xhr) {
+                        const message = xhr.responseJSON?.message || '@lang("AI draft could not be generated right now.")';
+                        $draftStatus.addClass('text-danger').text(message);
+                    },
+                    complete: function() {
+                        $button.prop('disabled', false).html(originalHtml);
+                        $draftStatus.removeClass('d-none');
+                    }
+                });
             });
         })(jQuery);
     </script>

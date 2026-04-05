@@ -6,7 +6,9 @@ use App\Constants\Status;
 use App\Http\Controllers\Controller;
 use App\Models\SupportMessage;
 use App\Models\SupportTicket;
+use App\Services\SupportTicketAiResponder;
 use App\Traits\SupportTicketManager;
+use Illuminate\Http\Request;
 
 class SupportTicketController extends Controller
 {
@@ -51,6 +53,24 @@ class SupportTicketController extends Controller
         $pageTitle = 'Reply Ticket';
         $messages = SupportMessage::with('ticket','admin','attachments')->where('support_ticket_id', $ticket->id)->orderBy('id','desc')->get();
         return view('admin.support.reply', compact('ticket', 'messages', 'pageTitle'));
+    }
+
+    public function generateAiDraft(Request $request, $id)
+    {
+        $ticket = SupportTicket::with('user')->findOrFail($id);
+        $draft = app(SupportTicketAiResponder::class)->draftForAdmin($ticket);
+
+        if (!$draft) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'AI draft could not be generated right now.',
+            ], 422);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'draft' => $draft,
+        ]);
     }
 
 
