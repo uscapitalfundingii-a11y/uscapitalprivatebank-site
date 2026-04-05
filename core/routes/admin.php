@@ -74,6 +74,8 @@ Route::middleware('admin', 'adminPermission')->group(function () {
         Route::post('update/{id}', 'update')->name('update');
         Route::post('{id}/accounts', 'storeAccount')->name('accounts.store');
         Route::post('{id}/accounts/{accountId}/switch', 'switchAccount')->name('accounts.switch');
+        Route::post('{id}/account-requests/{requestId}/approve', 'approveAccountRequest')->name('account.requests.approve');
+        Route::post('{id}/account-requests/{requestId}/reject', 'rejectAccountRequest')->name('account.requests.reject');
         Route::post('add-sub-balance/{id}', 'addSubBalance')->name('add.sub.balance');
         Route::post('send-notification/ai-revise', 'notificationAiPolish')->name('notification.ai.revise');
         Route::get('send-notification/{id}', 'showNotificationSingleForm')->name('notification.single');

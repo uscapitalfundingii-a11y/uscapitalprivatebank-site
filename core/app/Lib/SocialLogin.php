@@ -112,9 +112,9 @@ class SocialLogin
             $lastName  = array_pop($pieces);
         }
 
-        $referBy = session()->get('reference');
+        $referBy = trim((string) session()->get('reference'));
         if ($referBy) {
-            $referUser = User::where('username', $referBy)->first();
+            $referUser = User::whereRaw('LOWER(username) = ?', [strtolower($referBy)])->first();
         } else {
             $referUser = null;
         }
@@ -128,7 +128,10 @@ class SocialLogin
         $newUser->password = Hash::make($password);
         $newUser->firstname = $firstName;
         $newUser->lastname = $lastName;
-        $user->ref_by    = $referUser ? $referUser->id : 0;
+        $newUser->ref_by = $referUser ? $referUser->id : 0;
+        if ($referUser) {
+            $newUser->referral_commission_count = gs('referral_commission_count');
+        }
 
         $newUser->status = Status::VERIFIED;
         $newUser->kv = $general->kv ? Status::NO : Status::YES;

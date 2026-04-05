@@ -6,6 +6,7 @@ use App\Constants\Status;
 use App\Http\Controllers\Controller;
 use App\Lib\FormProcessor;
 use App\Lib\GoogleAuthenticator;
+use App\Models\AccountOpeningRequest;
 use App\Models\BalanceTransfer;
 use App\Models\Deposit;
 use App\Models\DeviceToken;
@@ -28,7 +29,7 @@ class UserController extends Controller
     public function home()
     {
         $pageTitle = 'Dashboard';
-        $user                     = auth()->user();
+        $user                     = auth()->user()->load(['accounts', 'referrer', 'accountOpeningRequests']);
         $widget['total_deposit']  = Deposit::pending()->where('user_id', $user->id)->sum('amount');
         $widget['total_withdraw'] = Withdrawal::pending()->where('user_id', $user->id)->sum('amount');
         $widget['total_trx']      = Transaction::where('user_id', $user->id)->whereDate('created_at', now()->today())->count();
@@ -38,7 +39,9 @@ class UserController extends Controller
 
         $credits = Transaction::where('user_id', $user->id)->where('trx_type', '+')->latest()->limit(5)->get();
         $debits  = Transaction::where('user_id', $user->id)->where('trx_type', '-')->latest()->limit(5)->get();
-        return view('Template::user.dashboard', compact('pageTitle', 'user', 'credits', 'debits', 'widget'));
+        $availableAccountCurrencies = AccountOpeningRequest::currencyOptions();
+        $pendingAccountRequests = $user->accountOpeningRequests->take(5);
+        return view('Template::user.dashboard', compact('pageTitle', 'user', 'credits', 'debits', 'widget', 'availableAccountCurrencies', 'pendingAccountRequests'));
     }
 
     public function depositHistory(Request $request)
@@ -315,6 +318,42 @@ class UserController extends Controller
         $referees  = User::where('ref_by', $user->id)->with('allReferees')->paginate(getPaginate());
         $maxLevel  = ReferralSetting::max('level');
         return view('Template::user.referral.index', compact('pageTitle', 'referees', 'user', 'maxLevel'));
+    }
+
+    public function requestMultiCurrencyAccount(Request $request)
+    {
+        $currencyOptions = AccountOpeningRequest::currencyOptions();
+
+        $request->validate([
+            'currency_code' => 'required|in:' . implode(',', array_keys($currencyOptions)),
+        ]);
+
+        $user = auth()->user()->load(['accounts', 'accountOpeningRequests']);
+        $currencyCode = $request->currency_code;
+        $currency = $currencyOptions[$currencyCode];
+
+        $hasExistingAccount = $user->accounts->contains(fn ($account) => strtoupper((string) $account->currency_code) === $currencyCode);
+        if ($hasExistingAccount) {
+            $notify[] = ['error', 'You already have an account in that currency.'];
+            return back()->withNotify($notify);
+        }
+
+        $hasPendingRequest = $user->accountOpeningRequests->contains(fn ($accountRequest) => strtoupper((string) $accountRequest->currency_code) === $currencyCode && (int) $accountRequest->status === AccountOpeningRequest::STATUS_PENDING);
+        if ($hasPendingRequest) {
+            $notify[] = ['error', 'A request for that currency is already pending admin approval.'];
+            return back()->withNotify($notify);
+        }
+
+        AccountOpeningRequest::create([
+            'user_id' => $user->id,
+            'currency_code' => $currencyCode,
+            'currency_name' => $currency['name'],
+            'currency_symbol' => $currency['symbol'],
+            'status' => AccountOpeningRequest::STATUS_PENDING,
+        ]);
+
+        $notify[] = ['success', 'Your multi-currency account request was submitted and is now waiting for admin approval.'];
+        return back()->withNotify($notify);
     }
 
     public function transferHistory()

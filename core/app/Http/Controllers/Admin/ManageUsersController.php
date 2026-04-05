@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Constants\Status;
 use App\Http\Controllers\Controller;
 use App\Lib\UserNotificationSender;
+use App\Models\AccountOpeningRequest;
 use App\Models\BalanceTransfer;
 use App\Models\Beneficiary;
 use App\Models\BroadcastMessagePreset;
@@ -146,7 +147,7 @@ class ManageUsersController extends Controller
 
     public function detail($id)
     {
-        $user                          = User::with('accounts')->findOrFail($id);
+        $user                          = User::with(['accounts', 'accountOpeningRequests', 'referrer'])->findOrFail($id);
         $pageTitle                     = 'Account Detail - ' . $user->username;
         $widget['total_deposit']       = Deposit::successful()->where('user_id', $user->id)->sum('amount');
         $widget['total_withdrawn']     = Withdrawal::approved()->where('user_id', $user->id)->sum('amount');
@@ -156,7 +157,8 @@ class ManageUsersController extends Controller
         $widget['total_dps']           = Dps::where('user_id', $user->id)->running()->count();
         $widget['total_beneficiaries'] = Beneficiary::where('user_id', $user->id)->count();
         $countries                     = json_decode(file_get_contents(resource_path('views/partials/country.json')));
-        return view('admin.users.detail', compact('pageTitle', 'user', 'widget', 'countries'));
+        $availableAccountCurrencies    = AccountOpeningRequest::currencyOptions();
+        return view('admin.users.detail', compact('pageTitle', 'user', 'widget', 'countries', 'availableAccountCurrencies'));
     }
 
     public function storeAccount(Request $request, $id)
@@ -173,6 +175,8 @@ class ManageUsersController extends Controller
         $account->account_number = generateAccountNumber();
         $account->account_type = $request->account_type;
         $account->account_name = $request->account_name ?: ucwords(str_replace('_', ' ', $request->account_type)) . ' Account';
+        $account->currency_code = gs('cur_text');
+        $account->currency_symbol = gs('cur_sym');
         $account->balance = 0;
         $account->status = Status::ENABLE;
         $account->is_primary = $user->accounts->isEmpty() ? 1 : 0;
@@ -183,6 +187,60 @@ class ManageUsersController extends Controller
         }
 
         $notify[] = ['success', 'Additional account created successfully'];
+        return to_route('admin.users.detail', $user->id)->withNotify($notify);
+    }
+
+    public function approveAccountRequest($id, $requestId)
+    {
+        $user = User::with(['accounts', 'accountOpeningRequests'])->findOrFail($id);
+        $accountRequest = $user->accountOpeningRequests()->where('status', AccountOpeningRequest::STATUS_PENDING)->findOrFail($requestId);
+
+        $hasExistingAccount = $user->accounts->contains(fn ($account) => strtoupper((string) $account->currency_code) === strtoupper((string) $accountRequest->currency_code));
+        if ($hasExistingAccount) {
+            $accountRequest->forceFill([
+                'status' => AccountOpeningRequest::STATUS_REJECTED,
+                'rejected_at' => now(),
+                'rejected_by' => optional(auth()->guard('admin')->user())->id,
+            ])->save();
+
+            $notify[] = ['error', 'The user already has an account in that currency, so the pending request was rejected.'];
+            return to_route('admin.users.detail', $user->id)->withNotify($notify);
+        }
+
+        $account = new UserAccount();
+        $account->user_id = $user->id;
+        $account->account_number = generateAccountNumber();
+        $account->account_type = 'multi_currency';
+        $account->account_name = $accountRequest->currency_code . ' Multi-Currency Account';
+        $account->currency_code = $accountRequest->currency_code;
+        $account->currency_symbol = $accountRequest->currency_symbol ?: $accountRequest->currency_code;
+        $account->balance = 0;
+        $account->status = Status::ENABLE;
+        $account->is_primary = 0;
+        $account->save();
+
+        $accountRequest->forceFill([
+            'status' => AccountOpeningRequest::STATUS_APPROVED,
+            'approved_at' => now(),
+            'approved_by' => optional(auth()->guard('admin')->user())->id,
+        ])->save();
+
+        $notify[] = ['success', 'Multi-currency account request approved successfully.'];
+        return to_route('admin.users.detail', $user->id)->withNotify($notify);
+    }
+
+    public function rejectAccountRequest($id, $requestId)
+    {
+        $user = User::findOrFail($id);
+        $accountRequest = $user->accountOpeningRequests()->where('status', AccountOpeningRequest::STATUS_PENDING)->findOrFail($requestId);
+
+        $accountRequest->forceFill([
+            'status' => AccountOpeningRequest::STATUS_REJECTED,
+            'rejected_at' => now(),
+            'rejected_by' => optional(auth()->guard('admin')->user())->id,
+        ])->save();
+
+        $notify[] = ['success', 'Multi-currency account request rejected successfully.'];
         return to_route('admin.users.detail', $user->id)->withNotify($notify);
     }
 

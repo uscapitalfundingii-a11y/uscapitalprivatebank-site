@@ -110,10 +110,10 @@ class RegisterController extends Controller
         $user->ts = Status::DISABLE;
         $user->tv = Status::ENABLE;
 
-        $referBy = session('reference');
+        $referBy = trim((string) ($data['referBy'] ?? session('reference')));
 
         if ($referBy && gs('modules')->referral_system) {
-            $referrer = User::where('username', $referBy)->first();
+            $referrer = User::whereRaw('LOWER(username) = ?', [strtolower($referBy)])->first();
 
             if ($referrer) {
                 $user->ref_by                    = $referrer->id;
