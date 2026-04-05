@@ -17,6 +17,7 @@
                             <th>@lang('Amount')</th>
                             <th>@lang('Post Balance')</th>
                             <th>@lang('Notes')</th>
+                            <th>@lang('Action')</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -27,11 +28,12 @@
                                 <td><span class="{{ $trx->trx_type == '+' ? 'text--success' : 'text--danger' }}">{{ $trx->trx_type == '+' ? __('Incoming') : __('Outgoing') }}</span></td>
                                 <td>{{ $trx->trx_type }} {{ showAmount($trx->amount) }}</td>
                                 <td>{{ showAmount($trx->post_balance) }}</td>
-                                <td>{{ \Illuminate\Support\Str::limit($trx->details, 80) }}</td>
+                                <td style="white-space: pre-wrap;">{{ \Illuminate\Support\Str::limit($trx->details, 80) }}</td>
+                                <td><a href="{{ route('user.accounts.transactions.show', [$account->id, $trx->id]) }}" class="btn btn-sm btn-outline--base">@lang('View Detail')</a></td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="text-center">@lang('No transactions found for this account yet.')</td>
+                                <td colspan="7" class="text-center">@lang('No transactions found for this account yet.')</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -45,4 +47,3 @@
         </div>
     </div>
 @endsection
-

@@ -29,6 +29,11 @@ class UserAccount extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function transactions()
+    {
+        return $this->hasMany(Transaction::class, 'user_account_id')->latest('id');
+    }
+
     public function scopeActive($query)
     {
         return $query->where('status', Status::ENABLE);

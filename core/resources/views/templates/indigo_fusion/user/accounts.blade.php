@@ -42,17 +42,17 @@
                                         </td>
                                         <td>
                                             <div class="d-flex flex-wrap gap-2">
-                                                @if($account->is_primary)
-                                                    <span class="text-muted align-self-center">@lang('Current')</span>
-                                                @else
+                                                <a href="{{ route('user.accounts.show', $account->id) }}" class="btn btn-sm btn--base">@lang('View Ledger')</a>
+                                                @if(!$account->is_primary)
                                                     <form action="{{ route('user.profile.account.switch', $account->id) }}" method="POST">
                                                         @csrf
                                                         <button class="btn btn-sm btn--base" type="submit">@lang('Switch')</button>
                                                     </form>
+                                                @else
+                                                    <span class="text-muted align-self-center">@lang('Current')</span>
                                                 @endif
                                                 <a href="{{ route('user.deposit.index') }}" class="btn btn-sm btn-outline--base">@lang('Deposit')</a>
                                                 <a href="{{ route('user.withdraw') }}" class="btn btn-sm btn-outline--base">@lang('Withdraw')</a>
-                                                <a href="{{ route('user.accounts.show', $account->id) }}" class="btn btn-sm btn-outline--base">@lang('Transactions')</a>
                                             </div>
                                         </td>
                                     </tr>

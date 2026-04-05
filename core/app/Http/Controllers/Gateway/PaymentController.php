@@ -130,16 +130,28 @@ class PaymentController extends Controller
             $deposit->status = Status::PAYMENT_SUCCESS;
             $deposit->save();
 
-            $user = User::find($deposit->user_id);
-            $user->balance += $deposit->amount;
-            $user->save();
+            $user = User::with('activeAccount')->find($deposit->user_id);
+            $activeAccount = $user?->activeAccount;
+
+            if ($activeAccount) {
+                $activeAccount->balance += $deposit->amount;
+                $activeAccount->save();
+                $activeAccount->syncLegacyUserBalance();
+                $user->refresh();
+            } else {
+                $user->balance += $deposit->amount;
+                $user->save();
+            }
 
             $methodName = $deposit->methodName();
+            $postBalance = $activeAccount?->fresh()->balance ?? $user->balance;
 
             $transaction = new Transaction();
             $transaction->user_id = $deposit->user_id;
+            $transaction->user_account_id = $activeAccount?->id;
+            $transaction->account_number = $activeAccount?->account_number ?: $user->account_number;
             $transaction->amount = $deposit->amount;
-            $transaction->post_balance = $user->balance;
+            $transaction->post_balance = $postBalance;
             $transaction->charge = $deposit->charge;
             $transaction->trx_type = '+';
             $transaction->details = 'Deposit Via ' . $methodName;
@@ -163,7 +175,7 @@ class PaymentController extends Controller
                 'charge' => showAmount($deposit->charge, currencyFormat: false),
                 'rate' => showAmount($deposit->rate, currencyFormat: false),
                 'trx' => $deposit->trx,
-                'post_balance' => showAmount($user->balance, currencyFormat: false)
+                'post_balance' => showAmount($postBalance, currencyFormat: false)
             ]);
 
             if ($deposit->is_card_issue) {
