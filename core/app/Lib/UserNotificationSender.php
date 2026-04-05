@@ -301,6 +301,8 @@ class UserNotificationSender
         $subject = trim((string) $request->subject);
         $message = trim((string) $request->message);
         $via = trim((string) $request->via);
+        $audienceKey = trim((string) $request->being_sent_to);
+        $audienceLabel = $this->resolveAudienceLabel($request, $audienceKey);
 
         if ($message === '' || $via === '') {
             return;
@@ -308,6 +310,7 @@ class UserNotificationSender
 
         $preset = BroadcastMessagePreset::query()
             ->where('via', $via)
+            ->where('audience_key', $audienceKey !== '' ? $audienceKey : null)
             ->where('subject', $subject !== '' ? $subject : null)
             ->where('message', $message)
             ->first();
@@ -316,12 +319,28 @@ class UserNotificationSender
             $preset = new BroadcastMessagePreset();
             $preset->name = $subject !== '' ? $subject : str($message)->squish()->limit(80, '...')->value();
             $preset->via = $via;
+            $preset->audience_key = $audienceKey !== '' ? $audienceKey : null;
+            $preset->audience_label = $audienceLabel;
             $preset->subject = $subject !== '' ? $subject : null;
             $preset->message = $message;
             $preset->created_by = optional(auth()->guard('admin')->user())->id;
         }
 
+        $preset->audience_key = $audienceKey !== '' ? $audienceKey : null;
+        $preset->audience_label = $audienceLabel;
         $preset->last_used_at = Carbon::now();
         $preset->save();
+    }
+
+    private function resolveAudienceLabel($request, string $audienceKey): ?string
+    {
+        if ($audienceKey === 'filtered_users' && session()->has('FILTERED_USERS')) {
+            $selection = decrypt(session('FILTERED_USERS'));
+            return $selection['title'] ?? 'Filtered Accounts';
+        }
+
+        $labels = method_exists(User::class, 'notifyToUser') ? User::notifyToUser() : [];
+
+        return $labels[$audienceKey] ?? null;
     }
 }

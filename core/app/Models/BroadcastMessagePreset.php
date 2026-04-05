@@ -9,6 +9,8 @@ class BroadcastMessagePreset extends Model
     protected $fillable = [
         'name',
         'via',
+        'audience_key',
+        'audience_label',
         'subject',
         'message',
         'created_by',

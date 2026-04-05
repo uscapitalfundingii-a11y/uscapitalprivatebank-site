@@ -112,7 +112,7 @@
                                             <option value="">@lang('Choose a saved message')</option>
                                             @foreach ($savedPresets as $preset)
                                                 <option value="{{ $preset->id }}" data-via="{{ $preset->via }}" data-subject="{{ $preset->subject }}" data-message="{{ $preset->message }}">
-                                                    {{ $preset->name }} ({{ strtoupper($preset->via) }})
+                                                    {{ $preset->name }} ({{ strtoupper($preset->via) }}{{ $preset->audience_label ? ' - ' . $preset->audience_label : '' }})
                                                 </option>
                                             @endforeach
                                         </select>
