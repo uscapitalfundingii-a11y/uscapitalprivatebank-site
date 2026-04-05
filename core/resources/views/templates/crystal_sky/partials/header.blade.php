@@ -16,8 +16,11 @@
                         <a class="nav-link {{ menuActive('home') }}" aria-current="page" href="{{ route('home') }}">@lang('Home')</a>
                     </li>
                     @foreach ($pages as $k => $data)
+                        @php
+                            $isSupportPage = strcasecmp($data->slug, 'support') === 0 || strcasecmp($data->name, 'Support') === 0;
+                        @endphp
                         <li class="nav-item">
-                            <a class="nav-link @if ($data->slug == Request::segment(1)) active @endif" aria-current="page" href="{{ route('pages', [$data->slug]) }}">{{ __($data->name) }}</a>
+                            <a class="nav-link @if ($isSupportPage ? request()->routeIs('ticket.*') : $data->slug == Request::segment(1)) active @endif" aria-current="page" href="{{ $isSupportPage ? route('ticket.index') : route('pages', [$data->slug]) }}">{{ __($data->name) }}</a>
                         </li>
                     @endforeach
                     <li class="nav-item">

@@ -5,8 +5,11 @@
         ->get();
 @endphp
 @foreach ($pages as $k => $data)
+    @php
+        $isSupportPage = strcasecmp($data->slug, 'support') === 0 || strcasecmp($data->name, 'Support') === 0;
+    @endphp
     <li>
-        <a class="@if ($data->slug == Request::segment(1)) active @endif" href="{{ route('pages', [$data->slug]) }}">
+        <a class="@if ($isSupportPage ? request()->routeIs('ticket.*') : $data->slug == Request::segment(1)) active @endif" href="{{ $isSupportPage ? route('ticket.index') : route('pages', [$data->slug]) }}">
             {{ __($data->name) }}
         </a>
     </li>
