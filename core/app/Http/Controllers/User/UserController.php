@@ -36,6 +36,9 @@ class UserController extends Controller
         $widget['total_fdr']      = Fdr::running()->where('user_id', $user->id)->count();
         $widget['total_loan']     = Loan::running()->where('user_id', $user->id)->count();
         $widget['total_dps']      = Dps::running()->where('user_id', $user->id)->count();
+        $widget['referral_earnings'] = Transaction::where('user_id', $user->id)->where('remark', 'referral_commission')->sum('amount');
+        $widget['referral_rewards'] = Transaction::where('user_id', $user->id)->where('remark', 'referral_commission')->count();
+        $widget['referral_signups'] = User::where('ref_by', $user->id)->count();
 
         $credits = Transaction::where('user_id', $user->id)->where('trx_type', '+')->latest()->limit(5)->get();
         $debits  = Transaction::where('user_id', $user->id)->where('trx_type', '-')->latest()->limit(5)->get();

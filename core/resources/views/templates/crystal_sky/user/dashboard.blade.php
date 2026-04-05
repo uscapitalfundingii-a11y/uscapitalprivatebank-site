@@ -62,11 +62,11 @@
             </a>
         </div>
 
-        @if (gs()->modules->referral_system)
-            <div class="col-xl-8 col-lg-12 col-md-8 order-xl-0 order-lg-first order-md-0 order-sm-first">
-                <div class="dashboard-widget refer">
-                    <div class="custom-border flex-align flex-between">
-                        <div class="refer__content">
+    @if (gs()->modules->referral_system)
+        <div class="col-xl-8 col-lg-12 col-md-8 order-xl-0 order-lg-first order-md-0 order-sm-first">
+            <div class="dashboard-widget refer">
+                <div class="custom-border flex-align flex-between">
+                    <div class="refer__content">
                             <h5 class="refer__title">@lang('My Referral Link'):</h5>
                             <h5 class="refer__link" id="ref">{{ route('home') . '?reference=' . $user->username }}
                             </h5>
@@ -74,10 +74,10 @@
                         <span class="refer__icon dashboard-widget__icon flex-center copy-icon copyBtn">
                             <i class="icon-copy"></i>
                         </span>
-                    </div>
                 </div>
             </div>
-        @endif
+        </div>
+    @endif
 
         @if (@gs()->modules->deposit)
             <div class="col-xl-4 col-lg-6 col-md-4 col-sm-6 col-xsm-6">
@@ -127,6 +127,34 @@
             </a>
         </div>
 
+        <div class="col-xl-4 col-lg-6 col-md-4 col-sm-6 col-xsm-6">
+            <button type="button" class="dashboard-widget text-start border-0 w-100" data-bs-toggle="modal" data-bs-target="#multiCurrencyAccountModal">
+                <div class="dashboard-widget__content flex-align">
+                    <span class="dashboard-widget__icon flex-center">
+                        <i class="las la-globe"></i>
+                    </span>
+                    <span class="dashboard-widget__text">@lang('Open Multi-Currency Account')</span>
+                </div>
+                <h4 class="dashboard-widget__number">@lang('Request')</h4>
+            </button>
+        </div>
+
+        @if (gs()->modules->referral_system)
+            <div class="col-xl-4 col-lg-6 col-md-4 col-sm-6 col-xsm-6">
+                <a href="{{ route('user.referral.users') }}" class="d-block">
+                    <div class="dashboard-widget">
+                        <div class="dashboard-widget__content flex-align">
+                            <span class="dashboard-widget__icon flex-center">
+                                <i class="las la-gift"></i>
+                            </span>
+                            <span class="dashboard-widget__text">@lang('Referral Rewards')</span>
+                        </div>
+                        <h4 class="dashboard-widget__number">{{ showAmount(@$widget['referral_earnings']) }}</h4>
+                    </div>
+                </a>
+            </div>
+        @endif
+
         @if (gs()->modules->fdr)
             <div class="col-xl-4 col-lg-6 col-md-4 col-sm-6 col-xsm-6">
                 <a href="{{ route('user.fdr.list') }}?status={{ Status::FDR_RUNNING }}" class="d-block">
@@ -174,6 +202,82 @@
             </div>
         @endif
     </div>
+
+    @if($user->referrer)
+        <div class="pt-30">
+            <div class="dashboard-widget refer">
+                <div class="custom-border flex-align flex-between">
+                    <div class="refer__content">
+                        <h5 class="refer__title">@lang('Referred By'):</h5>
+                        <h5 class="refer__link">{{ $user->referrer->fullname }} ({{ '@' . $user->referrer->username }})</h5>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    @if (gs()->modules->referral_system)
+        <div class="pt-30">
+            <div class="row gy-4">
+                <div class="col-md-6">
+                    <div class="dashboard-widget">
+                        <div class="dashboard-widget__content flex-align">
+                            <span class="dashboard-widget__icon flex-center">
+                                <i class="las la-user-plus"></i>
+                            </span>
+                            <span class="dashboard-widget__text">@lang('Referral Signups')</span>
+                        </div>
+                        <h4 class="dashboard-widget__number">{{ @$widget['referral_signups'] }}</h4>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="dashboard-widget">
+                        <div class="dashboard-widget__content flex-align">
+                            <span class="dashboard-widget__icon flex-center">
+                                <i class="las la-coins"></i>
+                            </span>
+                            <span class="dashboard-widget__text">@lang('Referral Reward Payments')</span>
+                        </div>
+                        <h4 class="dashboard-widget__number">{{ @$widget['referral_rewards'] }}</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    @if($pendingAccountRequests->count())
+        <div class="pt-30">
+            <div class="dashboard-table">
+                <h5 class="dashboard-table__title card-header__title text-dark">@lang('Account Requests')</h5>
+                <table class="table table--responsive--md">
+                    <thead>
+                        <tr>
+                            <th>@lang('Currency')</th>
+                            <th>@lang('Requested')</th>
+                            <th>@lang('Status')</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($pendingAccountRequests as $accountRequest)
+                            <tr>
+                                <td>{{ $accountRequest->currency_code }} - {{ $accountRequest->currency_name }}</td>
+                                <td>{{ showDateTime($accountRequest->created_at, 'd M, Y h:i A') }}</td>
+                                <td>
+                                    @if($accountRequest->status === \App\Models\AccountOpeningRequest::STATUS_PENDING)
+                                        <span class="badge badge--warning">@lang('Pending Approval')</span>
+                                    @elseif($accountRequest->status === \App\Models\AccountOpeningRequest::STATUS_APPROVED)
+                                        <span class="badge badge--success">@lang('Approved')</span>
+                                    @else
+                                        <span class="badge badge--danger">@lang('Rejected')</span>
+                                    @endif
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    @endif
 
     <div class="pt-60">
         <div class="row gy-4 justify-content-center">
@@ -244,6 +348,38 @@
         </div>
     </div>
 @endsection
+
+@push('modal')
+    <div class="modal fade" id="multiCurrencyAccountModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@lang('Open Multi-Currency Account')</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@lang('Close')"></button>
+                </div>
+                <form action="{{ route('user.accounts.request') }}" method="POST">
+                    @csrf
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label class="form-label">@lang('Select Currency')</label>
+                            <select name="currency_code" class="form-control" required>
+                                <option value="">@lang('Select currency')</option>
+                                @foreach($availableAccountCurrencies as $code => $currency)
+                                    <option value="{{ $code }}">{{ $code }} - {{ $currency['name'] }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <p class="text-muted mb-0">@lang('Your request will be sent to admin for approval before the new account becomes available in your profile.')</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn--dark" data-bs-dismiss="modal">@lang('Cancel')</button>
+                        <button type="submit" class="btn btn--base">@lang('Submit Request')</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+@endpush
 
 @if (auth()->user()->kv == Status::KYC_UNVERIFIED && auth()->user()->kyc_rejection_reason)
     @push('modal')
