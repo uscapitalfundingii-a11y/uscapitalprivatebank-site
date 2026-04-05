@@ -19,7 +19,11 @@
             <div class="alert mb-4 alert--danger" role="alert">
                 <h4 class="text--primary mb-0">@lang('KYC Verification required')</h4>
                 <hr>
-                <p>{{ __(@$kyc->data_values->required) }} <a href="{{ route('user.kyc.form') }}">@lang('Click Here to Submit Documents')</a></p>
+                @php
+                    $requiredKycText = (string) __(@$kyc->data_values->required);
+                    $requiredKycText = str_replace('The files that are needed can be found here (( https://uscapitalprivatebank.com/kyc_codes.pdf )) Highlite the previous link and paste it in a new broser window and scan the QR-Codes on the document to download the KYC Files.', '', $requiredKycText);
+                @endphp
+                <p>{{ trim($requiredKycText) }} <a href="{{ route('user.kyc.form') }}">@lang('Click Here to Submit Documents')</a></p>
             </div>
         @elseif(auth()->user()->kv == Status::KYC_PENDING)
             <div class="alert mb-4 alert--warning" role="alert">

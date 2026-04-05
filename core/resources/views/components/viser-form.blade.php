@@ -103,6 +103,16 @@
                         @endforeach
                     </div>
                 @elseif($data->type == 'file')
+                    @php
+                        $document = \App\Models\KycDocument::resolveForField($data);
+                    @endphp
+                    @if($document)
+                        <div class="mb-2">
+                            <a href="{{ route('user.kyc.document.download', $document->slug) }}" class="btn btn-sm btn-outline--primary">
+                                <i class="las la-download"></i> @lang('Download') {{ __($document->title) }}
+                            </a>
+                        </div>
+                    @endif
                     <input
                     type="file"
                     class="form-control form--control"

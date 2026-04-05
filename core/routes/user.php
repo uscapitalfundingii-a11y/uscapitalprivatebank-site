@@ -69,6 +69,7 @@ Route::middleware('auth')->name('user.')->group(function () {
                 //KYC
                 Route::get('kyc-form', 'kycForm')->name('kyc.form');
                 Route::get('kyc-data', 'kycData')->name('kyc.data');
+                Route::get('kyc-documents/{slug}', 'downloadKycDocument')->name('kyc.document.download');
                 Route::post('kyc-submit', 'kycSubmit')->name('kyc.submit');
 
                 //Report

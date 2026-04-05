@@ -14,6 +14,7 @@ use App\Models\Dps;
 use App\Models\Fdr;
 use App\Models\Form;
 use App\Models\Loan;
+use App\Models\KycDocument;
 use App\Models\ReferralSetting;
 use App\Models\Transaction;
 use App\Models\User;
@@ -168,6 +169,28 @@ class UserController extends Controller
 
         $notify[] = ['success', 'KYC data submitted successfully'];
         return to_route('user.home')->withNotify($notify);
+    }
+
+    public function downloadKycDocument($slug)
+    {
+        $document = KycDocument::where('slug', $slug)->where('status', true)->firstOrFail();
+        $filePath = $document->absolute_path;
+
+        if (!file_exists($filePath) || !is_file($filePath)) {
+            $notify[] = ['error', 'The requested document is not available right now'];
+            return back()->withNotify($notify);
+        }
+
+        try {
+            $mimetype = mime_content_type($filePath) ?: 'application/octet-stream';
+        } catch (\Exception $e) {
+            $notify[] = ['error', 'The requested document is not available right now'];
+            return back()->withNotify($notify);
+        }
+
+        header('Content-Disposition: attachment; filename="' . $document->download_name . '"');
+        header('Content-Type: ' . $mimetype);
+        return readfile($filePath);
     }
 
     public function userData()
