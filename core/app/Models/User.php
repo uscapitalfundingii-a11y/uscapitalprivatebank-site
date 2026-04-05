@@ -7,6 +7,7 @@ use App\Traits\UserNotify;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable {
@@ -223,5 +224,35 @@ class User extends Authenticatable {
             'account_number' => $account->account_number,
             'balance' => $account->balance,
         ])->saveQuietly();
+    }
+
+    public function generateSystemUsername(): string
+    {
+        if ($this->username) {
+            return $this->username;
+        }
+
+        $base = Str::of(trim($this->firstname . '_' . $this->lastname))
+            ->lower()
+            ->replaceMatches('/[^a-z0-9_]+/', '_')
+            ->trim('_')
+            ->value();
+
+        if ($base === '') {
+            $base = 'member';
+        }
+
+        if (strlen($base) < 6) {
+            $base = str_pad($base, 6, 'user');
+        }
+
+        $base = substr($base, 0, 18);
+        $candidate = $base;
+
+        while (static::where('username', $candidate)->where('id', '!=', $this->id)->exists()) {
+            $candidate = substr($base, 0, 18) . random_int(10, 99);
+        }
+
+        return $candidate;
     }
 }

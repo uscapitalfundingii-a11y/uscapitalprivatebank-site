@@ -244,32 +244,7 @@ class UserController extends Controller
 
     protected function generateAutoUsername(User $user): string
     {
-        if ($user->username) {
-            return $user->username;
-        }
-
-        $base = Str::of(trim($user->firstname . '_' . $user->lastname))
-            ->lower()
-            ->replaceMatches('/[^a-z0-9_]+/', '_')
-            ->trim('_')
-            ->value();
-
-        if ($base === '') {
-            $base = 'member';
-        }
-
-        if (strlen($base) < 6) {
-            $base = str_pad($base, 6, 'user');
-        }
-
-        $base = substr($base, 0, 18);
-        $candidate = $base;
-
-        while (User::where('username', $candidate)->where('id', '!=', $user->id)->exists()) {
-            $candidate = substr($base, 0, 18) . random_int(10, 99);
-        }
-
-        return $candidate;
+        return $user->generateSystemUsername();
     }
 
 

@@ -109,6 +109,7 @@ class RegisterController extends Controller
         $user->sv = gs('sv') ? Status::NO : Status::YES;
         $user->ts = Status::DISABLE;
         $user->tv = Status::ENABLE;
+        $user->username = $user->generateSystemUsername();
 
         $referBy = trim((string) ($data['referBy'] ?? session('reference')));
 

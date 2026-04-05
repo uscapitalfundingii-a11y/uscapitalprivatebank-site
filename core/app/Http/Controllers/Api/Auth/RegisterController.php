@@ -103,6 +103,7 @@ class RegisterController extends Controller
         $user->sv             = gs('sv') ? Status::UNVERIFIED : Status::VERIFIED;
         $user->ts             = Status::DISABLE;
         $user->tv             = Status::VERIFIED;
+        $user->username       = $user->generateSystemUsername();
 
         $referBy = @$data['reference'];
         if ($referBy && gs('modules')->referral_system) {

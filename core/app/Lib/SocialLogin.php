@@ -140,6 +140,7 @@ class SocialLogin
         $newUser->ts = Status::DISABLE;
         $newUser->tv = Status::VERIFIED;
         $newUser->provider = $provider;
+        $newUser->username = $newUser->generateSystemUsername();
         $newUser->save();
 
         $adminNotification = new AdminNotification();
