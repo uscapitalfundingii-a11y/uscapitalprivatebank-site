@@ -204,6 +204,8 @@
             const SpeechRecognitionApi = window.SpeechRecognition || window.webkitSpeechRecognition;
             let recognition = null;
             let isListening = false;
+            let dictatedBaseText = '';
+            let finalTranscript = '';
 
             $('.delete-message').on('click', function(e) {
                 $('.message_id').val($(this).data('id'));
@@ -315,19 +317,33 @@
 
                 recognition.onstart = function() {
                     isListening = true;
+                    dictatedBaseText = $messageField.val().trim();
+                    finalTranscript = '';
                     $dictateButton.html('<i class="las la-microphone-slash"></i> @lang("Stop Dictation")');
                     $draftStatus.removeClass('d-none text-danger text-success').text('@lang("Listening... speak to fill the reply box.")');
                 };
 
                 recognition.onresult = function(event) {
-                    let transcript = '';
+                    let interimTranscript = '';
+
                     for (let i = event.resultIndex; i < event.results.length; i++) {
-                        transcript += event.results[i][0].transcript;
+                        const chunk = event.results[i][0].transcript.trim();
+
+                        if (!chunk) {
+                            continue;
+                        }
+
+                        if (event.results[i].isFinal) {
+                            finalTranscript += (finalTranscript ? ' ' : '') + chunk;
+                        } else {
+                            interimTranscript += (interimTranscript ? ' ' : '') + chunk;
+                        }
                     }
 
-                    const existing = $messageField.val().trim();
-                    const spacer = existing && !existing.endsWith(' ') ? ' ' : '';
-                    $messageField.val((existing + spacer + transcript).trimStart());
+                    const spokenText = [finalTranscript.trim(), interimTranscript.trim()].filter(Boolean).join(' ').trim();
+                    const composedText = [dictatedBaseText, spokenText].filter(Boolean).join(' ').trim();
+
+                    $messageField.val(composedText);
                 };
 
                 recognition.onerror = function(event) {
@@ -338,6 +354,8 @@
 
                 recognition.onend = function() {
                     isListening = false;
+                    dictatedBaseText = '';
+                    finalTranscript = '';
                     $dictateButton.html('<i class="las la-microphone"></i> @lang("Dictate")');
                 };
 
