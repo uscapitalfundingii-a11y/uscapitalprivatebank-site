@@ -39,13 +39,13 @@
                     <tbody>
                         @forelse ($data as $item)
                             <tr>
-                                <x-viser_table.table-data-columns :renderColumns="$renderColumns" :item="$item" />
-
                                 @if ($action['show'])
                                     <td>
                                         <x-viser_table.table-actions :action="$action" :item="$item" />
                                     </td>
                                 @endif
+
+                                <x-viser_table.table-data-columns :renderColumns="$renderColumns" :item="$item" />
                             </tr>
                         @empty
                             <tr>

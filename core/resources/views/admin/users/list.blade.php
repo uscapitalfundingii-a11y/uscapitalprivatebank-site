@@ -78,7 +78,72 @@
         }
     @endphp
 
-    <x-viser_table.table :data="$users" :columns="$columns" :action="$action" :columnConfig="true" :tableName="$tableName" :visibleColumns="$visibleColumns" class="table-responsive--md table-responsive" />
+    <x-viser_table.table :data="$users" :columns="$columns" :action="$action" :columnConfig="true" :tableName="$tableName" :visibleColumns="$visibleColumns" class="table-responsive--md table-responsive">
+        @if (request()->routeIs('admin.users.banned'))
+            <x-slot:tbody>
+                <tbody>
+                    @forelse ($users as $item)
+                        <tr>
+                            <td>
+                                <div class="dropdown">
+                                    <button aria-expanded="false" class="btn btn-sm btn--light" data-bs-toggle="dropdown" type="button">
+                                        <i class="las la-ellipsis-v m-0"></i>
+                                    </button>
+                                    <div class="dropdown-menu">
+                                        <a href="{{ route('admin.users.detail', $item->id) }}" class="dropdown-item">
+                                            @lang('View Details')
+                                        </a>
+                                        @can('admin.users.status')
+                                            <button
+                                                type="button"
+                                                class="dropdown-item text--success unban-user-btn"
+                                                data-action="{{ route('admin.users.status', $item->id) }}"
+                                                data-name="{{ $item->fullname }}"
+                                                data-account="{{ $item->account_number }}"
+                                            >
+                                                @lang('Unban Account')
+                                            </button>
+                                        @endcan
+                                    </div>
+                                </div>
+                            </td>
+                            <x-viser_table.table-data-columns :renderColumns="$columns->whereIn('id', $visibleColumns)" :item="$item" />
+                        </tr>
+                    @empty
+                        <tr>
+                            <td class="text-muted text-center" colspan="100%">@lang('No data found')</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </x-slot:tbody>
+        @endif
+    </x-viser_table.table>
+
+    @can('admin.users.status')
+        <div class="modal fade" id="unbanUserModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">@lang('Unban Account')</h5>
+                        <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                            <i class="las la-times"></i>
+                        </button>
+                    </div>
+                    <form id="unbanUserForm" method="POST">
+                        @csrf
+                        <div class="modal-body">
+                            <p class="mb-1">@lang('This will remove the banned status from this account.')</p>
+                            <p class="mb-0"><strong id="unbanUserLabel"></strong></p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn--dark" data-bs-dismiss="modal">@lang('Cancel')</button>
+                            <button type="submit" class="btn btn--success">@lang('Unban')</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    @endcan
 @endsection
 
 @if($users->total() > 0 && can('admin.users.notification.all.send'))
@@ -90,3 +155,27 @@
     </a>
     @endpush
 @endif
+
+@can('admin.users.status')
+    @push('script')
+        <script>
+            (function($) {
+                "use strict";
+
+                const modal = $('#unbanUserModal');
+                const form = $('#unbanUserForm');
+                const label = $('#unbanUserLabel');
+
+                $('.unban-user-btn').on('click', function() {
+                    const action = $(this).data('action');
+                    const name = $(this).data('name');
+                    const account = $(this).data('account');
+
+                    form.attr('action', action);
+                    label.text(`${name} (${account})`);
+                    modal.modal('show');
+                });
+            })(jQuery);
+        </script>
+    @endpush
+@endcan

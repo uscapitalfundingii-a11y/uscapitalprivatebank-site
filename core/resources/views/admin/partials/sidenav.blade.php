@@ -43,15 +43,15 @@
                             <li class="sidebar-menu-item sidebar-dropdown">
                                 <a href="javascript:void(0)" class="{{ menuActive(@$data->menu_active, 3) }}">
                                     <i class="menu-icon {{ @$data->icon }}"></i>
-                                    <span class="menu-title">{{ __(@$data->title) }}</span>
                                     @foreach (@$data->counters ?? [] as $counter)
                                         @if ($$counter > 0)
-                                            <span class="menu-badge menu-badge-level-one bg--warning ms-auto">
+                                            <span class="menu-badge menu-badge-level-one bg--warning me-2">
                                                 <i class="fas fa-exclamation"></i>
                                             </span>
                                         @break
                                     @endif
                                 @endforeach
+                                    <span class="menu-title">{{ __(@$data->title) }}</span>
                             </a>
                             <div class="sidebar-submenu {{ menuActive(@$data->menu_active, 2) }}">
                                 <ul>
@@ -81,11 +81,11 @@
                                             <li class="sidebar-menu-item {{ menuActive(@$menu->menu_active) }} ">
                                                 <a href="{{ route(@$routeName, $submenuParams) }}" class="nav-link">
                                                     <i class="menu-icon las la-dot-circle"></i>
-                                                    <span class="menu-title">{{ __($menu->title) }}</span>
                                                     @php $counter = @$menu->counter; @endphp
                                                     @if (@$$counter)
-                                                        <span class="menu-badge bg--info ms-auto">{{ @$$counter }}</span>
+                                                        <span class="menu-badge bg--info me-2">{{ @$$counter }}</span>
                                                     @endif
+                                                    <span class="menu-title">{{ __($menu->title) }}</span>
                                                 </a>
                                             </li>
                                         @endcan
@@ -119,11 +119,11 @@
                         <li class="sidebar-menu-item {{ menuActive(@$data->menu_active) }}">
                             <a href="{{ route(@$routeName, $mainParams) }}" class="nav-link ">
                                 <i class="menu-icon {{ $data->icon }}"></i>
-                                <span class="menu-title">{{ __(@$data->title) }}</span>
                                 @php $counter = @$data->counter; @endphp
                                 @if (@$$counter)
-                                    <span class="menu-badge bg--info ms-auto">{{ @$$counter }}</span>
+                                    <span class="menu-badge bg--info me-2">{{ @$$counter }}</span>
                                 @endif
+                                <span class="menu-title">{{ __(@$data->title) }}</span>
                             </a>
                         </li>
                     @endcan
