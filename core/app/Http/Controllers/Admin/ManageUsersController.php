@@ -101,6 +101,29 @@ class ManageUsersController extends Controller
         return $this->userData('mobileVerified');
     }
 
+    public function pendingAccountRequests()
+    {
+        $pageTitle = 'Pending Account Approvals';
+        $requests = AccountOpeningRequest::with(['user.referrer'])
+            ->where('status', AccountOpeningRequest::STATUS_PENDING)
+            ->when(request('search'), function ($query, $search) {
+                $query->where(function ($inner) use ($search) {
+                    $inner->where('currency_code', 'like', "%{$search}%")
+                        ->orWhere('currency_name', 'like', "%{$search}%")
+                        ->orWhereHas('user', function ($userQuery) use ($search) {
+                            $userQuery->where('username', 'like', "%{$search}%")
+                                ->orWhere('email', 'like', "%{$search}%")
+                                ->orWhere('account_number', 'like', "%{$search}%")
+                                ->orWhereRaw('CONCAT(firstname, " ", lastname) LIKE ?', ["%{$search}%"]);
+                        });
+                });
+            })
+            ->latest()
+            ->paginate(getPaginate());
+
+        return view('admin.users.account_requests', compact('pageTitle', 'requests'));
+    }
+
     protected function userData($scope = null)
     {
         $users = User::query();
@@ -234,7 +257,9 @@ class ManageUsersController extends Controller
         ])->save();
 
         $notify[] = ['success', $accountRequest->type_label . ' request approved successfully.'];
-        return to_route('admin.users.detail', $user->id)->withNotify($notify);
+        return request()->boolean('queue')
+            ? to_route('admin.users.account.requests.pending')->withNotify($notify)
+            : to_route('admin.users.detail', $user->id)->withNotify($notify);
     }
 
     public function rejectAccountRequest($id, $requestId)
@@ -249,7 +274,9 @@ class ManageUsersController extends Controller
         ])->save();
 
         $notify[] = ['success', $accountRequest->type_label . ' request rejected successfully.'];
-        return to_route('admin.users.detail', $user->id)->withNotify($notify);
+        return request()->boolean('queue')
+            ? to_route('admin.users.account.requests.pending')->withNotify($notify)
+            : to_route('admin.users.detail', $user->id)->withNotify($notify);
     }
 
     public function switchAccount($id, $accountId)

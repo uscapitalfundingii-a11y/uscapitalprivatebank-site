@@ -35,10 +35,25 @@
             "emailUnverifiedUsersCount",
             "mobileUnverifiedUsersCount",
             "kycUnverifiedUsersCount",
-            "kycPendingUsersCount"
+            "kycPendingUsersCount",
+            "pendingAccountRequestCount"
         ],
         "menu_active": "admin.users*",
         "submenu": [
+            {
+                "keyword": [
+                    "account approval",
+                    "account approvals",
+                    "pending account approvals",
+                    "pending account requests",
+                    "multi currency requests",
+                    "crypto wallet requests"
+                ],
+                "title": "Account Approvals",
+                "route_name": "admin.users.account.requests.pending",
+                "menu_active": "admin.users.account.requests.pending",
+                "counter": "pendingAccountRequestCount"
+            },
             {
                 "keyword": [
                     "users",

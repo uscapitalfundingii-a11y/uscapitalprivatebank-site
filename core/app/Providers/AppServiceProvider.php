@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Constants\Status;
 use App\Lib\Searchable;
 use App\Models\AdminNotification;
+use App\Models\AccountOpeningRequest;
 use App\Models\BalanceTransfer;
 use App\Models\Deposit;
 use App\Models\Dps;
@@ -67,6 +68,7 @@ class AppServiceProvider extends ServiceProvider
                 'mobileUnverifiedUsersCount' => User::mobileUnverified()->count(),
                 'kycUnverifiedUsersCount'    => User::kycUnverified()->count(),
                 'kycPendingUsersCount'       => User::kycPending()->count(),
+                'pendingAccountRequestCount' => AccountOpeningRequest::where('status', AccountOpeningRequest::STATUS_PENDING)->count(),
 
                 'pendingTicketCount'         => SupportTicket::whereIN('status', [Status::TICKET_OPEN, Status::TICKET_REPLY])->count(),
                 'pendingDepositsCount'       => Deposit::pending()->count(),
