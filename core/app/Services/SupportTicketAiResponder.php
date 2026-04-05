@@ -72,7 +72,7 @@ class SupportTicketAiResponder
     public function draftForAdmin(SupportTicket $ticket): ?string
     {
         if (!$this->enabled()) {
-            return null;
+            throw new \RuntimeException('AI ticket drafts are not enabled on this server.');
         }
 
         $latestCustomerMessage = SupportMessage::query()
@@ -82,7 +82,7 @@ class SupportTicketAiResponder
             ->first();
 
         if (!$latestCustomerMessage) {
-            return null;
+            throw new \RuntimeException('There is no customer message available to draft a reply from.');
         }
 
         $response = Http::baseUrl(rtrim(config('openai.base_url'), '/'))
@@ -102,8 +102,7 @@ class SupportTicketAiResponder
             ]);
 
         if (!$response->successful()) {
-            report(new \RuntimeException('OpenAI support ticket draft failed: ' . $response->body()));
-            return null;
+            throw new \RuntimeException($this->apiErrorMessage($response->json(), 'AI draft could not be generated right now.'));
         }
 
         return $this->extractText($response->json());
@@ -239,5 +238,17 @@ class SupportTicketAiResponder
         $reply = trim(implode("\n\n", $chunks));
 
         return $reply !== '' ? $reply : null;
+    }
+
+    protected function apiErrorMessage(array $payload, string $fallback): string
+    {
+        $message = trim((string) data_get($payload, 'error.message', ''));
+        $code = trim((string) data_get($payload, 'error.code', ''));
+
+        if ($code === 'insufficient_quota') {
+            return 'OpenAI billing quota has been exceeded for the configured API key.';
+        }
+
+        return $message !== '' ? $message : $fallback;
     }
 }

@@ -58,12 +58,13 @@ class SupportTicketController extends Controller
     public function generateAiDraft(Request $request, $id)
     {
         $ticket = SupportTicket::with('user')->findOrFail($id);
-        $draft = app(SupportTicketAiResponder::class)->draftForAdmin($ticket);
-
-        if (!$draft) {
+        
+        try {
+            $draft = app(SupportTicketAiResponder::class)->draftForAdmin($ticket);
+        } catch (\Throwable $exception) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'AI draft could not be generated right now.',
+                'message' => $exception->getMessage(),
             ], 422);
         }
 
