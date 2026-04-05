@@ -3,8 +3,10 @@
 namespace App\Lib;
 
 use App\Constants\Status;
+use App\Models\BroadcastMessagePreset;
 use App\Models\NotificationTemplate;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -49,6 +51,7 @@ class UserNotificationSender
         $users = $this->getUsers($userQuery, $request->start, $request->batch, $filteredSelection);
 
         $this->sendNotifications($users, $request, $imageUrl);
+        $this->saveBroadcastPreset($request);
 
         return $this->manageSessionForNotification($totalUserCount, $request);
     }
@@ -286,5 +289,38 @@ class UserNotificationSender
 
         $notify[] = ['success', $message];
         return redirect($url)->withNotify($notify);
+    }
+
+    private function saveBroadcastPreset($request): void
+    {
+        if (session()->has('SEND_NOTIFICATION') || !SchemaHasBroadcastPresetTable()) {
+            return;
+        }
+
+        $subject = trim((string) $request->subject);
+        $message = trim((string) $request->message);
+        $via = trim((string) $request->via);
+
+        if ($message === '' || $via === '') {
+            return;
+        }
+
+        $preset = BroadcastMessagePreset::query()
+            ->where('via', $via)
+            ->where('subject', $subject !== '' ? $subject : null)
+            ->where('message', $message)
+            ->first();
+
+        if (!$preset) {
+            $preset = new BroadcastMessagePreset();
+            $preset->name = $subject !== '' ? $subject : str($message)->squish()->limit(80, '...')->value();
+            $preset->via = $via;
+            $preset->subject = $subject !== '' ? $subject : null;
+            $preset->message = $message;
+            $preset->created_by = optional(auth()->guard('admin')->user())->id;
+        }
+
+        $preset->last_used_at = Carbon::now();
+        $preset->save();
     }
 }
