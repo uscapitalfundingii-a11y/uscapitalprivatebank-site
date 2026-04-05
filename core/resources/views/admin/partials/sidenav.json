@@ -50,6 +50,7 @@
                     "crypto wallet requests"
                 ],
                 "title": "Account Approvals",
+                "permission_route_name": "admin.users.all",
                 "route_name": "admin.users.account.requests.pending",
                 "menu_active": "admin.users.account.requests.pending",
                 "counter": "pendingAccountRequestCount"

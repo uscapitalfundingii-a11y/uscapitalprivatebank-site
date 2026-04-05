@@ -56,9 +56,10 @@
                                                 }
                                             }
                                             $routeName = $menu->route_name;
+                                            $permissionRouteName = $menu->permission_route_name ?? $menu->route_name;
                                         @endphp
 
-                                        @can($menu->route_name)
+                                        @can($permissionRouteName)
                                             @php
                                                 if (is_array($menu->route_name)) {
                                                     foreach ($menu->route_name as $route) {
@@ -95,9 +96,10 @@
                             }
                         }
                         $routeName = $data->route_name;
+                        $permissionRouteName = $data->permission_route_name ?? $data->route_name;
                     @endphp
 
-                    @can(@$data->route_name)
+                    @can(@$permissionRouteName)
                         @php
                             if (is_array($data->route_name)) {
                                 foreach ($data->route_name as $route) {
