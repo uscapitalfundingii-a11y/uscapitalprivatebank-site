@@ -17,8 +17,9 @@ foreach ($elements as $element) {
     $preview = mb_substr($preview, 0, 180);
 
     echo sprintf(
-        "[%d] %s | %s\n",
+        "[%d] %s | %s | %s\n",
         $element->id,
+        $element->tempname,
         $heading,
         $preview
     );
