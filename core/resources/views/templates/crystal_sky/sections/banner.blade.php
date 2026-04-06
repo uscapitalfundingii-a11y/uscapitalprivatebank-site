@@ -11,6 +11,9 @@
             <div class="col-lg-7 col-md-6">
                 <div class="banner-content">
                     <h1 class="banner-content__title">{{ __(@$banner->data_values->heading) }}</h1>
+                    @if (@$banner->data_values->subheading)
+                        <p class="text-white mt-3 mb-4">{{ __(@$banner->data_values->subheading) }}</p>
+                    @endif
                     <div class="banner-content__bottom flex-align gap-4">
                         <span class="banner-animation">
                             <i class="icon-Asset-1"></i>
