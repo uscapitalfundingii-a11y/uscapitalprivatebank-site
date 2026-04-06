@@ -7,9 +7,17 @@
 @foreach ($pages as $k => $data)
     @php
         $isSupportPage = strcasecmp($data->slug, 'support') === 0 || strcasecmp($data->name, 'Support') === 0;
+        $isStaffPage = strcasecmp($data->slug, 'staff') === 0 || strcasecmp($data->name, 'Staff') === 0;
+        $targetUrl = route('pages', [$data->slug]);
+
+        if ($isSupportPage) {
+            $targetUrl = url('/crm/');
+        } elseif ($isStaffPage) {
+            $targetUrl = url('/crm/admin/authentication');
+        }
     @endphp
     <li>
-        <a class="@if ($isSupportPage ? request()->routeIs('ticket.*') : $data->slug == Request::segment(1)) active @endif" href="{{ $isSupportPage ? route('ticket.index') : route('pages', [$data->slug]) }}">
+        <a class="@if ((!$isSupportPage && !$isStaffPage) && $data->slug == Request::segment(1)) active @endif" href="{{ $targetUrl }}">
             {{ __($data->name) }}
         </a>
     </li>

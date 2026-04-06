@@ -18,9 +18,17 @@
                     @foreach ($pages as $k => $data)
                         @php
                             $isSupportPage = strcasecmp($data->slug, 'support') === 0 || strcasecmp($data->name, 'Support') === 0;
+                            $isStaffPage = strcasecmp($data->slug, 'staff') === 0 || strcasecmp($data->name, 'Staff') === 0;
+                            $targetUrl = route('pages', [$data->slug]);
+
+                            if ($isSupportPage) {
+                                $targetUrl = url('/crm/');
+                            } elseif ($isStaffPage) {
+                                $targetUrl = url('/crm/admin/authentication');
+                            }
                         @endphp
                         <li class="nav-item">
-                            <a class="nav-link @if ($isSupportPage ? request()->routeIs('ticket.*') : $data->slug == Request::segment(1)) active @endif" aria-current="page" href="{{ $isSupportPage ? route('ticket.index') : route('pages', [$data->slug]) }}">{{ __($data->name) }}</a>
+                            <a class="nav-link @if ((!$isSupportPage && !$isStaffPage) && $data->slug == Request::segment(1)) active @endif" aria-current="page" href="{{ $targetUrl }}">{{ __($data->name) }}</a>
                         </li>
                     @endforeach
                     <li class="nav-item">
