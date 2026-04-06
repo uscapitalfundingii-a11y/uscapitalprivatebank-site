@@ -10,9 +10,28 @@ if (!file_exists($configFile)) {
     exit(1);
 }
 
-require $configFile;
+$config = file_get_contents($configFile);
+if ($config === false) {
+    fwrite(STDERR, "read_failed\n");
+    exit(1);
+}
 
-$mysqli = new mysqli(APP_DB_HOSTNAME, APP_DB_USERNAME, APP_DB_PASSWORD, APP_DB_NAME);
+$readDefine = static function (string $constant) use ($config): string {
+    $pattern = "/define\\('" . preg_quote($constant, '/') . "',\\s*'([^']*)'\\);/";
+    if (!preg_match($pattern, $config, $matches)) {
+        fwrite(STDERR, "missing_define:$constant\n");
+        exit(1);
+    }
+
+    return $matches[1];
+};
+
+$dbHost = $readDefine('APP_DB_HOSTNAME');
+$dbUser = $readDefine('APP_DB_USERNAME');
+$dbPass = $readDefine('APP_DB_PASSWORD');
+$dbName = $readDefine('APP_DB_NAME');
+
+$mysqli = new mysqli($dbHost, $dbUser, $dbPass, $dbName);
 if ($mysqli->connect_errno) {
     fwrite(STDERR, 'connect_failed:' . $mysqli->connect_error . PHP_EOL);
     exit(1);
