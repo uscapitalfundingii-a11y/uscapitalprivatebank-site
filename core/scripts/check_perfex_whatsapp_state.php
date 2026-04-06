@@ -9,10 +9,10 @@ if ($config === false) {
 }
 
 $patterns = [
-    'host' => "/\\\$config\\['db_hostname'\\]\\s*=\\s*'([^']+)'\\s*;/",
-    'user' => "/\\\$config\\['db_username'\\]\\s*=\\s*'([^']+)'\\s*;/",
-    'pass' => "/\\\$config\\['db_password'\\]\\s*=\\s*'([^']*)'\\s*;/",
-    'name' => "/\\\$config\\['db_name'\\]\\s*=\\s*'([^']+)'\\s*;/",
+    'host' => "/define\\('APP_DB_HOSTNAME',\\s*'([^']+)'\\);/",
+    'user' => "/define\\('APP_DB_USERNAME',\\s*'([^']+)'\\);/",
+    'pass' => "/define\\('APP_DB_PASSWORD',\\s*'([^']*)'\\);/",
+    'name' => "/define\\('APP_DB_NAME',\\s*'([^']+)'\\);/",
 ];
 
 $values = [];
@@ -65,10 +65,28 @@ if ($result) {
     echo 'tblmodules-query-failed:' . $mysqli->error . PHP_EOL;
 }
 
-$result = $mysqli->query("SELECT option_name, LENGTH(option_value) AS len FROM tbloptions WHERE option_name LIKE 'whatsapp_%' ORDER BY option_name");
+$result = $mysqli->query("SHOW COLUMNS FROM tbloptions");
+$columns = [];
 if ($result) {
     while ($row = $result->fetch_assoc()) {
-        echo 'option=' . $row['option_name'] . ' len=' . $row['len'] . PHP_EOL;
+        $columns[] = $row['Field'];
     }
 }
 
+echo 'tbloptions_columns=' . implode(',', $columns) . PHP_EOL;
+
+$nameColumn = in_array('name', $columns, true) ? 'name' : (in_array('option_name', $columns, true) ? 'option_name' : null);
+$valueColumn = in_array('value', $columns, true) ? 'value' : (in_array('option_value', $columns, true) ? 'option_value' : null);
+
+if ($nameColumn && $valueColumn) {
+    $result = $mysqli->query("SELECT `{$nameColumn}` AS option_name, LENGTH(`{$valueColumn}`) AS len FROM tbloptions WHERE `{$nameColumn}` LIKE 'whatsapp_%' ORDER BY `{$nameColumn}`");
+    if ($result) {
+        while ($row = $result->fetch_assoc()) {
+            echo 'option=' . $row['option_name'] . ' len=' . $row['len'] . PHP_EOL;
+        }
+    } else {
+        echo 'whatsapp-options-query-failed:' . $mysqli->error . PHP_EOL;
+    }
+} else {
+    echo 'tbloptions-name-value-columns-not-found' . PHP_EOL;
+}
