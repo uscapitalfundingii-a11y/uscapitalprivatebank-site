@@ -21,6 +21,48 @@ class Authentication extends ClientsController
         redirect(admin_url('authentication'));
     }
 
+    public function sso()
+    {
+        if (is_client_logged_in()) {
+            redirect(site_url());
+        }
+
+        $token = (string) $this->input->get('token', true);
+
+        if (!$token) {
+            set_alert('danger', 'Missing SSO token.');
+            redirect(site_url('authentication/login'));
+        }
+
+        $payload = $this->validate_sso_token($token);
+
+        if (!$payload || empty($payload['email'])) {
+            set_alert('danger', 'Invalid or expired SSO login request.');
+            redirect(site_url('authentication/login'));
+        }
+
+        $this->load->model('Authentication_model');
+
+        $success = $this->Authentication_model->login_by_email($payload['email']);
+
+        if (is_array($success) && isset($success['memberinactive'])) {
+            set_alert('danger', _l('inactive_account'));
+            redirect(site_url('authentication/login'));
+        }
+
+        if ($success !== true) {
+            set_alert('danger', 'No CRM contact was found for your email address.');
+            redirect(site_url('authentication/login'));
+        }
+
+        $this->load->model('announcements_model');
+        $this->announcements_model->set_announcements_as_read_except_last_one(get_contact_user_id());
+
+        hooks()->do_action('after_contact_login');
+
+        redirect(site_url());
+    }
+
     public function login()
     {
         if (is_client_logged_in()) {
@@ -73,6 +115,62 @@ class Authentication extends ClientsController
         $this->data($data);
         $this->view('login');
         $this->layout();
+    }
+
+    private function validate_sso_token($token)
+    {
+        $secret = getenv('CRM_SSO_SECRET') ?: (defined('APP_CRM_SSO_SECRET') ? APP_CRM_SSO_SECRET : null);
+
+        if (!$secret || strpos($token, '.') === false) {
+            return null;
+        }
+
+        [$encodedPayload, $providedSignature] = explode('.', $token, 2);
+
+        if (!$encodedPayload || !$providedSignature) {
+            return null;
+        }
+
+        $expectedSignature = hash_hmac('sha256', $encodedPayload, $secret);
+
+        if (!hash_equals($expectedSignature, $providedSignature)) {
+            return null;
+        }
+
+        $decodedPayload = $this->base64_url_decode($encodedPayload);
+
+        if ($decodedPayload === false) {
+            return null;
+        }
+
+        $payload = json_decode($decodedPayload, true);
+
+        if (!is_array($payload) || empty($payload['email']) || empty($payload['exp'])) {
+            return null;
+        }
+
+        if (!filter_var($payload['email'], FILTER_VALIDATE_EMAIL)) {
+            return null;
+        }
+
+        if ((int) $payload['exp'] < time()) {
+            return null;
+        }
+
+        $payload['email'] = strtolower(trim($payload['email']));
+
+        return $payload;
+    }
+
+    private function base64_url_decode($value)
+    {
+        $remainder = strlen($value) % 4;
+
+        if ($remainder) {
+            $value .= str_repeat('=', 4 - $remainder);
+        }
+
+        return base64_decode(strtr($value, '-_', '+/'), true);
     }
 
     public function register()

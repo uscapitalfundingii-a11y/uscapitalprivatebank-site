@@ -86,3 +86,9 @@ define('APP_SESSION_COOKIE_SAME_SITE', 'Lax');
  * Enables CSRF Protection
  */
 define('APP_CSRF_PROTECTION', true);
+
+/**
+ * Optional shared secret for Laravel -> CRM single sign-on.
+ * Use the same value as CRM_SSO_SECRET in the Laravel .env file.
+ */
+// define('APP_CRM_SSO_SECRET', 'replace-with-a-long-random-secret');

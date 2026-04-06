@@ -122,6 +122,52 @@ class Authentication_model extends App_Model
         return false;
     }
 
+    public function login_by_email($email, $remember = false)
+    {
+        if (empty($email)) {
+            return false;
+        }
+
+        $this->db->where('email', $email);
+        $user = $this->db->get(db_prefix() . 'contacts')->row();
+
+        if (!$user) {
+            log_activity('CRM SSO Failed - Contact Not Found [Email: ' . $email . ', IP: ' . $this->input->ip_address() . ']');
+
+            return false;
+        }
+
+        if ((int) $user->active === 0) {
+            log_activity('CRM SSO Failed - Inactive Contact [Email: ' . $email . ', Contact ID: ' . $user->id . ', IP: ' . $this->input->ip_address() . ']');
+
+            return [
+                'memberinactive' => true,
+            ];
+        }
+
+        hooks()->do_action('before_client_login', [
+            'email'           => $email,
+            'userid'          => $user->userid,
+            'contact_user_id' => $user->id,
+        ]);
+
+        $this->session->set_userdata([
+            'client_user_id'   => $user->userid,
+            'contact_user_id'  => $user->id,
+            'client_logged_in' => true,
+        ]);
+
+        if ($remember) {
+            $this->create_autologin($user->id, false);
+        }
+
+        $this->update_login_info($user->id, false);
+
+        log_activity('CRM SSO Success [Email: ' . $email . ', Contact ID: ' . $user->id . ', IP: ' . $this->input->ip_address() . ']');
+
+        return true;
+    }
+
     /**
      * @param  boolean If Client or Staff
      * @return none

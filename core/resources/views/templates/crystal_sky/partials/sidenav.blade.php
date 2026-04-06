@@ -119,6 +119,13 @@
                 </a>
             </li>
 
+            <li class="sidebar-menu-list__item {{ menuActive('user.crm.sso') }}">
+                <a href="{{ route('user.crm.sso') }}" class="sidebar-menu-list__link">
+                    <span class="icon"><i class="las la-user-shield"></i></span>
+                    <span class="text">@lang('CRM Portal')</span>
+                </a>
+            </li>
+
             <li
                 class="sidebar-menu-list__item {{ menuActive(['user.profile.setting', 'user.change.password', 'user.twofactor']) }}">
                 <a href="{{ route('user.profile.setting') }}" class="sidebar-menu-list__link">

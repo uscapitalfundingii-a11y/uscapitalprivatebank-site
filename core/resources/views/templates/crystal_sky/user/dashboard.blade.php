@@ -153,6 +153,19 @@
                 <h4 class="dashboard-widget__number">@lang('Request')</h4>
             </button>
         </div>
+        <div class="col-xl-4 col-lg-6 col-md-4 col-sm-6 col-xsm-6">
+            <a href="{{ route('user.crm.sso') }}" class="d-block">
+                <div class="dashboard-widget">
+                    <div class="dashboard-widget__content flex-align">
+                        <span class="dashboard-widget__icon flex-center">
+                            <i class="las la-user-shield"></i>
+                        </span>
+                        <span class="dashboard-widget__text">@lang('Open CRM Portal')</span>
+                    </div>
+                    <h4 class="dashboard-widget__number">@lang('Single Sign-On')</h4>
+                </div>
+            </a>
+        </div>
 
         @if (gs()->modules->referral_system)
             <div class="col-xl-4 col-lg-6 col-md-4 col-sm-6 col-xsm-6">
