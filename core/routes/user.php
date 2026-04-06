@@ -57,6 +57,8 @@ Route::middleware('auth')->name('user.')->group(function () {
                 Route::post('resend/otp/{id}', 'resendOtp')->name('otp.resend');
             });
 
+            Route::get('crm/login', 'CrmSsoController@redirect')->name('crm.sso');
+
             Route::controller('UserController')->group(function () {
                 Route::get('dashboard', 'home')->name('home');
                 Route::get('download-attachments/{file_hash}', 'downloadAttachment')->name('download.attachment');
