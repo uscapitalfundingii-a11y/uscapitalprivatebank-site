@@ -117,15 +117,17 @@ a {
     min-height: 520px;
     overflow: hidden;
     background:
-        radial-gradient(circle at top left, rgba(30, 167, 255, 0.26), transparent 34%),
-        linear-gradient(135deg, rgba(12, 22, 50, 0.96), rgba(18, 41, 85, 0.88)),
-        url("https://www.uscapitalprivatebank.com/assets/images/frontend/breadcrumb/66d6f3c03c2ec1725363136.jpg") center/cover no-repeat;
+        radial-gradient(circle at top left, rgba(30, 167, 255, 0.22), transparent 34%),
+        linear-gradient(135deg, rgba(7, 14, 33, 0.72), rgba(11, 31, 69, 0.68)),
+        url("/support/what-is-conversational-ai-1.jpg") center center/cover no-repeat;
 }
 
 .hero__overlay {
     position: absolute;
     inset: 0;
-    background: linear-gradient(180deg, rgba(8, 17, 40, 0.28), rgba(8, 17, 40, 0.56));
+    background:
+        linear-gradient(180deg, rgba(6, 12, 30, 0.12), rgba(6, 12, 30, 0.5)),
+        radial-gradient(circle at 72% 28%, rgba(30, 167, 255, 0.14), transparent 22%);
 }
 
 .hero__content {
