@@ -43,10 +43,10 @@
                 <p class="eyebrow">Private Client Support</p>
                 <h1>Secure Assistance, Routed the Right Way</h1>
                 <p class="hero__lead">
-                    Choose the support path that matches your request. For account-specific help, secure routing continues only for authenticated and approved users.
+                    Choose the support path that matches your request. Premium client support and Tier-1 banking services require an active signed-in account before a ticket can be opened.
                 </p>
                 <div class="hero__actions">
-                    <a class="button button--solid" href="https://www.uscapitalprivatebank.com/crm/">Continue to Support Portal</a>
+                    <a class="button button--solid js-ticket-gate" href="https://www.uscapitalprivatebank.com/ticket">Open Support Ticket</a>
                     <a class="button button--ghost-light" href="https://www.uscapitalprivatebank.com/crm/admin/authentication">Staff Access</a>
                 </div>
             </div>
@@ -65,8 +65,20 @@
                 <div class="notice-card">
                     <h3>Before You Continue</h3>
                     <p>
-                        Only authenticated and approved users can move deeper into account-specific or transaction-related support. If you are not signed in yet, you will be prompted to sign in before continuing.
+                        Guests can review support options, FAQs, and live chat. Opening a secure ticket requires that you are signed in to your banking account first.
                     </p>
+                </div>
+
+                <div class="support-alert" id="support-access-alert" hidden>
+                    <h3>Please sign in or register to access Premium Client Support and Tier-1 Banking Services.</h3>
+                    <p>
+                        To open a secure support ticket, you must be signed in. If you are having trouble logging in, use the live chat / WhatsApp option on the site and our team will guide you from there.
+                    </p>
+                    <div class="support-alert__actions">
+                        <a class="button button--solid" href="https://www.uscapitalprivatebank.com/user/login">Sign In</a>
+                        <a class="button button--ghost-dark" href="https://www.uscapitalprivatebank.com/user/register">Register</a>
+                        <a class="button button--soft" href="https://www.uscapitalprivatebank.com/faq">View FAQ</a>
+                    </div>
                 </div>
 
                 <div class="support-grid">
@@ -74,42 +86,42 @@
                         <span class="support-card__index">01</span>
                         <h3>General Support</h3>
                         <p>General platform help, login guidance, page access questions, and support navigation assistance.</p>
-                        <a class="support-card__link" href="https://www.uscapitalprivatebank.com/crm/?support=general-support">Continue</a>
+                        <a class="support-card__link js-ticket-gate" data-category="general-support" href="https://www.uscapitalprivatebank.com/ticket/new?category=general-support">Open Ticket</a>
                     </article>
 
                     <article class="support-card">
                         <span class="support-card__index">02</span>
                         <h3>Account Assistance</h3>
                         <p>Account access, profile updates, account review, statement questions, and account-related servicing.</p>
-                        <a class="support-card__link" href="https://www.uscapitalprivatebank.com/crm/?support=account-assistance">Continue</a>
+                        <a class="support-card__link js-ticket-gate" data-category="account-assistance" href="https://www.uscapitalprivatebank.com/ticket/new?category=account-assistance">Open Ticket</a>
                     </article>
 
                     <article class="support-card">
                         <span class="support-card__index">03</span>
                         <h3>Relationship Manager</h3>
                         <p>Private client coordination, onboarding follow-up, client relationship support, and directed manager contact.</p>
-                        <a class="support-card__link" href="https://www.uscapitalprivatebank.com/crm/?support=relationship-manager">Continue</a>
+                        <a class="support-card__link js-ticket-gate" data-category="relationship-manager" href="https://www.uscapitalprivatebank.com/ticket/new?category=relationship-manager">Open Ticket</a>
                     </article>
 
                     <article class="support-card">
                         <span class="support-card__index">04</span>
                         <h3>Banking Services</h3>
                         <p>General banking products, private banking services, account features, and service eligibility requests.</p>
-                        <a class="support-card__link" href="https://www.uscapitalprivatebank.com/crm/?support=banking-services">Continue</a>
+                        <a class="support-card__link js-ticket-gate" data-category="banking-services" href="https://www.uscapitalprivatebank.com/ticket/new?category=banking-services">Open Ticket</a>
                     </article>
 
                     <article class="support-card">
                         <span class="support-card__index">05</span>
                         <h3>Transaction Desk</h3>
                         <p>Transaction follow-up, funding questions, payment status, transfer support, and transaction desk review.</p>
-                        <a class="support-card__link" href="https://www.uscapitalprivatebank.com/crm/?support=transaction-desk">Continue</a>
+                        <a class="support-card__link js-ticket-gate" data-category="transaction-desk" href="https://www.uscapitalprivatebank.com/ticket/new?category=transaction-desk">Open Ticket</a>
                     </article>
 
                     <article class="support-card">
                         <span class="support-card__index">06</span>
                         <h3>Compliance &amp; Verification</h3>
                         <p>KYC, verification, account review, documentation requests, and compliance-related follow-up.</p>
-                        <a class="support-card__link" href="https://www.uscapitalprivatebank.com/crm/?support=compliance-verification">Continue</a>
+                        <a class="support-card__link js-ticket-gate" data-category="compliance-verification" href="https://www.uscapitalprivatebank.com/ticket/new?category=compliance-verification">Open Ticket</a>
                     </article>
                 </div>
             </div>
@@ -120,14 +132,44 @@
                 <div>
                     <p class="eyebrow eyebrow--dark">Need Secure Access?</p>
                     <h2>Client and Staff Support Routes</h2>
-                    <p>Choose the correct secure path below if you already know whether you are entering as a client or as staff.</p>
+                    <p>Signed-in clients can open secure tickets. Guests should review FAQs or use the live chat / WhatsApp support option for login help.</p>
                 </div>
                 <div class="help-strip__actions">
-                    <a class="button button--solid" href="https://www.uscapitalprivatebank.com/crm/">Client Support Portal</a>
+                    <a class="button button--solid js-ticket-gate" href="https://www.uscapitalprivatebank.com/ticket">Open Ticket</a>
                     <a class="button button--ghost" href="https://www.uscapitalprivatebank.com/crm/admin/authentication">Staff Sign In</a>
                 </div>
             </div>
         </section>
     </main>
+    <script>
+        (function () {
+            const alertBox = document.getElementById('support-access-alert');
+            const gatedLinks = document.querySelectorAll('.js-ticket-gate');
+            let signedIn = false;
+
+            function revealNotice() {
+                if (!alertBox) return;
+                alertBox.hidden = false;
+                alertBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+
+            fetch('/session-status', { credentials: 'same-origin' })
+                .then((response) => response.json())
+                .then((data) => {
+                    signedIn = !!(data && data.status === true);
+                })
+                .catch(() => {
+                    signedIn = false;
+                });
+
+            gatedLinks.forEach((link) => {
+                link.addEventListener('click', function (event) {
+                    if (signedIn) return;
+                    event.preventDefault();
+                    revealNotice();
+                });
+            });
+        })();
+    </script>
 </body>
 </html>

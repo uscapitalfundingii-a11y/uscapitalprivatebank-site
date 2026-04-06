@@ -11,7 +11,7 @@
         $targetUrl = route('pages', [$data->slug]);
 
         if ($isSupportPage) {
-            $targetUrl = url('/crm/');
+            $targetUrl = url('/support/');
         } elseif ($isStaffPage) {
             $targetUrl = url('/crm/admin/authentication');
         }
