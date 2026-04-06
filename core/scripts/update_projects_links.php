@@ -3,6 +3,11 @@
 use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Support\Facades\DB;
 
+$autoload = __DIR__ . '/../vendor/autoload.php';
+if (file_exists($autoload)) {
+    require $autoload;
+}
+
 $app = require __DIR__ . '/../bootstrap/app.php';
 $app->make(Kernel::class)->bootstrap();
 
