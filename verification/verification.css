@@ -29,12 +29,15 @@ a {
 }
 
 .site-header {
-    position: sticky;
+    position: absolute;
     top: 0;
+    left: 0;
+    width: 100%;
     z-index: 30;
-    background: rgba(15, 31, 69, 0.62);
+    background: rgba(10, 18, 38, 0.06);
     backdrop-filter: blur(14px);
-    box-shadow: 0 10px 30px rgba(10, 22, 50, 0.14);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 6px 18px rgba(10, 22, 50, 0.08);
 }
 
 .site-header__inner {
@@ -127,18 +130,15 @@ a {
     min-height: 500px;
     overflow: hidden;
     background:
-        radial-gradient(circle at top left, rgba(30, 167, 255, 0.22), transparent 34%),
-        linear-gradient(180deg, rgba(9, 16, 38, 0.18), rgba(9, 16, 38, 0.18)),
-        linear-gradient(135deg, rgba(7, 14, 33, 0.78), rgba(11, 31, 69, 0.74)),
-        url("https://www.uscapitalprivatebank.com/assets/images/frontend/banner/663fc1ef1d2c01715237359.jpg") center center/cover no-repeat;
+        url("/verification/Bez_nazvi_1500_x_500_piks_39_1_a08dbd3060.webp") center center/cover no-repeat;
 }
 
 .hero__overlay {
     position: absolute;
     inset: 0;
     background:
-        linear-gradient(180deg, rgba(6, 12, 30, 0.08), rgba(6, 12, 30, 0.44)),
-        radial-gradient(circle at 74% 22%, rgba(30, 167, 255, 0.16), transparent 22%);
+        linear-gradient(180deg, rgba(42, 61, 105, 0.44), rgba(20, 31, 59, 0.58)),
+        radial-gradient(circle at 22% 24%, rgba(115, 169, 255, 0.08), transparent 30%);
 }
 
 .hero__content {
