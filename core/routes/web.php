@@ -27,6 +27,8 @@ Route::get('app/deposit/confirm/{hash}', 'Gateway\PaymentController@appDepositCo
 Route::controller('SiteController')->group(function () {
     Route::get('contact', 'contact')->name('contact');
     Route::post('contact', 'contactSubmit');
+    Route::get('verify', 'verification')->name('verify.portal');
+    Route::get('verification', 'verification')->name('verification');
     Route::get('change/{lang?}', 'changeLanguage')->name('lang');
     Route::get('cookie-policy', 'cookiePolicy')->name('cookie.policy');
     Route::get('cookie/accept', 'cookieAccept')->name('cookie.accept');

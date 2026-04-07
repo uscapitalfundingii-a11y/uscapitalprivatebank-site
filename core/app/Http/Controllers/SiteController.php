@@ -113,6 +113,18 @@ class SiteController extends Controller
         return view('Template::branches', compact('pageTitle', 'branches'));
     }
 
+    public function verification()
+    {
+        $pageTitle = 'Document Verification';
+        $seoContents = (object) [
+            'description' => 'Verify U.S. Capital Private Bank documents and continue into the secure document authentication portal.',
+            'image' => null,
+        ];
+        $seoImage = null;
+
+        return view('Template::verification', compact('pageTitle', 'seoContents', 'seoImage'));
+    }
+
     public function policyPages($slug)
     {
         $policy      = Frontend::activeTemplate()->where('slug', $slug)->where('data_keys', 'policy_pages.element')->firstOrFail();
