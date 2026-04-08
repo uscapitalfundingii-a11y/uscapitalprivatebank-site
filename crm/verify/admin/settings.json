@@ -1,0 +1,28 @@
+{
+    "colors": {
+        "headerBg": "#003366",
+        "headerOverlay": "rgba(0, 51, 102, 0.8)",
+        "navText": "#ffffff",
+        "navHover": "#87cefa",
+        "buttonBg": "#004080",
+        "buttonText": "#ffffff"
+    },
+    "menuLinks": [
+        { "text": "Home", "href": "https://uscapitalprivatebank.com" },
+        { "text": "About Us", "href": "#" },
+        { "text": "Services", "href": "#" },
+        { "text": "Swift-NFT", "href": "#" },
+        { "text": "USCPBGOLD", "href": "#" },
+        { "text": "Support", "href": "#" },
+        { "text": "Contact", "href": "#" }
+    ],
+    "buttons": [],
+    "images": {
+        "logo": "uscapital-logo.png",
+        "headerBg": "https://uscapitalprivatebank.com/assets/images/frontend/banner/60c756944f1271623676564.jpg"
+    },
+    "content": {
+        "heroTitle": "Welcome to US Capital Private Bank",
+        "heroText": "US Capital Private Bank offers a Tier 1, safe, fast, easy, and efficient e-banking system..."
+    }
+}
