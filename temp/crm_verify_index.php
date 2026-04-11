@@ -319,6 +319,57 @@ $isAuthenticated = isset($_SESSION['upload_authenticated']) && $_SESSION['upload
             box-shadow: 0 0 0 4px rgba(30, 167, 255, 0.12);
         }
 
+        .password-field {
+            position: relative;
+        }
+
+        .password-field input {
+            padding-right: 56px;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 34px;
+            height: 34px;
+            border: 0;
+            border-radius: 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            color: var(--muted);
+            cursor: pointer;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        .password-toggle:hover,
+        .password-toggle:focus-visible {
+            background: rgba(30, 167, 255, 0.12);
+            color: var(--navy);
+            outline: none;
+        }
+
+        .password-toggle svg {
+            width: 19px;
+            height: 19px;
+            pointer-events: none;
+        }
+
+        .password-toggle .eye-off {
+            display: none;
+        }
+
+        .password-toggle.is-visible .eye-on {
+            display: none;
+        }
+
+        .password-toggle.is-visible .eye-off {
+            display: block;
+        }
+
         .stack {
             display: grid;
             gap: 14px;
@@ -547,9 +598,26 @@ $isAuthenticated = isset($_SESSION['upload_authenticated']) && $_SESSION['upload
                                 <label for="username">Username</label>
                                 <input type="text" id="username" name="username" required />
                             </div>
-                            <div>
+                            <div class="password-field">
                                 <label for="password">Password</label>
                                 <input type="password" id="password" name="password" required />
+                                <button
+                                    class="password-toggle"
+                                    type="button"
+                                    data-password-toggle="password"
+                                    aria-label="Show password"
+                                    aria-pressed="false"
+                                >
+                                    <svg class="eye-on" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                        <path d="M1.5 12s3.75-6.75 10.5-6.75S22.5 12 22.5 12s-3.75 6.75-10.5 6.75S1.5 12 1.5 12Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <circle cx="12" cy="12" r="3.25" stroke="currentColor" stroke-width="1.8"/>
+                                    </svg>
+                                    <svg class="eye-off" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                        <path d="M3 3l18 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                        <path d="M10.58 5.44A10.67 10.67 0 0 1 12 5.25c6.75 0 10.5 6.75 10.5 6.75a19.2 19.2 0 0 1-3.1 3.95M6.73 6.73C3.88 8.36 1.5 12 1.5 12s3.75 6.75 10.5 6.75a10.8 10.8 0 0 0 4.23-.83" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <path d="M9.88 9.88A3 3 0 0 0 14.12 14.12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                    </svg>
+                                </button>
                             </div>
                             <div class="submit-row">
                                 <button class="button button--solid" type="submit" name="login">Sign In</button>
@@ -588,5 +656,23 @@ $isAuthenticated = isset($_SESSION['upload_authenticated']) && $_SESSION['upload
     <footer>
         &copy; <?= date('Y') ?> U.S. Capital Private Bank. All rights reserved.
     </footer>
+    <script>
+        document.querySelectorAll('[data-password-toggle]').forEach(function (button) {
+            button.addEventListener('click', function () {
+                var inputId = button.getAttribute('data-password-toggle');
+                var input = document.getElementById(inputId);
+
+                if (!input) {
+                    return;
+                }
+
+                var isVisible = input.type === 'text';
+                input.type = isVisible ? 'password' : 'text';
+                button.classList.toggle('is-visible', !isVisible);
+                button.setAttribute('aria-pressed', String(!isVisible));
+                button.setAttribute('aria-label', isVisible ? 'Show password' : 'Hide password');
+            });
+        });
+    </script>
 </body>
 </html>
