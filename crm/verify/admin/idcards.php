@@ -29,6 +29,25 @@ $error = '';
 $previewCard = null;
 $cards = verify_load_id_cards();
 
+if (isset($_POST['delete_id_card'])) {
+    $targetCode = strtoupper(trim((string) ($_POST['delete_id_card'] ?? '')));
+    if ($targetCode !== '' && isset($cards[$targetCode])) {
+        $photoUrl = (string) ($cards[$targetCode]['photo_url'] ?? '');
+        if ($photoUrl !== '' && str_starts_with($photoUrl, 'idcard_photos/')) {
+            $photoPath = dirname(__DIR__) . '/' . str_replace(['../', '..\\'], '', $photoUrl);
+            if (is_file($photoPath)) {
+                @unlink($photoPath);
+            }
+        }
+        unset($cards[$targetCode]);
+        verify_save_id_cards($cards);
+        $message = 'ID card deleted.';
+        if ($previewCard !== null && ($previewCard['code'] ?? '') === $targetCode) {
+            $previewCard = null;
+        }
+    }
+}
+
 if (isset($_POST['create_id_card'])) {
     $name = trim((string) ($_POST['name'] ?? ''));
     $title = trim((string) ($_POST['title'] ?? ''));
@@ -138,6 +157,34 @@ uksort($cards, static function ($a, $b) use ($cards) {
             margin-top: 12px;
             color: var(--verify-muted);
             font-size: 14px;
+        }
+
+        .idcard-action-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .idcard-delete-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 18px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 114, 114, 0.28);
+            background: rgba(255, 114, 114, 0.1);
+            color: #ffb4b4;
+            font: inherit;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+        }
+
+        .idcard-delete-button:hover {
+            transform: translateY(-1px);
+            background: rgba(255, 114, 114, 0.18);
+            border-color: rgba(255, 114, 114, 0.4);
         }
 
         @media (max-width: 860px) {
@@ -281,9 +328,12 @@ uksort($cards, static function ($a, $b) use ($cards) {
                                         <td><?= htmlspecialchars($card['affiliation'], ENT_QUOTES, 'UTF-8') ?></td>
                                         <td><span class="verify-status approved"><?= htmlspecialchars($card['status'], ENT_QUOTES, 'UTF-8') ?></span></td>
                                         <td>
-                                            <div class="verify-actions" style="margin:0;">
+                                            <div class="idcard-action-group">
                                                 <a class="verify-link" href="?code=<?= urlencode($card['code']) ?>">Preview</a>
                                                 <a class="verify-link" href="../idcard.php?code=<?= urlencode($card['code']) ?>" target="_blank" rel="noopener">Verify</a>
+                                                <form method="post" onsubmit="return confirm('Delete this ID card?');" style="margin:0;">
+                                                    <button class="idcard-delete-button" type="submit" name="delete_id_card" value="<?= htmlspecialchars($card['code'], ENT_QUOTES, 'UTF-8') ?>">Delete</button>
+                                                </form>
                                             </div>
                                         </td>
                                     </tr>
