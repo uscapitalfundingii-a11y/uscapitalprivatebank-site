@@ -3,12 +3,16 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
+require_once __DIR__ . '/crm_verify_auth.php';
+
 $baseDir = __DIR__ . '/files';
 $baseUrl = 'https://www.uscapitalprivatebank.com/crm/verify/files';
 $requestedFile = basename((string) ($_GET['file'] ?? ''));
 $filePath = $requestedFile !== '' ? $baseDir . '/' . $requestedFile : '';
+$documents = verify_load_documents();
+$document = $documents[$requestedFile] ?? null;
 
-if ($requestedFile === '' || !is_file($filePath)) {
+if ($requestedFile === '' || !is_file($filePath) || !is_array($document) || !verify_is_document_approved($document)) {
     header('Location: index.php?error=' . urlencode('The requested verification file could not be located.'));
     exit;
 }
@@ -23,7 +27,7 @@ $printUrls = [
     'a4' => $printUrl . '&paper=a4',
 ];
 $extension = strtolower(pathinfo($requestedFile, PATHINFO_EXTENSION));
-$documentCode = pathinfo($requestedFile, PATHINFO_FILENAME);
+$documentCode = (string) ($document['code'] ?? pathinfo($requestedFile, PATHINFO_FILENAME));
 
 require_once __DIR__ . '/phpqrcode/qrlib.php';
 $qrTempDir = __DIR__ . '/tempqr';
@@ -82,6 +86,7 @@ if (in_array($extension, ['png', 'jpg', 'jpeg', 'gif', 'webp'], true)) {
                         <div class="verify-meta-item"><strong>Document Code</strong><span><?= htmlspecialchars($documentCode, ENT_QUOTES, 'UTF-8') ?></span></div>
                         <div class="verify-meta-item"><strong>File Name</strong><span><?= htmlspecialchars($requestedFile, ENT_QUOTES, 'UTF-8') ?></span></div>
                         <div class="verify-meta-item"><strong>Document Type</strong><span><?= htmlspecialchars(strtoupper($extension), ENT_QUOTES, 'UTF-8') ?></span></div>
+                        <div class="verify-meta-item"><strong>Approved By</strong><span><?= htmlspecialchars((string) ($document['approved_by'] ?? 'Verification Administrator'), ENT_QUOTES, 'UTF-8') ?></span></div>
                         <div class="verify-meta-item"><strong>Verification Source</strong><span>US Capital Private Bank verification repository</span></div>
                     </div>
 

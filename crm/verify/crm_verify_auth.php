@@ -96,3 +96,82 @@ function verify_is_trustee()
     return verify_current_role() === 'trustee';
 }
 
+function verify_documents_file_path()
+{
+    return __DIR__ . '/documents.json';
+}
+
+function verify_normalize_document_record($filename, $entry)
+{
+    if (!is_array($entry)) {
+        return null;
+    }
+
+    $file = basename((string) ($entry['file'] ?? $filename));
+    $defaultCode = pathinfo($file, PATHINFO_FILENAME);
+
+    return [
+        'title' => (string) ($entry['title'] ?? $defaultCode),
+        'code' => (string) ($entry['code'] ?? $defaultCode),
+        'file' => $file,
+        'notes' => (string) ($entry['notes'] ?? ''),
+        'uploaded_by' => (string) ($entry['uploaded_by'] ?? 'Unknown'),
+        'uploaded_at' => (string) ($entry['uploaded_at'] ?? date('c')),
+        'status' => (string) ($entry['status'] ?? 'approved'),
+        'approved_by' => (string) ($entry['approved_by'] ?? ''),
+        'approved_at' => (string) ($entry['approved_at'] ?? ''),
+        'rejection_note' => (string) ($entry['rejection_note'] ?? ''),
+    ];
+}
+
+function verify_load_documents()
+{
+    $documentsFile = verify_documents_file_path();
+    if (!file_exists($documentsFile)) {
+        file_put_contents($documentsFile, json_encode([], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+        return [];
+    }
+
+    $decoded = json_decode((string) file_get_contents($documentsFile), true);
+    if (!is_array($decoded)) {
+        $decoded = [];
+    }
+
+    $documents = [];
+    foreach ($decoded as $filename => $entry) {
+        $normalized = verify_normalize_document_record((string) $filename, $entry);
+        if ($normalized !== null) {
+            $documents[$normalized['file']] = $normalized;
+        }
+    }
+
+    file_put_contents($documentsFile, json_encode($documents, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+
+    return $documents;
+}
+
+function verify_save_documents(array $documents)
+{
+    file_put_contents(verify_documents_file_path(), json_encode($documents, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+}
+
+function verify_is_document_approved(array $document)
+{
+    return (string) ($document['status'] ?? 'pending') === 'approved';
+}
+
+function verify_find_document_by_code(string $code)
+{
+    $normalizedCode = trim($code);
+    if ($normalizedCode === '') {
+        return null;
+    }
+
+    foreach (verify_load_documents() as $document) {
+        if ((string) ($document['code'] ?? '') === $normalizedCode) {
+            return $document;
+        }
+    }
+
+    return null;
+}

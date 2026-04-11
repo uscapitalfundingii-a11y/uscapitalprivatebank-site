@@ -4,17 +4,21 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 set_time_limit(0);
 
+require_once __DIR__ . '/crm_verify_auth.php';
+
 $baseDir = __DIR__ . '/files';
 $requestedFile = basename((string) ($_GET['file'] ?? ''));
 $filePath = $requestedFile !== '' ? $baseDir . '/' . $requestedFile : '';
+$documents = verify_load_documents();
+$document = $documents[$requestedFile] ?? null;
 $paper = strtolower((string) ($_GET['paper'] ?? 'legal'));
 
-if ($requestedFile === '' || !is_file($filePath)) {
+if ($requestedFile === '' || !is_file($filePath) || !is_array($document) || !verify_is_document_approved($document)) {
     http_response_code(404);
     exit('Verification file not found.');
 }
 
-$documentCode = pathinfo($requestedFile, PATHINFO_FILENAME);
+$documentCode = (string) ($document['code'] ?? pathinfo($requestedFile, PATHINFO_FILENAME));
 $verifyUrl = 'https://www.uscapitalprivatebank.com/crm/verify/verifycode.php?code=' . rawurlencode($documentCode);
 $verifyLandingUrl = 'www.uscapitalprivatebank.com/crm/verify';
 $extension = strtolower(pathinfo($requestedFile, PATHINFO_EXTENSION));

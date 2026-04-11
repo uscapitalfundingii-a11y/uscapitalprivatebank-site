@@ -6,6 +6,36 @@ session_start();
 
 require_once dirname(__DIR__) . '/crm_verify_auth.php';
 
+if (!empty($_SESSION['upload_authenticated']) && verify_current_role() === 'admin') {
+    $_SESSION['verify_admin_authenticated'] = true;
+}
+
+function verify_send_approval_email(string $username, array $entry, string $role): bool
+{
+    $email = trim((string) ($entry['email'] ?? ''));
+    if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        return false;
+    }
+
+    $roleLabel = $role === 'admin' ? 'Verification Administrator' : 'Trustee Reviewer';
+    $loginUrl = 'https://www.uscapitalprivatebank.com/crm/verify/';
+    $subject = 'Your Verification Access Has Been Approved';
+    $message = "Hello {$username},\n\n"
+        . "Your access request for the U.S. Capital Private Bank document verification workspace has been approved.\n\n"
+        . "Assigned role: {$roleLabel}\n"
+        . "Login: {$loginUrl}\n\n"
+        . "You can now sign in using the username and password you registered with.\n\n"
+        . "If you did not request this access, please contact the verification desk immediately.\n\n"
+        . "U.S. Capital Private Bank Verification Desk";
+    $headers = implode("\r\n", [
+        'From: noreply@uscapitalprivatebank.com',
+        'Reply-To: chairman@uscapitalprivatebank.com',
+        'Content-Type: text/plain; charset=UTF-8',
+    ]);
+
+    return @mail($email, $subject, $message, $headers);
+}
+
 $users = verify_load_users();
 $adminPassword = (string) ($users['admin']['password'] ?? verify_default_admin_record()['password']);
 
@@ -38,7 +68,8 @@ if (!empty($_SESSION['verify_admin_authenticated'])) {
             $users[$target]['status'] = 'approved';
             $users[$target]['role'] = $role;
             verify_save_users($users);
-            $message = "Approved {$target} as {$role}.";
+            $mailSent = verify_send_approval_email($target, $users[$target], $role);
+            $message = "Approved {$target} as {$role}." . ($mailSent ? ' Confirmation email sent.' : ' Approval saved, but confirmation email could not be sent.');
         }
     }
 
@@ -60,7 +91,8 @@ if (!empty($_SESSION['verify_admin_authenticated'])) {
         if (isset($users[$target]) && is_array($users[$target]) && $target !== 'admin') {
             $users[$target]['role'] = $role;
             verify_save_users($users);
-            $message = "Updated {$target} to {$role}.";
+            $mailSent = verify_send_approval_email($target, $users[$target], $role);
+            $message = "Updated {$target} to {$role}." . ($mailSent ? ' Confirmation email sent.' : ' Role saved, but confirmation email could not be sent.');
         }
     }
 

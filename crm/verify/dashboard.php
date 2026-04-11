@@ -9,7 +9,28 @@ if (empty($_SESSION['upload_authenticated']) || empty($_SESSION['username'])) {
 
 $username = (string) $_SESSION['username'];
 $userRole = verify_current_role();
-$canUpload = verify_is_admin();
+$canUpload = true;
+$canAdminReview = verify_is_admin();
+$pendingRequests = 0;
+$pendingDocuments = 0;
+
+if ($canAdminReview) {
+    foreach (verify_load_users() as $accountName => $entry) {
+        if ($accountName === 'admin' || !is_array($entry)) {
+            continue;
+        }
+
+        if ((string) ($entry['status'] ?? 'pending') === 'pending') {
+            $pendingRequests++;
+        }
+    }
+
+    foreach (verify_load_documents() as $document) {
+        if (!verify_is_document_approved($document)) {
+            $pendingDocuments++;
+        }
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -33,6 +54,9 @@ $canUpload = verify_is_admin();
                 <a class="verify-link" href="https://www.uscapitalprivatebank.com/">Home</a>
                 <a class="verify-link" href="https://www.uscapitalprivatebank.com/support">Support</a>
                 <a class="verify-link" href="index.php">Verification Home</a>
+                <?php if ($canAdminReview): ?>
+                    <a class="verify-link" href="admin/index.php">Admin Review<?= $pendingRequests > 0 ? ' (' . $pendingRequests . ')' : '' ?></a>
+                <?php endif; ?>
                 <a class="verify-button-secondary" href="logout.php">Sign Out</a>
             </div>
         </div>
@@ -52,6 +76,9 @@ $canUpload = verify_is_admin();
                         <?php else: ?>
                             <a class="verify-button" href="documents.php">Open Document Library</a>
                         <?php endif; ?>
+                        <?php if ($canAdminReview): ?>
+                            <a class="verify-button-secondary" href="admin/index.php">Review Access Requests<?= $pendingRequests > 0 ? ' (' . $pendingRequests . ')' : '' ?></a>
+                        <?php endif; ?>
                         <a class="verify-button-secondary" href="documents.php">View Document Library</a>
                         <a class="verify-button-secondary" href="index.php#code-verification">Verify A Document</a>
                     </div>
@@ -66,7 +93,11 @@ $canUpload = verify_is_admin();
                             <div class="verify-meta-item"><strong>Session Status</strong><span>Authenticated</span></div>
                             <div class="verify-meta-item"><strong>Workspace</strong><span>Verification Operations</span></div>
                             <div class="verify-meta-item"><strong>Role</strong><span><?= htmlspecialchars($userRole !== '' ? ucfirst($userRole) : 'User', ENT_QUOTES, 'UTF-8') ?></span></div>
-                            <div class="verify-meta-item"><strong>Routing</strong><span><?= htmlspecialchars($canUpload ? 'Code lookup, QR validation, upload desk, and library access' : 'Code lookup, QR validation, and library access', ENT_QUOTES, 'UTF-8') ?></span></div>
+                            <?php if ($canAdminReview): ?>
+                                <div class="verify-meta-item"><strong>Pending Requests</strong><span><?= htmlspecialchars((string) $pendingRequests, ENT_QUOTES, 'UTF-8') ?></span></div>
+                                <div class="verify-meta-item"><strong>Pending Documents</strong><span><?= htmlspecialchars((string) $pendingDocuments, ENT_QUOTES, 'UTF-8') ?></span></div>
+                            <?php endif; ?>
+                            <div class="verify-meta-item"><strong>Routing</strong><span><?= htmlspecialchars($canAdminReview ? 'Code lookup, QR validation, upload desk, library access, and approval review' : 'Code lookup, QR validation, upload desk, and library access', ENT_QUOTES, 'UTF-8') ?></span></div>
                         </div>
                     </div>
                 </div>
@@ -80,10 +111,12 @@ $canUpload = verify_is_admin();
                     <ul class="verify-feature-list">
                         <li>Verify documents instantly using a secure code issued with the file.</li>
                         <li>Open QR-enabled documents in a live viewer with traceable verification links.</li>
-                        <?php if ($canUpload): ?>
-                            <li>Upload new issued documents and maintain the repository as a verification administrator.</li>
+                        <li>Upload new issued documents into the verification workspace.</li>
+                        <?php if ($canAdminReview): ?>
+                            <li>Approve or reject new verification user registrations from the built-in admin review desk.</li>
+                            <li>Approve or reject uploaded documents before they can be verified, viewed, printed, or downloaded.</li>
                         <?php else: ?>
-                            <li>Review and print documents already in the repository as an approved trustee without upload privileges.</li>
+                            <li>Review approved documents already in the repository and track your own pending uploads.</li>
                         <?php endif; ?>
                     </ul>
                 </div>
@@ -93,8 +126,10 @@ $canUpload = verify_is_admin();
                 <div class="verify-card-inner">
                     <h3 style="margin:0 0 14px; font-size:24px;">Operational note</h3>
                     <p class="verify-copy">
-                        This dashboard is intentionally minimal and secure. Upload rights are limited to verification administrators.
-                        Trustees and other approved viewers can review and print records already on file.
+                        This dashboard is intentionally minimal and secure. All approved users can upload documents, but only administrator-approved records become publicly verifiable.
+                        <?php if ($canAdminReview): ?>
+                            Use <strong>Admin Review</strong> to approve pending users and uploaded documents for this verification workspace.
+                        <?php endif; ?>
                     </p>
                 </div>
             </div>

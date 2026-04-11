@@ -564,18 +564,19 @@ $isAuthenticated = isset($_SESSION['upload_authenticated']) && $_SESSION['upload
         <div class="portal-grid">
             <section class="card portal-card">
                 <p class="section-kicker">Verification Portal</p>
-                <h2>Secure Code Verification & Client Upload Access</h2>
+                <h2>Official Document Verification Portal</h2>
                 <p class="portal-card__lead">
-                    This portal is used to confirm the authenticity of U.S. Capital Private Bank documents and to let approved users upload verification materials securely.
+                    In accordance with established authentication standards, including <a href="https://www.law.cornell.edu/rules/fre/rule_902" target="_blank" rel="noopener">Federal Rule of Evidence 902</a> governing self-authenticating documents, you are hereby instructed to enter the unique Document Verification Code exactly as it appears on the officially issued instrument.
                 </p>
 
                 <div class="action-grid">
                     <article class="action-panel" id="code-verification">
-                        <h3>Verify Document by Code</h3>
-                        <p>Enter the verification code exactly as it appears on your issued document to confirm its authenticity.</p>
+                        <h3>Official Document Verification Portal</h3>
+                        <p>This verification process serves to confirm the document’s authenticity, integrity, and official registration within the authorized records system. Documents validated through this system may qualify as self-authenticating, requiring no extrinsic evidence of authenticity when properly verified.</p>
+                        <p>All entries must match the issued code precisely. Any deviation, omission, or alteration may result in an invalid or rejected verification response.</p>
                         <form method="get" action="verifycode.php" autocomplete="off" class="stack">
                             <div>
-                                <label for="doccode">Document Code</label>
+                                <label for="doccode">Document Verification Code</label>
                                 <input type="text" id="doccode" name="code" placeholder="e.g. ABC123XYZ" required />
                             </div>
                             <div class="submit-row">

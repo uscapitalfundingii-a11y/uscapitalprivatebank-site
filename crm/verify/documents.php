@@ -15,15 +15,7 @@ $username = (string) $_SESSION['username'];
 $canManageDocuments = verify_is_admin();
 $currentRole = $canManageDocuments ? 'Admin' : 'Trustee';
 $filesDir = __DIR__ . '/files';
-$documentsFile = __DIR__ . '/documents.json';
-$documents = [];
-
-if (is_file($documentsFile)) {
-    $decodedDocuments = json_decode((string) file_get_contents($documentsFile), true);
-    if (is_array($decodedDocuments)) {
-        $documents = $decodedDocuments;
-    }
-}
+$documents = verify_load_documents();
 
 $message = '';
 $error = '';
@@ -42,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_file'])) {
 
             if (isset($documents[$deleteFile])) {
                 unset($documents[$deleteFile]);
-                file_put_contents($documentsFile, json_encode($documents, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+                verify_save_documents($documents);
             }
 
             $viewQr = __DIR__ . '/tempqr/' . md5($deleteFile) . '.png';
@@ -82,7 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_file'])) {
             $documents[$targetFile]['uploaded_by'] = (string) ($documents[$targetFile]['uploaded_by'] ?? $username);
             $documents[$targetFile]['uploaded_at'] = (string) ($documents[$targetFile]['uploaded_at'] ?? date('c'));
 
-            file_put_contents($documentsFile, json_encode($documents, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+            verify_save_documents($documents);
 
             $message = 'The verification record was updated successfully.';
         }
@@ -95,6 +87,13 @@ if (is_dir($filesDir)) {
     foreach ($files as $path) {
         $file = basename($path);
         $meta = $documents[$file] ?? [];
+        if (!$canManageDocuments) {
+            $status = (string) ($meta['status'] ?? 'approved');
+            $uploadedBy = (string) ($meta['uploaded_by'] ?? '');
+            if ($status !== 'approved' && $uploadedBy !== $username) {
+                continue;
+            }
+        }
         $code = (string) ($meta['code'] ?? pathinfo($file, PATHINFO_FILENAME));
         $entries[] = [
             'file' => $file,
@@ -103,6 +102,10 @@ if (is_dir($filesDir)) {
             'uploaded_by' => (string) ($meta['uploaded_by'] ?? 'Unknown'),
             'uploaded_at' => (string) ($meta['uploaded_at'] ?? date('c', filemtime($path))),
             'notes' => (string) ($meta['notes'] ?? ''),
+            'status' => (string) ($meta['status'] ?? 'approved'),
+            'approved_by' => (string) ($meta['approved_by'] ?? ''),
+            'approved_at' => (string) ($meta['approved_at'] ?? ''),
+            'rejection_note' => (string) ($meta['rejection_note'] ?? ''),
             'view_url' => 'viewfile.php?file=' . rawurlencode($file),
             'print_url' => 'print.php?file=' . rawurlencode($file),
             'download_url' => 'download.php?file=' . rawurlencode($file),
@@ -147,7 +150,8 @@ usort($entries, static function ($a, $b) {
                     <span class="verify-kicker">Repository View</span>
                     <h2 class="verify-title">All uploaded verification documents in one place.</h2>
                     <p class="verify-copy">
-                        Signed in as <strong><?= htmlspecialchars($username, ENT_QUOTES, 'UTF-8') ?></strong>. This library shows the current verification records stored in the system with direct links to view, download, or test the live verification code.
+                        Signed in as <strong><?= htmlspecialchars($username, ENT_QUOTES, 'UTF-8') ?></strong>. This library shows the current verification records stored in the system.
+                        Only administrator-approved documents can be verified, viewed, printed, or downloaded publicly.
                     </p>
                     <div class="verify-actions">
                         <a class="verify-button" href="upload.php">Upload New Document</a>
@@ -161,9 +165,9 @@ usort($entries, static function ($a, $b) {
                     <div style="width:100%;">
                         <h3 style="margin:0 0 16px; font-size:28px;">Library summary</h3>
                         <div class="verify-meta-list">
-                            <div class="verify-meta-item"><strong>Stored Records</strong><span><?= count($entries) ?></span></div>
+                            <div class="verify-meta-item"><strong>Visible Records</strong><span><?= count($entries) ?></span></div>
                             <div class="verify-meta-item"><strong>Access Level</strong><span><?= htmlspecialchars($currentRole, ENT_QUOTES, 'UTF-8') ?></span></div>
-                            <div class="verify-meta-item"><strong>Available Actions</strong><span><?= htmlspecialchars($canManageDocuments ? 'View, print, download, verify, and delete' : 'View, print, download, and verify', ENT_QUOTES, 'UTF-8') ?></span></div>
+                            <div class="verify-meta-item"><strong>Available Actions</strong><span><?= htmlspecialchars($canManageDocuments ? 'Review, approve, reject, edit, delete, and publish' : 'Track upload status and use approved verification links', ENT_QUOTES, 'UTF-8') ?></span></div>
                         </div>
                     </div>
                 </div>
@@ -189,18 +193,19 @@ usort($entries, static function ($a, $b) {
                     </div>
                 </div>
                 <?php if (empty($entries)): ?>
-                    <div class="verify-empty">No documents are stored yet. Upload the first record from the upload desk.</div>
+                    <div class="verify-empty">No documents are visible yet. Upload the first record from the upload desk.</div>
                 <?php else: ?>
                     <table class="verify-table" id="document-library-table">
                         <thead>
                             <tr>
                                 <th>Title</th>
                                 <th>Document Code</th>
+                                <th>Status</th>
                                 <th>Uploaded By</th>
                                 <th>Uploaded</th>
-                                        <th>Action</th>
-                                    </tr>
-                                </thead>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
                         <tbody>
                             <?php foreach ($entries as $entry): ?>
                                 <?php
@@ -219,15 +224,23 @@ usort($entries, static function ($a, $b) {
                                         <?php if ($entry['notes'] !== ''): ?>
                                             <div style="margin-top:6px; color:var(--verify-muted);"><?= htmlspecialchars($entry['notes'], ENT_QUOTES, 'UTF-8') ?></div>
                                         <?php endif; ?>
+                                        <?php if ($entry['rejection_note'] !== ''): ?>
+                                            <div style="margin-top:6px; color:var(--verify-danger);"><strong>Admin note:</strong> <?= htmlspecialchars($entry['rejection_note'], ENT_QUOTES, 'UTF-8') ?></div>
+                                        <?php endif; ?>
                                     </td>
                                     <td><?= htmlspecialchars($entry['code'], ENT_QUOTES, 'UTF-8') ?></td>
+                                    <td><span class="verify-status <?= htmlspecialchars($entry['status'], ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($entry['status'], ENT_QUOTES, 'UTF-8') ?></span></td>
                                     <td><?= htmlspecialchars($entry['uploaded_by'], ENT_QUOTES, 'UTF-8') ?></td>
                                     <td><?= htmlspecialchars(date('M j, Y g:i A', strtotime($entry['uploaded_at'])), ENT_QUOTES, 'UTF-8') ?></td>
                                     <td>
-                                        <a class="verify-link" href="<?= htmlspecialchars($entry['print_url'], ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener">Print</a>
-                                        <a class="verify-link" href="<?= htmlspecialchars($entry['view_url'], ENT_QUOTES, 'UTF-8') ?>">View</a>
-                                        <a class="verify-link" href="<?= htmlspecialchars($entry['download_url'], ENT_QUOTES, 'UTF-8') ?>">Download</a>
-                                        <a class="verify-link" href="<?= htmlspecialchars($entry['verify_url'], ENT_QUOTES, 'UTF-8') ?>">Verify</a>
+                                        <?php if ($entry['status'] === 'approved'): ?>
+                                            <a class="verify-link" href="<?= htmlspecialchars($entry['print_url'], ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener">Print</a>
+                                            <a class="verify-link" href="<?= htmlspecialchars($entry['view_url'], ENT_QUOTES, 'UTF-8') ?>">View</a>
+                                            <a class="verify-link" href="<?= htmlspecialchars($entry['download_url'], ENT_QUOTES, 'UTF-8') ?>">Download</a>
+                                            <a class="verify-link" href="<?= htmlspecialchars($entry['verify_url'], ENT_QUOTES, 'UTF-8') ?>">Verify</a>
+                                        <?php else: ?>
+                                            <span class="verify-link" style="opacity:.7; cursor:default;">Awaiting Admin Review</span>
+                                        <?php endif; ?>
                                         <?php if ($canManageDocuments): ?>
                                             <button class="verify-link" type="button" style="cursor:pointer;" data-edit-target="edit-<?= htmlspecialchars(md5($entry['file']), ENT_QUOTES, 'UTF-8') ?>">Edit</button>
                                             <form class="verify-inline-form" method="post" onsubmit="return confirm('Delete this document and remove its verification code from the system?');">
@@ -239,7 +252,7 @@ usort($entries, static function ($a, $b) {
                                 </tr>
                                 <?php if ($canManageDocuments): ?>
                                     <tr id="edit-<?= htmlspecialchars(md5($entry['file']), ENT_QUOTES, 'UTF-8') ?>" data-search="<?= htmlspecialchars(mb_strtolower($searchBlob), ENT_QUOTES, 'UTF-8') ?>" style="display:none;">
-                                        <td colspan="5">
+                                        <td colspan="6">
                                             <form method="post" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:16px; align-items:end;">
                                                 <input type="hidden" name="update_file" value="<?= htmlspecialchars($entry['file'], ENT_QUOTES, 'UTF-8') ?>">
                                                 <div>
