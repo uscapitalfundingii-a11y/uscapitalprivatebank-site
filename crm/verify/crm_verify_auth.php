@@ -175,3 +175,104 @@ function verify_find_document_by_code(string $code)
 
     return null;
 }
+
+function verify_id_cards_file_path()
+{
+    return __DIR__ . '/idcards.json';
+}
+
+function verify_normalize_id_card_record($key, $entry)
+{
+    if (!is_array($entry)) {
+        return null;
+    }
+
+    $code = strtoupper(trim((string) ($entry['code'] ?? $key)));
+    if ($code === '') {
+        return null;
+    }
+
+    return [
+        'code' => $code,
+        'name' => trim((string) ($entry['name'] ?? '')),
+        'title' => trim((string) ($entry['title'] ?? '')),
+        'department' => trim((string) ($entry['department'] ?? '')),
+        'affiliation' => trim((string) ($entry['affiliation'] ?? 'Bank Officer')),
+        'email' => trim((string) ($entry['email'] ?? '')),
+        'phone' => trim((string) ($entry['phone'] ?? '')),
+        'photo_url' => trim((string) ($entry['photo_url'] ?? '')),
+        'notes' => trim((string) ($entry['notes'] ?? '')),
+        'status' => trim((string) ($entry['status'] ?? 'active')),
+        'created_by' => trim((string) ($entry['created_by'] ?? '')),
+        'created_at' => trim((string) ($entry['created_at'] ?? date('c'))),
+        'updated_at' => trim((string) ($entry['updated_at'] ?? date('c'))),
+    ];
+}
+
+function verify_load_id_cards()
+{
+    $file = verify_id_cards_file_path();
+    if (!file_exists($file)) {
+        file_put_contents($file, json_encode([], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+        return [];
+    }
+
+    $decoded = json_decode((string) file_get_contents($file), true);
+    if (!is_array($decoded)) {
+        $decoded = [];
+    }
+
+    $cards = [];
+    foreach ($decoded as $key => $entry) {
+        $normalized = verify_normalize_id_card_record((string) $key, $entry);
+        if ($normalized !== null) {
+            $cards[$normalized['code']] = $normalized;
+        }
+    }
+
+    file_put_contents($file, json_encode($cards, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+
+    return $cards;
+}
+
+function verify_save_id_cards(array $cards)
+{
+    file_put_contents(verify_id_cards_file_path(), json_encode($cards, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+}
+
+function verify_generate_id_card_code(string $name = ''): string
+{
+    $base = preg_replace('/[^A-Z0-9]+/', '', strtoupper($name));
+    $base = substr($base, 0, 6);
+    if ($base === '') {
+        $base = 'USCPB';
+    }
+
+    return $base . '-' . strtoupper(substr(md5(uniqid((string) mt_rand(), true)), 0, 6));
+}
+
+function verify_find_id_card_by_code(string $code)
+{
+    $normalized = strtoupper(trim($code));
+    if ($normalized === '') {
+        return null;
+    }
+
+    foreach (verify_load_id_cards() as $card) {
+        if (($card['code'] ?? '') === $normalized) {
+            return $card;
+        }
+    }
+
+    return null;
+}
+
+function verify_id_card_photo_dir_path()
+{
+    return __DIR__ . '/idcard_photos';
+}
+
+function verify_id_card_photo_web_path(string $filename)
+{
+    return 'idcard_photos/' . rawurlencode(basename($filename));
+}

@@ -152,6 +152,9 @@ if (!empty($_SESSION['verify_admin_authenticated'])) {
                 <a class="verify-link" href="https://www.uscapitalprivatebank.com/">Home</a>
                 <a class="verify-link" href="../index.php">Verification Home</a>
                 <?php if (!empty($_SESSION['verify_admin_authenticated'])): ?>
+                    <a class="verify-link" href="idcards.php">ID Card Studio</a>
+                <?php endif; ?>
+                <?php if (!empty($_SESSION['verify_admin_authenticated'])): ?>
                     <a class="verify-button-secondary" href="index.php?logout=1">Sign Out</a>
                 <?php endif; ?>
             </div>
@@ -193,7 +196,7 @@ if (!empty($_SESSION['verify_admin_authenticated'])) {
 
                     <span class="verify-kicker">Verification Desk</span>
                     <h2 class="verify-title" style="max-width: 920px; font-size: clamp(30px, 3.6vw, 44px);">Pending access reviews and approved users.</h2>
-                    <p class="verify-copy">Use this control desk to approve new verification enrollments, assign roles, and control who can upload versus who can only review and print records.</p>
+                    <p class="verify-copy">Use this control desk to approve new verification enrollments, assign roles, control who can upload versus who can only review and print records, and manage access to the employee ID card studio.</p>
                 </div>
             </div>
 

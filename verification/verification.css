@@ -162,7 +162,7 @@ a {
     color: var(--sky);
 }
 
-.institution-name {
+.section-shell .institution-name {
     color: #1e3f79;
     font-weight: 700;
 }
