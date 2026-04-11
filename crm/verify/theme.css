@@ -226,6 +226,18 @@ body.verify-portal::before {
     outline: none;
 }
 
+select.verify-input,
+select.verify-select {
+    appearance: auto;
+    color-scheme: dark;
+}
+
+select.verify-input option,
+select.verify-select option {
+    color: var(--verify-text);
+    background: #172742;
+}
+
 .verify-input::placeholder,
 .verify-textarea::placeholder {
     color: rgba(224, 237, 251, 0.48);

@@ -403,6 +403,26 @@ $isAuthenticated = isset($_SESSION['upload_authenticated']) && $_SESSION['upload
             background: rgba(30, 167, 255, 0.08);
         }
 
+        .access-note {
+            margin: 18px 0 0;
+            padding: 16px 18px;
+            border-radius: 16px;
+            background: rgba(15, 31, 69, 0.04);
+            border: 1px solid rgba(15, 31, 69, 0.08);
+            color: var(--muted);
+            line-height: 1.75;
+            font-size: 0.98rem;
+        }
+
+        .access-note a {
+            color: var(--navy);
+            font-weight: 700;
+        }
+
+        .access-note strong {
+            color: var(--navy);
+        }
+
         .status {
             margin: 0 0 14px;
             padding: 14px 16px;
@@ -625,6 +645,9 @@ $isAuthenticated = isset($_SESSION['upload_authenticated']) && $_SESSION['upload
                                 <a class="register-link" href="register.php">Register</a>
                             </div>
                         </form>
+                        <p class="access-note">
+                            <strong>Customer document access:</strong> If you are a customer and want documents issued by the Bank to be verified, <a href="register.php">register here</a>. Once registered, your request can be added to the customer group for upload access. Customers may sign in to upload documents, await approval, and view only their own submitted documents. Any document issued to you may also be verified by entering its document verification code through this portal, just like any other verification request.
+                        </p>
                     </article>
                 </div>
             </section>

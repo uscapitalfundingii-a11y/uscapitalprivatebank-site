@@ -10,6 +10,19 @@ if (!empty($_SESSION['upload_authenticated']) && verify_current_role() === 'admi
     $_SESSION['verify_admin_authenticated'] = true;
 }
 
+const VERIFY_ROLE_OPTIONS = [
+    'admin' => 'Admin',
+    'trustee' => 'Trustee',
+    'client' => 'Client',
+    'customer' => 'Customer',
+    'bank_officer' => 'Bank Officer',
+];
+
+function verify_role_label(string $role): string
+{
+    return VERIFY_ROLE_OPTIONS[$role] ?? ucfirst(str_replace('_', ' ', $role));
+}
+
 function verify_send_approval_email(string $username, array $entry, string $role): bool
 {
     $email = trim((string) ($entry['email'] ?? ''));
@@ -17,7 +30,14 @@ function verify_send_approval_email(string $username, array $entry, string $role
         return false;
     }
 
-    $roleLabel = $role === 'admin' ? 'Verification Administrator' : 'Trustee Reviewer';
+    $roleLabel = match ($role) {
+        'admin' => 'Verification Administrator',
+        'trustee' => 'Trustee Reviewer',
+        'client' => 'Client',
+        'customer' => 'Customer',
+        'bank_officer' => 'Bank Officer',
+        default => verify_role_label($role),
+    };
     $loginUrl = 'https://www.uscapitalprivatebank.com/crm/verify/';
     $subject = 'Your Verification Access Has Been Approved';
     $message = "Hello {$username},\n\n"
@@ -61,7 +81,7 @@ if (!empty($_SESSION['verify_admin_authenticated'])) {
     if (isset($_POST['approve_user'])) {
         $target = (string) $_POST['approve_user'];
         $role = (string) ($_POST['role'] ?? 'trustee');
-        if (!in_array($role, ['admin', 'trustee'], true)) {
+        if (!array_key_exists($role, VERIFY_ROLE_OPTIONS)) {
             $role = 'trustee';
         }
         if (isset($users[$target]) && is_array($users[$target])) {
@@ -85,7 +105,7 @@ if (!empty($_SESSION['verify_admin_authenticated'])) {
     if (isset($_POST['update_role_user'])) {
         $target = (string) $_POST['update_role_user'];
         $role = (string) ($_POST['role'] ?? 'trustee');
-        if (!in_array($role, ['admin', 'trustee'], true)) {
+        if (!array_key_exists($role, VERIFY_ROLE_OPTIONS)) {
             $role = 'trustee';
         }
         if (isset($users[$target]) && is_array($users[$target]) && $target !== 'admin') {
@@ -205,8 +225,9 @@ if (!empty($_SESSION['verify_admin_authenticated'])) {
                                                 <form class="verify-inline-form" method="post" style="display:inline-flex; gap:8px; align-items:center; flex-wrap:wrap;">
                                                     <input type="hidden" name="approve_user" value="<?= htmlspecialchars($username, ENT_QUOTES, 'UTF-8') ?>">
                                                     <select class="verify-input" name="role" style="min-height:40px; width:auto; min-width:120px;">
-                                                        <option value="trustee">Trustee</option>
-                                                        <option value="admin">Admin</option>
+                                                        <?php foreach (VERIFY_ROLE_OPTIONS as $roleValue => $roleLabel): ?>
+                                                            <option value="<?= htmlspecialchars($roleValue, ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($roleLabel, ENT_QUOTES, 'UTF-8') ?></option>
+                                                        <?php endforeach; ?>
                                                     </select>
                                                     <button class="verify-link" type="submit" style="cursor:pointer;">Approve</button>
                                                 </form>
@@ -249,13 +270,14 @@ if (!empty($_SESSION['verify_admin_authenticated'])) {
                                             <td><?= htmlspecialchars($username, ENT_QUOTES, 'UTF-8') ?></td>
                                             <td><?= htmlspecialchars((string) ($entry['email'] ?? ''), ENT_QUOTES, 'UTF-8') ?></td>
                                             <td><span class="verify-status approved">approved</span></td>
-                                            <td><?= htmlspecialchars((string) ($entry['role'] ?? 'trustee'), ENT_QUOTES, 'UTF-8') ?></td>
+                                            <td><?= htmlspecialchars(verify_role_label((string) ($entry['role'] ?? 'trustee')), ENT_QUOTES, 'UTF-8') ?></td>
                                             <td>
                                                 <form class="verify-inline-form" method="post" style="display:inline-flex; gap:8px; align-items:center;">
                                                     <input type="hidden" name="update_role_user" value="<?= htmlspecialchars($username, ENT_QUOTES, 'UTF-8') ?>">
                                                     <select class="verify-input" name="role" style="min-height:40px; width:auto; min-width:120px;">
-                                                        <option value="trustee"<?= (($entry['role'] ?? 'trustee') === 'trustee') ? ' selected' : '' ?>>Trustee</option>
-                                                        <option value="admin"<?= (($entry['role'] ?? 'trustee') === 'admin') ? ' selected' : '' ?>>Admin</option>
+                                                        <?php foreach (VERIFY_ROLE_OPTIONS as $roleValue => $roleLabel): ?>
+                                                            <option value="<?= htmlspecialchars($roleValue, ENT_QUOTES, 'UTF-8') ?>"<?= (($entry['role'] ?? 'trustee') === $roleValue) ? ' selected' : '' ?>><?= htmlspecialchars($roleLabel, ENT_QUOTES, 'UTF-8') ?></option>
+                                                        <?php endforeach; ?>
                                                     </select>
                                                     <button class="verify-link" type="submit" style="cursor:pointer;">Save Role</button>
                                                 </form>

@@ -218,6 +218,10 @@ a {
     margin-bottom: 0;
 }
 
+.section-heading--split h2 {
+    font-size: clamp(2.5rem, 4.2vw, 4rem);
+}
+
 .section-banner {
     margin: 28px 0 0;
     max-width: 920px;
