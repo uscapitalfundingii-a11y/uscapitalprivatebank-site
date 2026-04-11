@@ -57,6 +57,7 @@ if ($canAdminReview) {
                 <?php if ($canAdminReview): ?>
                     <a class="verify-link" href="admin/index.php">Admin Review<?= $pendingRequests > 0 ? ' (' . $pendingRequests . ')' : '' ?></a>
                     <a class="verify-link" href="admin/idcards.php">ID Card Studio</a>
+                    <a class="verify-link" href="admin/certificates.php">Certificate Studio</a>
                 <?php endif; ?>
                 <a class="verify-button-secondary" href="logout.php">Sign Out</a>
             </div>
@@ -80,6 +81,7 @@ if ($canAdminReview) {
                         <?php if ($canAdminReview): ?>
                             <a class="verify-button-secondary" href="admin/index.php">Review Access Requests<?= $pendingRequests > 0 ? ' (' . $pendingRequests . ')' : '' ?></a>
                             <a class="verify-button-secondary" href="admin/idcards.php">Create Employee ID Cards</a>
+                            <a class="verify-button-secondary" href="admin/certificates.php">Create Certificates</a>
                         <?php endif; ?>
                         <a class="verify-button-secondary" href="documents.php">View Document Library</a>
                         <a class="verify-button-secondary" href="index.php#code-verification">Verify A Document</a>
@@ -118,6 +120,7 @@ if ($canAdminReview) {
                             <li>Approve or reject new verification user registrations from the built-in admin review desk.</li>
                             <li>Approve or reject uploaded documents before they can be verified, viewed, printed, or downloaded.</li>
                             <li>Create employee ID cards with QR codes that resolve back to the verification site for live credential validation.</li>
+                            <li>Generate bank certificates and awards with QR codes that resolve to live verification pages.</li>
                         <?php else: ?>
                             <li>Review approved documents already in the repository and track your own pending uploads.</li>
                         <?php endif; ?>
