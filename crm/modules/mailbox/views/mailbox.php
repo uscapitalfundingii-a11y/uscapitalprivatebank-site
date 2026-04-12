@@ -26,7 +26,7 @@
                             <i class="fa fa-inbox menu-icon" aria-hidden="true"></i>
                             <?php echo _l('mailbox_inbox'); ?>
                             <?php
-                                $num_unread = total_rows(db_prefix().'mail_inbox', ['read' => '0', 'to_staff_id' => get_staff_user_id()]);
+                                $num_unread = total_rows(db_prefix().'mail_inbox', ['read' => '0', 'to_staff_id' => get_staff_user_id(), 'trash' => '0']);
                                 if ($num_unread > 0) {
                                     ?>
                             <span class="badge menu-badge bg-warning"><?php echo $num_unread; ?></span>

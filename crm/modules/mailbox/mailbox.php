@@ -56,14 +56,8 @@ function mailbox_module_init_menu_items()
 {
     $CI = &get_instance();
     if ('1' == get_option('mailbox_enabled')) {
-        $badge      = '';
-        $num_unread = total_rows(db_prefix().'mail_inbox', ['read' => '0', 'to_staff_id' => get_staff_user_id()]);
-        if ($num_unread > 0) {
-            $badge = ' <span class="badge menu-badge bg-warning">'.total_rows(db_prefix().'mail_inbox', ['read' => '0', 'to_staff_id' => get_staff_user_id()]).'</span>';
-        }
-
         $CI->app_menu->add_sidebar_menu_item('mailbox', [
-            'name'     => _l('mailbox').$badge,
+            'name'     => _l('mailbox'),
             'href'     => admin_url('mailbox'),
             'icon'     => 'fa fa-envelope-square',
             'position' => 6,
@@ -123,7 +117,11 @@ function mailbox_scan_staff_email($staff, $forceRecent = false)
     }
 
     $CI = &get_instance();
-    require_once APPPATH.'third_party/php-imap/Imap.php';
+    $imapLibraryPath = APPPATH.'third_party/php-imap/Imap.php';
+    if (!file_exists($imapLibraryPath)) {
+        $imapLibraryPath = module_dir_path(MAILBOX_MODULE_NAME, 'third_party/php-imap/Imap.php');
+    }
+    require_once $imapLibraryPath;
     include_once APPPATH.'third_party/simple_html_dom.php';
 
     if (!column_exists('imap_uid', 'mail_inbox')) {
