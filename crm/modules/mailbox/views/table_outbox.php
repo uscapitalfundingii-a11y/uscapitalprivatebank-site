@@ -14,13 +14,14 @@ $sTable       = db_prefix() . 'mail_outbox';
 
 $join = [];
 $where = [];
+$mailbox_staff_id = function_exists('mailbox_get_selected_staff_id') ? mailbox_get_selected_staff_id() : get_staff_user_id();
 array_push($where, 'AND trash = 0');
 if($group=='draft'){
     array_push($where, ' AND draft = 1');
 } else {
     array_push($where, ' AND draft = 0');
 }
-array_push($where, ' AND sender_staff_id = '.get_staff_user_id());
+array_push($where, ' AND sender_staff_id = '.(int) $mailbox_staff_id);
 $result = data_tables_init($aColumns, $sIndexColumn, $sTable, $join, $where, ['id','has_attachment','stared','important','body']);
 
 $output  = $result['output'];

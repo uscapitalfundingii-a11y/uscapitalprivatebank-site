@@ -66,6 +66,70 @@ function mailbox_module_init_menu_items()
 }
 
 /**
+ * Determine if the current user can switch between staff mailboxes.
+ *
+ * @return bool
+ */
+function mailbox_can_switch_staff_mailbox()
+{
+    return function_exists('is_admin') && is_admin();
+}
+
+/**
+ * Get the active mailbox staff id for the current session.
+ *
+ * @return int
+ */
+function mailbox_get_selected_staff_id()
+{
+    $CI = &get_instance();
+    $currentStaffId = (int) get_staff_user_id();
+
+    if (!mailbox_can_switch_staff_mailbox()) {
+        return $currentStaffId;
+    }
+
+    $selectedStaffId = (int) $CI->session->userdata('mailbox_selected_staff_id');
+    if ($selectedStaffId <= 0) {
+        return $currentStaffId;
+    }
+
+    $exists = $CI->db->where('staffid', $selectedStaffId)->count_all_results(db_prefix().'staff');
+    if (!$exists) {
+        return $currentStaffId;
+    }
+
+    return $selectedStaffId;
+}
+
+/**
+ * Persist the active mailbox staff id for admin mailbox switching.
+ *
+ * @param int $staffId
+ *
+ * @return void
+ */
+function mailbox_set_selected_staff_id($staffId)
+{
+    if (!mailbox_can_switch_staff_mailbox()) {
+        return;
+    }
+
+    $CI = &get_instance();
+    $staffId = (int) $staffId;
+
+    if ($staffId <= 0) {
+        $CI->session->unset_userdata('mailbox_selected_staff_id');
+        return;
+    }
+
+    $exists = $CI->db->where('staffid', $staffId)->count_all_results(db_prefix().'staff');
+    if ($exists) {
+        $CI->session->set_userdata('mailbox_selected_staff_id', $staffId);
+    }
+}
+
+/**
  * Init mailbox module setting menu items in setup in admin_init hook.
  *
  * @return null

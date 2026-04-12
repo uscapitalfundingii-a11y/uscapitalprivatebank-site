@@ -54,13 +54,15 @@
     <?php echo render_input('subject', 'mailbox_subject', $subject); ?>
 	<?php
         $CI = &get_instance();
-        $CI->db->select()
+        $mail_signature = '';
+        $currentuser = $CI->db->select('mail_signature')
             ->from(db_prefix().'staff')
-            ->where(db_prefix().'staff.mail_password !=', '');
-        $staffs = $CI->db->get()->result_array();
-        foreach ($staffs as $staff) {
-            $mail_signature = $staff['mail_signature'];
-        } 
+            ->where('staffid', get_staff_user_id())
+            ->get()
+            ->row_array();
+        if (!empty($currentuser['mail_signature'])) {
+            $mail_signature = $currentuser['mail_signature'];
+        }
         $body = $mail->body;
         $attachmentlang = _l('mailbox_single_attachment');
     ?>

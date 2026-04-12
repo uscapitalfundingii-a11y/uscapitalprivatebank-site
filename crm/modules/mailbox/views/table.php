@@ -14,7 +14,8 @@ $sTable       = db_prefix() . 'mail_inbox';
 
 $join = [];
 $where = [];
-array_push($where, 'AND to_staff_id = '.get_staff_user_id());
+$mailbox_staff_id = function_exists('mailbox_get_selected_staff_id') ? mailbox_get_selected_staff_id() : get_staff_user_id();
+array_push($where, 'AND to_staff_id = '.(int) $mailbox_staff_id);
 if($group == 'inbox'){
     array_push($where, ' AND trash = 0');
 } else if($group == 'starred'){

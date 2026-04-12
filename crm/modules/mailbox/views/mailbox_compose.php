@@ -23,28 +23,22 @@
     <?php echo render_input('subject', 'mailbox_subject', $subject); ?>
 	<?php
         $CI = &get_instance();
-        $CI->db->select()
+        $mail_signature = '';
+        $currentuser = $CI->db->select('mail_signature')
             ->from(db_prefix().'staff')
-            ->where(db_prefix().'staff.mail_password !=', '');
-        $staffs = $CI->db->get()->result_array();
-		
-		$myid = get_staff_user_id();
-		
-        $CI->db->select()
-            ->from(db_prefix().'staff')
-            ->where('staffid', $myid );
-        $currentusers = $CI->db->get()->result_array();
-		
-        foreach ($currentusers as $currentuser) {
+            ->where('staffid', get_staff_user_id())
+            ->get()
+            ->row_array();
+
+        if (!empty($currentuser['mail_signature'])) {
             $mail_signature = $currentuser['mail_signature'];
         }
-		
-		
     ?>
     <hr />
     <?php 
-        if ($mail_signature !== null) {
-            echo render_textarea('body', '', $body.$mail_signature, [], [], '', 'tinymce tinymce-compose');
+        if ($mail_signature !== '') {
+            $composed_body = trim($body) !== '' ? $body . '<br><br>' . $mail_signature : $mail_signature;
+            echo render_textarea('body', '', $composed_body, [], [], '', 'tinymce tinymce-compose');
         } else {
             echo render_textarea('body', '', $body, [], [], '', 'tinymce tinymce-compose');
         }

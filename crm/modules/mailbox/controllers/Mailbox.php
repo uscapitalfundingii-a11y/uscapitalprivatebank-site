@@ -23,12 +23,23 @@ class Mailbox extends AdminController
      */
     public function index()
     {
+        if (mailbox_can_switch_staff_mailbox() && null !== $this->input->get('staff_id')) {
+            mailbox_set_selected_staff_id($this->input->get('staff_id'));
+        }
+
+        $selectedStaffId = mailbox_get_selected_staff_id();
         $data['title'] = _l('mailbox');
         $group         = !$this->input->get('group') ? 'inbox' : $this->input->get('group');
         $data['group'] = $group;
+        $data['selected_staff_id'] = $selectedStaffId;
+        $data['can_switch_staff_mailbox'] = mailbox_can_switch_staff_mailbox();
+        if ($data['can_switch_staff_mailbox']) {
+            $this->load->model('staff_model');
+            $data['mailbox_staffs'] = $this->staff_model->get('', ['active' => 1]);
+        }
         if ('config' == $group) {
             $this->load->model('staff_model');
-            $member         = $this->staff_model->get(get_staff_user_id());
+            $member         = $this->staff_model->get($selectedStaffId);
             $data['member'] = $member;
         }
         $this->load->view('mailbox', $data);
@@ -45,12 +56,19 @@ class Mailbox extends AdminController
      */
     public function compose($outbox_id = null)
     {
+        $selectedStaffId = mailbox_get_selected_staff_id();
         $data['title'] = _l('mailbox');
         $group         = 'compose';
         $data['group'] = $group;
+        $data['selected_staff_id'] = $selectedStaffId;
+        $data['can_switch_staff_mailbox'] = mailbox_can_switch_staff_mailbox();
+        if ($data['can_switch_staff_mailbox']) {
+            $this->load->model('staff_model');
+            $data['mailbox_staffs'] = $this->staff_model->get('', ['active' => 1]);
+        }
         if ($this->input->post()) {
             $data            = $this->input->post();
-            $id              = $this->mailbox_model->add($data, get_staff_user_id(), $outbox_id);
+            $id              = $this->mailbox_model->add($data, $selectedStaffId, $outbox_id);
             if ($id) {
                 if ('draft' == $this->input->post('sendmail')) {
                     set_alert('success', _l('mailbox_email_draft_successfully', $id));
@@ -64,6 +82,9 @@ class Mailbox extends AdminController
 
         if (isset($outbox_id)) {
             $mail         = $this->mailbox_model->get($outbox_id, 'outbox');
+            if (!$mail || (int) $mail->sender_staff_id !== (int) $selectedStaffId) {
+                access_denied('mailbox');
+            }
             $data['mail'] = $mail;
         }
         $this->load->view('mailbox', $data);
@@ -85,7 +106,7 @@ class Mailbox extends AdminController
                 throw new Exception('Mailbox receive function is not available.');
             }
 
-            $imported = mailbox_scan_email_server(get_staff_user_id(), true);
+            $imported = mailbox_scan_email_server(mailbox_get_selected_staff_id(), true);
 
             if ($imported > 0) {
                 set_alert('success', $imported.' incoming email(s) received successfully.');
@@ -141,11 +162,21 @@ class Mailbox extends AdminController
      */
     public function inbox($id)
     {
+        $selectedStaffId = mailbox_get_selected_staff_id();
         $inbox = $this->mailbox_model->get($id, 'inbox');
+        if (!$inbox || (int) $inbox->to_staff_id !== (int) $selectedStaffId) {
+            access_denied('mailbox');
+        }
         $this->mailbox_model->update_field('detail', 'read', 1, $id, 'inbox');
         $data['title']       = $inbox->subject;
         $group               = 'detail';
         $data['group']       = $group;
+        $data['selected_staff_id'] = $selectedStaffId;
+        $data['can_switch_staff_mailbox'] = mailbox_can_switch_staff_mailbox();
+        if ($data['can_switch_staff_mailbox']) {
+            $this->load->model('staff_model');
+            $data['mailbox_staffs'] = $this->staff_model->get('', ['active' => 1]);
+        }
         $data['inbox']       = $inbox;
         $data['type']        = 'inbox';
         $data['attachments'] = $this->mailbox_model->get_mail_attachment($id, 'inbox');
@@ -161,10 +192,20 @@ class Mailbox extends AdminController
      */
     public function outbox($id)
     {
+        $selectedStaffId = mailbox_get_selected_staff_id();
         $inbox               = $this->mailbox_model->get($id, 'outbox');
+        if (!$inbox || (int) $inbox->sender_staff_id !== (int) $selectedStaffId) {
+            access_denied('mailbox');
+        }
         $data['title']       = $inbox->subject;
         $group               = 'detail';
         $data['group']       = $group;
+        $data['selected_staff_id'] = $selectedStaffId;
+        $data['can_switch_staff_mailbox'] = mailbox_can_switch_staff_mailbox();
+        if ($data['can_switch_staff_mailbox']) {
+            $this->load->model('staff_model');
+            $data['mailbox_staffs'] = $this->staff_model->get('', ['active' => 1]);
+        }
         $data['inbox']       = $inbox;
         $data['type']        = 'outbox';
         $data['attachments'] = $this->mailbox_model->get_mail_attachment($id, 'outbox');
@@ -216,15 +257,29 @@ class Mailbox extends AdminController
      */
     public function reply($id, $method = 'reply', $type = 'inbox')
     {
+        $selectedStaffId = mailbox_get_selected_staff_id();
         $mail          = $this->mailbox_model->get($id, $type);
+        if (
+            !$mail
+            || ('inbox' === $type && (int) $mail->to_staff_id !== (int) $selectedStaffId)
+            || ('outbox' === $type && (int) $mail->sender_staff_id !== (int) $selectedStaffId)
+        ) {
+            access_denied('mailbox');
+        }
         $data['title'] = _l('mailbox');
         $group         = 'compose';
         $data['group'] = $group;
+        $data['selected_staff_id'] = $selectedStaffId;
+        $data['can_switch_staff_mailbox'] = mailbox_can_switch_staff_mailbox();
+        if ($data['can_switch_staff_mailbox']) {
+            $this->load->model('staff_model');
+            $data['mailbox_staffs'] = $this->staff_model->get('', ['active' => 1]);
+        }
         if ($this->input->post()) {
             $data                  = $this->input->post();
             $data['reply_from_id'] = $id;
             $data['reply_type']    = $type;
-            $id                    = $this->mailbox_model->add($data, get_staff_user_id());
+            $id                    = $this->mailbox_model->add($data, $selectedStaffId);
             if ($id) {
                 set_alert('success', _l('mailbox_email_sent_successfully', $id));
                 redirect(admin_url('mailbox?group=sent'));
@@ -247,7 +302,7 @@ class Mailbox extends AdminController
     public function config()
     {
         if ($this->input->post()) {
-            $res  = $this->mailbox_model->update_config($this->input->post(), get_staff_user_id());
+            $res  = $this->mailbox_model->update_config($this->input->post(), mailbox_get_selected_staff_id());
             if ($res) {
                 set_alert('success', _l('mailbox_email_config_successfully'));
                 redirect(admin_url('mailbox'));

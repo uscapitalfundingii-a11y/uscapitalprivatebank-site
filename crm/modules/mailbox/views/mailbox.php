@@ -9,7 +9,7 @@
                     <div class="">
                         <a href="<?php echo admin_url().'mailbox/compose'; ?>" class="btn btn-info display-block">
                             <i class="fa fa-edit"></i>
-                            Send email
+                            Compose email
                         </a>
                         <a href="<?php echo admin_url('mailbox/fetch_now'); ?>" class="btn btn-default display-block mtop10">
                             <i class="fa fa-download"></i>
@@ -26,7 +26,8 @@
                             <i class="fa fa-inbox menu-icon" aria-hidden="true"></i>
                             <?php echo _l('mailbox_inbox'); ?>
                             <?php
-                                $num_unread = total_rows(db_prefix().'mail_inbox', ['read' => '0', 'to_staff_id' => get_staff_user_id(), 'trash' => '0']);
+                                $mailbox_staff_id = function_exists('mailbox_get_selected_staff_id') ? mailbox_get_selected_staff_id() : get_staff_user_id();
+                                $num_unread = total_rows(db_prefix().'mail_inbox', ['read' => '0', 'to_staff_id' => $mailbox_staff_id, 'trash' => '0']);
                                 if ($num_unread > 0) {
                                     ?>
                             <span class="badge menu-badge bg-warning"><?php echo $num_unread; ?></span>
@@ -89,14 +90,29 @@
                 <div class="panel_s">
                     <div class="panel-body">
                         <div class="tab-content">
-                            <h4 class="customer-profile-group-heading">                                
-                                <?php if ('detail' == $group) {
-                                    echo $title;
-                                } else {
-                                    echo _l('mailbox_'.$group);
-                                }
-                                ?>                                    
-                            </h4>
+                            <div class="mailbox-heading-bar">
+                                <h4 class="customer-profile-group-heading mailbox-heading-title">
+                                    <?php if ('detail' == $group) {
+                                        echo $title;
+                                    } else {
+                                        echo _l('mailbox_'.$group);
+                                    }
+                                    ?>
+                                </h4>
+                                <?php if (!empty($can_switch_staff_mailbox) && !empty($mailbox_staffs)) { ?>
+                                <form method="get" action="<?php echo admin_url('mailbox'); ?>" class="mailbox-staff-switch-form">
+                                    <input type="hidden" name="group" value="<?php echo html_escape($group === 'detail' ? 'inbox' : $group); ?>">
+                                    <label for="mailbox_staff_id" class="control-label mright10">Mailbox owner</label>
+                                    <select name="staff_id" id="mailbox_staff_id" class="selectpicker" data-width="260px" data-none-selected-text="Select staff" onchange="this.form.submit();">
+                                        <?php foreach ($mailbox_staffs as $staffMember) { ?>
+                                        <option value="<?php echo (int) $staffMember['staffid']; ?>" <?php echo isset($selected_staff_id) && (int) $selected_staff_id === (int) $staffMember['staffid'] ? 'selected' : ''; ?>>
+                                            <?php echo html_escape(trim($staffMember['firstname'].' '.$staffMember['lastname']).' - '.$staffMember['email']); ?>
+                                        </option>
+                                        <?php } ?>
+                                    </select>
+                                </form>
+                                <?php } ?>
+                            </div>
                             <?php if ('compose' != $group && 'config' != $group) {?>
                             <div class="horizontal-scrollable-tabs preview-tabs-top">
                                 <div class="scroller arrow-left"><i class="fa fa-angle-left"></i></div>
