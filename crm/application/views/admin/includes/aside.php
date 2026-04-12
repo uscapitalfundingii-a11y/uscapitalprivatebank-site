@@ -5,15 +5,15 @@
             false; ?>
     <div class="dropdown sidebar-user-profile tw-mt-[80px] tw-mx-1.5 ">
         <a href="#"
-            class="dropdown-toggle profile -tw-mt-1 tw-font-medium tw-border tw-border-solid tw-rounded-lg tw-bg-white/20 tw-py-2 tw-px-2.5 tw-block tw-shadow-sm tw-text-neutral-800 tw-border-white/20 hover:tw-text-neutral-900 focus:tw-text-neutral-900 hover:tw-border-white/35 focus:tw-border-white/35 hover:tw-bg-white/25 focus:tw-bg-white/25"
+            class="dropdown-toggle profile -tw-mt-1 tw-font-medium tw-border tw-border-solid tw-rounded-lg tw-bg-white/20 tw-py-2 tw-px-2.5 tw-block tw-shadow-sm tw-text-white tw-border-white/20 hover:tw-text-white focus:tw-text-white hover:tw-border-white/35 focus:tw-border-white/35 hover:tw-bg-white/25 focus:tw-bg-white/25"
             data-toggle="dropdown" aria-expanded="false">
             <span class="tw-inline-flex tw-items-center tw-gap-x-3 tw-pt-0.5">
                 <?= staff_profile_image($current_user->staffid, ['img', 'img-responsive', 'staff-profile-image-small']); ?>
                 <span>
                     <span
-                        class="tw-truncate tw-block tw-w-[140px] tw-font-semibold"><?= get_staff_full_name(); ?></span>
+                        class="tw-truncate tw-block tw-w-[180px] tw-font-semibold tw-text-white"><?= get_staff_full_name(); ?></span>
                     <span
-                        class="tw-font-normal tw-truncate tw-block tw-w-[140px] tw-text-sm tw-text-neutral-700">
+                        class="tw-font-normal tw-truncate tw-block tw-w-[180px] tw-text-sm tw-text-white/90">
                         <?= get_staff()->email; ?>
                     </span>
                 </span>
