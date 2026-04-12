@@ -1,4 +1,73 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
+<style>
+body.admin #menu.sidebar {
+    width: 340px !important;
+}
+
+body.admin #wrapper {
+    margin-left: 340px !important;
+}
+
+body.admin.hide-sidebar:not(.show-sidebar) #menu,
+body.admin.page-small #menu {
+    margin-left: -340px !important;
+}
+
+body.admin.page-small.show-sidebar #wrapper {
+    margin-left: 340px !important;
+}
+
+body.admin .btn-bottom-toolbar {
+    margin-left: 340px !important;
+    width: calc(100% - 340px) !important;
+}
+
+[dir="rtl"] body.admin #wrapper {
+    margin-right: 340px !important;
+    margin-left: 0 !important;
+}
+
+[dir="rtl"] body.admin.hide-sidebar:not(.show-sidebar) .sidebar,
+[dir="rtl"] body.admin.page-small .sidebar {
+    margin-right: -340px !important;
+}
+
+[dir="rtl"] body.admin.page-small.show-sidebar #wrapper {
+    margin-right: 340px !important;
+}
+
+[dir="rtl"] body.admin .btn-bottom-toolbar {
+    margin-right: 340px !important;
+    margin-left: 0 !important;
+}
+
+body.admin .dropdown.sidebar-user-profile .profile {
+    background: transparent !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+}
+
+body.admin .dropdown.sidebar-user-profile .profile,
+body.admin .dropdown.sidebar-user-profile .profile:hover,
+body.admin .dropdown.sidebar-user-profile .profile:focus,
+body.admin .dropdown.sidebar-user-profile .profile * {
+    color: #ffffff !important;
+}
+
+body.admin .dropdown.sidebar-user-profile .profile .tw-inline-flex {
+    width: 100% !important;
+}
+
+body.admin .dropdown.sidebar-user-profile .profile .tw-min-w-0 {
+    min-width: 0 !important;
+    flex: 1 1 auto !important;
+}
+
+body.admin .dropdown.sidebar-user-profile .profile .tw-truncate {
+    width: auto !important;
+    max-width: none !important;
+}
+</style>
 <div id="header">
     <button type="button"
         class="hide-menu tw-inline-flex tw-bg-transparent tw-border-0 tw-p-1 tw-mt-4 hover:tw-bg-neutral-600/10 tw-text-neutral-600 hover:tw-text-neutral-800 focus:tw-text-neutral-800 focus:tw-outline-none tw-rounded-md tw-mx-4 ltr:md:tw-ml-4 rtl:md:tw-mr-4 ltr:tw-float-left  rtl:tw-float-right">

@@ -5,15 +5,15 @@
             false; ?>
     <div class="dropdown sidebar-user-profile tw-mt-[80px] tw-mx-1.5 ">
         <a href="#"
-            class="dropdown-toggle profile -tw-mt-1 tw-font-medium tw-border tw-border-solid tw-rounded-lg tw-bg-white/20 tw-py-2 tw-px-2.5 tw-block tw-shadow-sm tw-text-white tw-border-white/20 hover:tw-text-white focus:tw-text-white hover:tw-border-white/35 focus:tw-border-white/35 hover:tw-bg-white/25 focus:tw-bg-white/25"
+            class="dropdown-toggle profile -tw-mt-1 tw-font-medium tw-rounded-lg tw-py-2 tw-px-2.5 tw-block tw-text-white hover:tw-text-white focus:tw-text-white"
             data-toggle="dropdown" aria-expanded="false">
             <span class="tw-inline-flex tw-items-center tw-gap-x-3 tw-pt-0.5">
                 <?= staff_profile_image($current_user->staffid, ['img', 'img-responsive', 'staff-profile-image-small']); ?>
-                <span>
+                <span class="tw-min-w-0 tw-flex-1">
                     <span
-                        class="tw-truncate tw-block tw-w-[180px] tw-font-semibold tw-text-white"><?= get_staff_full_name(); ?></span>
+                        class="tw-truncate tw-block tw-font-semibold tw-text-white"><?= get_staff_full_name(); ?></span>
                     <span
-                        class="tw-font-normal tw-truncate tw-block tw-w-[180px] tw-text-sm tw-text-white/90">
+                        class="tw-font-normal tw-truncate tw-block tw-text-sm tw-text-white/90">
                         <?= get_staff()->email; ?>
                     </span>
                 </span>
