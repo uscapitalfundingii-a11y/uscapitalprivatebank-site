@@ -431,6 +431,7 @@ function verify_normalize_certificate_record($key, $entry)
         'issued_on' => trim((string) ($entry['issued_on'] ?? date('Y-m-d'))),
         'signed_by' => trim((string) ($entry['signed_by'] ?? 'U.S. Capital Private Bank')),
         'signer_title' => trim((string) ($entry['signer_title'] ?? 'Verification Desk')),
+        'design' => verify_normalize_certificate_design(is_array($entry['design'] ?? null) ? $entry['design'] : []),
         'status' => trim((string) ($entry['status'] ?? 'active')),
         'created_by' => trim((string) ($entry['created_by'] ?? '')),
         'created_at' => trim((string) ($entry['created_at'] ?? date('c'))),
@@ -493,4 +494,90 @@ function verify_find_certificate_by_code(string $code)
     }
 
     return null;
+}
+
+function verify_certificate_design_settings_path()
+{
+    return __DIR__ . '/certificate_design.json';
+}
+
+function verify_default_certificate_design(): array
+{
+    return [
+        'preset_key' => 'landscape_classic_award',
+        'orientation' => 'landscape',
+        'width_mm' => 279,
+        'height_mm' => 216,
+        'headline_font' => 'Georgia',
+        'body_font' => 'Segoe UI',
+        'primary_color' => '#18294d',
+        'secondary_color' => '#4f6486',
+        'accent_color' => '#c7a55b',
+        'border_color' => '#8f836f',
+        'background_image' => '',
+        'seal_image' => '',
+        'logo_image' => 'uscapital-private-bank-white.png',
+    ];
+}
+
+function verify_certificate_design_presets(): array
+{
+    return [
+        'landscape_classic_award' => ['label' => 'Landscape Classic Award', 'orientation' => 'landscape', 'primary_color' => '#18294d', 'secondary_color' => '#4f6486', 'accent_color' => '#c7a55b', 'border_color' => '#8f836f'],
+        'landscape_midnight_gold' => ['label' => 'Landscape Midnight Gold', 'orientation' => 'landscape', 'primary_color' => '#111b34', 'secondary_color' => '#3d4f79', 'accent_color' => '#d8b15b', 'border_color' => '#9f7c3f'],
+        'landscape_platinum' => ['label' => 'Landscape Platinum', 'orientation' => 'landscape', 'primary_color' => '#22314f', 'secondary_color' => '#61728e', 'accent_color' => '#8eb8f5', 'border_color' => '#a7a19a'],
+        'landscape_royal_honors' => ['label' => 'Landscape Royal Honors', 'orientation' => 'landscape', 'primary_color' => '#1a2557', 'secondary_color' => '#3b509f', 'accent_color' => '#c9a64e', 'border_color' => '#988867'],
+        'portrait_executive_award' => ['label' => 'Portrait Executive Award', 'orientation' => 'portrait', 'primary_color' => '#18294d', 'secondary_color' => '#4f6486', 'accent_color' => '#c7a55b', 'border_color' => '#8f836f'],
+        'portrait_compliance_honors' => ['label' => 'Portrait Compliance Honors', 'orientation' => 'portrait', 'primary_color' => '#102a43', 'secondary_color' => '#1f5f8b', 'accent_color' => '#d8b15b', 'border_color' => '#8b8772'],
+    ];
+}
+
+function verify_normalize_certificate_design(array $settings): array
+{
+    $defaults = verify_default_certificate_design();
+    $normalized = array_merge($defaults, $settings);
+    $presets = verify_certificate_design_presets();
+    $presetKey = trim((string) ($normalized['preset_key'] ?? ''));
+
+    if ($presetKey !== '' && isset($presets[$presetKey])) {
+        $normalized = array_merge($defaults, $presets[$presetKey], $settings);
+    }
+
+    $normalized['preset_key'] = isset($presets[$presetKey]) ? $presetKey : $defaults['preset_key'];
+    $normalized['orientation'] = in_array((string) $normalized['orientation'], ['portrait', 'landscape'], true)
+        ? (string) $normalized['orientation']
+        : $defaults['orientation'];
+    $normalized['width_mm'] = max(148, min(420, (float) $normalized['width_mm']));
+    $normalized['height_mm'] = max(148, min(320, (float) $normalized['height_mm']));
+
+    foreach (['headline_font', 'body_font', 'primary_color', 'secondary_color', 'accent_color', 'border_color', 'background_image', 'seal_image', 'logo_image'] as $key) {
+        $normalized[$key] = trim((string) $normalized[$key]);
+    }
+
+    return $normalized;
+}
+
+function verify_load_certificate_design(): array
+{
+    $path = verify_certificate_design_settings_path();
+    if (!file_exists($path)) {
+        $defaults = verify_default_certificate_design();
+        file_put_contents($path, json_encode($defaults, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+        return $defaults;
+    }
+
+    $decoded = json_decode((string) file_get_contents($path), true);
+    if (!is_array($decoded)) {
+        $decoded = [];
+    }
+
+    $normalized = verify_normalize_certificate_design($decoded);
+    file_put_contents($path, json_encode($normalized, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+    return $normalized;
+}
+
+function verify_save_certificate_design(array $settings): void
+{
+    $normalized = verify_normalize_certificate_design($settings);
+    file_put_contents(verify_certificate_design_settings_path(), json_encode($normalized, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 }

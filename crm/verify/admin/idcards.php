@@ -128,6 +128,8 @@ $design = verify_load_id_card_design();
 $presets = verify_id_card_design_presets();
 $fontChoices = verify_card_font_choices();
 $affiliationChoices = verify_card_affiliation_choices();
+$editCode = strtoupper(trim((string) ($_GET['edit'] ?? '')));
+$editingCard = ($editCode !== '' && isset($cards[$editCode])) ? $cards[$editCode] : null;
 
 if (isset($_POST['save_design'])) {
     $design = verify_design_from_request($design);
@@ -135,7 +137,7 @@ if (isset($_POST['save_design'])) {
     $message = 'ID card design settings saved.';
 }
 
-if (isset($_POST['create_id_card'])) {
+if (isset($_POST['create_id_card']) || isset($_POST['update_id_card'])) {
     $designSnapshot = verify_design_from_request($design);
     verify_save_id_card_design($designSnapshot);
     $design = $designSnapshot;
@@ -148,6 +150,7 @@ if (isset($_POST['create_id_card'])) {
     $notes = trim((string) ($_POST['notes'] ?? ''));
     $status = trim((string) ($_POST['status'] ?? 'active'));
     $code = strtoupper(trim((string) ($_POST['code'] ?? '')));
+    $originalCode = strtoupper(trim((string) ($_POST['original_code'] ?? '')));
     $templateKey = trim((string) ($_POST['preset_key'] ?? $designSnapshot['preset_key']));
     $photoUrl = trim((string) ($_POST['photo_url'] ?? ''));
     $photoUrl = verify_store_uploaded_photo('photo_file', $photoUrl);
@@ -155,10 +158,15 @@ if (isset($_POST['create_id_card'])) {
     if ($name === '' || $title === '') {
         $error = 'Name and title are required to create an ID card.';
     } else {
+        $isUpdate = isset($_POST['update_id_card']) && $originalCode !== '' && isset($cards[$originalCode]);
+
         if ($code === '') {
-            $code = verify_generate_id_card_code($name);
+            $code = $isUpdate ? $originalCode : verify_generate_id_card_code($name);
         }
-        while (isset($cards[$code])) {
+        if ($isUpdate && $originalCode !== $code) {
+            unset($cards[$originalCode]);
+        }
+        while ((!$isUpdate || $code !== $originalCode) && isset($cards[$code])) {
             $code = verify_generate_id_card_code($name);
         }
 
@@ -176,12 +184,14 @@ if (isset($_POST['create_id_card'])) {
             'design' => $designSnapshot,
             'status' => $status,
             'created_by' => (string) ($_SESSION['username'] ?? 'admin'),
-            'created_at' => date('c'),
+            'created_at' => $isUpdate ? (string) ($cards[$code]['created_at'] ?? ($cards[$originalCode]['created_at'] ?? date('c'))) : date('c'),
             'updated_at' => date('c'),
         ]);
 
         verify_save_id_cards($cards);
-        $message = 'Employee ID card created successfully.';
+        $message = $isUpdate ? 'Employee ID card updated successfully.' : 'Employee ID card created successfully.';
+        $editCode = $code;
+        $editingCard = $cards[$code];
     }
 }
 
@@ -204,6 +214,22 @@ if (isset($_POST['delete_id_card'])) {
 uasort($cards, static function (array $a, array $b): int {
     return strcmp((string) ($b['created_at'] ?? ''), (string) ($a['created_at'] ?? ''));
 });
+
+$cardForm = [
+    'name' => (string) ($editingCard['name'] ?? ''),
+    'title' => (string) ($editingCard['title'] ?? ''),
+    'department' => (string) ($editingCard['department'] ?? ''),
+    'affiliation' => (string) ($editingCard['affiliation'] ?? 'Bank Officer'),
+    'email' => (string) ($editingCard['email'] ?? ''),
+    'phone' => (string) ($editingCard['phone'] ?? ''),
+    'photo_url' => (string) ($editingCard['photo_url'] ?? ''),
+    'notes' => (string) ($editingCard['notes'] ?? ''),
+    'status' => (string) ($editingCard['status'] ?? 'active'),
+    'code' => (string) ($editingCard['code'] ?? ''),
+];
+if ($editingCard !== null && is_array($editingCard['design'] ?? null)) {
+    $design = verify_normalize_id_card_design(array_merge($design, $editingCard['design']));
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -272,22 +298,29 @@ uasort($cards, static function (array $a, array $b): int {
             <div class="studio-stack">
                 <section class="verify-card">
                     <div class="verify-card-inner">
-                        <h3 style="margin:0 0 18px; font-size:24px;">Create Employee ID Card</h3>
+                        <h3 style="margin:0 0 18px; font-size:24px;"><?= $editingCard ? 'Edit Employee ID Card' : 'Create Employee ID Card' ?></h3>
                         <form method="post" enctype="multipart/form-data">
+                            <?php if ($editingCard): ?><input type="hidden" name="original_code" value="<?= htmlspecialchars($editingCard['code'], ENT_QUOTES, 'UTF-8') ?>"><?php endif; ?>
                             <div class="studio-fields">
-                                <div class="verify-form-group"><label class="verify-label" for="name">Employee Name</label><input class="verify-input" id="name" name="name" type="text" placeholder="e.g. HRM Joseph David Jeremiah" required></div>
-                                <div class="verify-form-group"><label class="verify-label" for="title">Title</label><input class="verify-input" id="title" name="title" type="text" placeholder="e.g. 1st Trustee / Chairman" required></div>
-                                <div class="verify-form-group"><label class="verify-label" for="department">Department</label><input class="verify-input" id="department" name="department" type="text" placeholder="e.g. Executive Office"></div>
-                                <div class="verify-form-group"><label class="verify-label" for="affiliation">Affiliation</label><select class="verify-input" id="affiliation" name="affiliation"><?php foreach ($affiliationChoices as $choice): ?><option value="<?= htmlspecialchars($choice, ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($choice, ENT_QUOTES, 'UTF-8') ?></option><?php endforeach; ?></select></div>
-                                <div class="verify-form-group"><label class="verify-label" for="email">Email</label><input class="verify-input" id="email" name="email" type="email" placeholder="employee@uscapitalprivatebank.com"></div>
-                                <div class="verify-form-group"><label class="verify-label" for="phone">Phone</label><input class="verify-input" id="phone" name="phone" type="text" placeholder="+971 ..."></div>
-                                <div class="verify-form-group"><label class="verify-label" for="code">Card Code</label><input class="verify-input" id="code" name="code" type="text" placeholder="Leave blank to auto-generate"></div>
-                                <div class="verify-form-group"><label class="verify-label" for="status">Status</label><select class="verify-input" id="status" name="status"><option value="active">Active</option><option value="inactive">Inactive</option><option value="suspended">Suspended</option></select></div>
-                                <div class="verify-form-group"><label class="verify-label" for="photo_url">Photo URL</label><input class="verify-input" id="photo_url" name="photo_url" type="text" placeholder="Optional remote image URL"></div>
+                                <div class="verify-form-group"><label class="verify-label" for="name">Employee Name</label><input class="verify-input" id="name" name="name" type="text" value="<?= htmlspecialchars($cardForm['name'], ENT_QUOTES, 'UTF-8') ?>" placeholder="e.g. HRM Joseph David Jeremiah" required></div>
+                                <div class="verify-form-group"><label class="verify-label" for="title">Title</label><input class="verify-input" id="title" name="title" type="text" value="<?= htmlspecialchars($cardForm['title'], ENT_QUOTES, 'UTF-8') ?>" placeholder="e.g. 1st Trustee / Chairman" required></div>
+                                <div class="verify-form-group"><label class="verify-label" for="department">Department</label><input class="verify-input" id="department" name="department" type="text" value="<?= htmlspecialchars($cardForm['department'], ENT_QUOTES, 'UTF-8') ?>" placeholder="e.g. Executive Office"></div>
+                                <div class="verify-form-group"><label class="verify-label" for="affiliation">Affiliation</label><select class="verify-input" id="affiliation" name="affiliation"><?php foreach ($affiliationChoices as $choice): ?><option value="<?= htmlspecialchars($choice, ENT_QUOTES, 'UTF-8') ?>"<?= $cardForm['affiliation'] === $choice ? ' selected' : '' ?>><?= htmlspecialchars($choice, ENT_QUOTES, 'UTF-8') ?></option><?php endforeach; ?></select></div>
+                                <div class="verify-form-group"><label class="verify-label" for="email">Email</label><input class="verify-input" id="email" name="email" type="email" value="<?= htmlspecialchars($cardForm['email'], ENT_QUOTES, 'UTF-8') ?>" placeholder="employee@uscapitalprivatebank.com"></div>
+                                <div class="verify-form-group"><label class="verify-label" for="phone">Phone</label><input class="verify-input" id="phone" name="phone" type="text" value="<?= htmlspecialchars($cardForm['phone'], ENT_QUOTES, 'UTF-8') ?>" placeholder="+971 ..."></div>
+                                <div class="verify-form-group"><label class="verify-label" for="code">Card Code</label><input class="verify-input" id="code" name="code" type="text" value="<?= htmlspecialchars($cardForm['code'], ENT_QUOTES, 'UTF-8') ?>" placeholder="Leave blank to auto-generate"></div>
+                                <div class="verify-form-group"><label class="verify-label" for="status">Status</label><select class="verify-input" id="status" name="status"><option value="active"<?= $cardForm['status'] === 'active' ? ' selected' : '' ?>>Active</option><option value="inactive"<?= $cardForm['status'] === 'inactive' ? ' selected' : '' ?>>Inactive</option><option value="suspended"<?= $cardForm['status'] === 'suspended' ? ' selected' : '' ?>>Suspended</option></select></div>
+                                <div class="verify-form-group"><label class="verify-label" for="photo_url">Photo URL</label><input class="verify-input" id="photo_url" name="photo_url" type="text" value="<?= htmlspecialchars($cardForm['photo_url'], ENT_QUOTES, 'UTF-8') ?>" placeholder="Optional remote image URL"></div>
                                 <div class="verify-form-group"><label class="verify-label" for="photo_file">Passport Photo Upload</label><input class="verify-input" id="photo_file" name="photo_file" type="file" accept=".jpg,.jpeg,.png,.webp"></div>
-                                <div class="verify-form-group studio-span-2"><label class="verify-label" for="notes">Credential Notes</label><textarea class="verify-textarea" id="notes" name="notes" placeholder="Optional notes, restrictions, issue remarks, or internal comments."></textarea></div>
+                                <div class="verify-form-group studio-span-2"><label class="verify-label" for="notes">Credential Notes</label><textarea class="verify-textarea" id="notes" name="notes" placeholder="Optional notes, restrictions, issue remarks, or internal comments."><?= htmlspecialchars($cardForm['notes'], ENT_QUOTES, 'UTF-8') ?></textarea></div>
                             </div>
-                            <div class="studio-actions"><button class="verify-button" type="submit" name="create_id_card" value="1">Create ID Card</button></div>
+                            <div class="studio-actions">
+                                <button class="verify-button" type="submit" name="<?= $editingCard ? 'update_id_card' : 'create_id_card' ?>" value="1"><?= $editingCard ? 'Save ID Card Changes' : 'Create ID Card' ?></button>
+                                <?php if ($editingCard): ?>
+                                    <a class="verify-link" href="idcards.php">Clear Edit</a>
+                                    <a class="verify-link" href="../idcard.php?code=<?= urlencode($editingCard['code']) ?>" target="_blank" rel="noopener">View Current Design</a>
+                                <?php endif; ?>
+                            </div>
                         </form>
                     </div>
                 </section>
@@ -314,7 +347,10 @@ uasort($cards, static function (array $a, array $b): int {
                                 <div class="verify-form-group studio-span-2"><label class="verify-label" for="back_background_url">Back Texture / Background URL</label><input class="verify-input" id="back_background_url" name="back_background_url" type="text" value="<?= htmlspecialchars((string) $design['back_background'], ENT_QUOTES, 'UTF-8') ?>" placeholder="Optional image path or remote URL"></div>
                                 <div class="verify-form-group"><label class="verify-label" for="back_background_file">Back Background Upload</label><input class="verify-input" id="back_background_file" name="back_background_file" type="file" accept=".jpg,.jpeg,.png,.webp"></div>
                             </div>
-                            <div class="studio-actions"><button class="verify-button" type="submit" name="save_design" value="1">Save Design Settings</button></div>
+                            <div class="studio-actions">
+                                <button class="verify-button" type="submit" name="save_design" value="1">Save Design Settings</button>
+                                <a class="verify-link" href="../idcard.php?preview=1" target="_blank" rel="noopener">View Design Preview</a>
+                            </div>
                         </form>
                     </div>
                 </section>
@@ -382,6 +418,7 @@ uasort($cards, static function (array $a, array $b): int {
                                         <td><span class="verify-status approved"><?= htmlspecialchars(strtoupper((string) $card['status']), ENT_QUOTES, 'UTF-8') ?></span></td>
                                         <td>
                                             <div class="studio-table-actions">
+                                                <a class="verify-link" href="idcards.php?edit=<?= urlencode($card['code']) ?>">Edit</a>
                                                 <a class="verify-link" href="../idcard.php?code=<?= urlencode($card['code']) ?>" target="_blank" rel="noopener">Preview</a>
                                                 <a class="verify-link" href="../idcard.php?code=<?= urlencode($card['code']) ?>&print=1" target="_blank" rel="noopener">Print</a>
                                                 <a class="verify-link" href="../idcard.php?code=<?= urlencode($card['code']) ?>" target="_blank" rel="noopener">Verify</a>

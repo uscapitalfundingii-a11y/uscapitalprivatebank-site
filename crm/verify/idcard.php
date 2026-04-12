@@ -4,16 +4,31 @@ require_once __DIR__ . '/crm_verify_auth.php';
 $code = strtoupper(trim((string) ($_GET['code'] ?? '')));
 $card = verify_find_id_card_by_code($code);
 $isPrint = isset($_GET['print']);
+$isPreview = isset($_GET['preview']);
 
 function verify_card_render_design(?array $card): array
 {
     $global = verify_load_id_card_design();
-    if ($card === null) {
+if ($card === null) {
         return $global;
     }
 
     $stored = is_array($card['design'] ?? null) ? $card['design'] : [];
     return verify_normalize_id_card_design(array_merge($global, $stored));
+}
+
+if ($card === null && $isPreview) {
+    $card = verify_normalize_id_card_record('PREVIEW-ID', [
+        'code' => 'PREVIEW-ID',
+        'name' => 'Sample Employee',
+        'title' => 'Private Banking Officer',
+        'department' => 'Executive Office',
+        'affiliation' => 'Bank Officer',
+        'email' => 'sample@uscapitalprivatebank.com',
+        'phone' => '+971 000 000 0000',
+        'notes' => 'This preview reflects the currently saved ID card design settings.',
+        'status' => 'active',
+    ]);
 }
 
 function verify_card_asset_url(string $value): string
