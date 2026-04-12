@@ -22,10 +22,13 @@
     </div>
     <div class="col-md-12">
         <label for="signature" class="control-label"><?php echo _l('mailbox_email_signature'); ?></label>
-        <div class="input-group">
-        <?php $value = (isset($member) ? $member->mail_signature : 'Sent from Perfex'); ?>
-        <?php echo render_textarea('mail_signature', '', $value); ?>
-	    </div>
+        <?php $value = (isset($member) ? $member->mail_signature : ''); ?>
+        <?php echo render_textarea('mail_signature', '', $value, ['rows' => 10], [], '', 'tinymce tinymce-compose'); ?>
+        <p class="text-muted mtop10">
+            Use full HTML here if needed. Remote image URLs like
+            <code>&lt;img src="https://example.com/signature-logo.png" alt="" style="max-height:60px;"&gt;</code>
+            are supported.
+        </p>
     </div>
 </div>
 <div class="row">
