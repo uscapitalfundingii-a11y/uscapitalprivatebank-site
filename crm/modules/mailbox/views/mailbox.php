@@ -13,7 +13,7 @@
                         </a>
                         <a href="<?php echo admin_url('mailbox/fetch_now'); ?>" class="btn btn-default display-block mtop10">
                             <i class="fa fa-download"></i>
-                            Receive email
+                            Send/Receive email
                         </a>
                     </div>
                 </div>               
@@ -103,13 +103,14 @@
                                 <form method="get" action="<?php echo admin_url('mailbox'); ?>" class="mailbox-staff-switch-form">
                                     <input type="hidden" name="group" value="<?php echo html_escape($group === 'detail' ? 'inbox' : $group); ?>">
                                     <label for="mailbox_staff_id" class="control-label mright10">Mailbox owner</label>
-                                    <select name="staff_id" id="mailbox_staff_id" class="selectpicker" data-width="260px" data-none-selected-text="Select staff" onchange="this.form.submit();">
+                                    <select name="staff_id" id="mailbox_staff_id" class="form-control mailbox-staff-select">
                                         <?php foreach ($mailbox_staffs as $staffMember) { ?>
                                         <option value="<?php echo (int) $staffMember['staffid']; ?>" <?php echo isset($selected_staff_id) && (int) $selected_staff_id === (int) $staffMember['staffid'] ? 'selected' : ''; ?>>
                                             <?php echo html_escape(trim($staffMember['firstname'].' '.$staffMember['lastname']).' - '.$staffMember['email']); ?>
                                         </option>
                                         <?php } ?>
                                     </select>
+                                    <button type="submit" class="btn btn-default">View mailbox</button>
                                 </form>
                                 <?php } ?>
                             </div>

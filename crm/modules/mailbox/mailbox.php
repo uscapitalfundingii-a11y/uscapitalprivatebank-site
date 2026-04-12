@@ -164,12 +164,12 @@ function mailbox_migration_tables_to_replace_old_links($tables)
 /**
  * Scan mailbox from mail-server.
  *
- * @param array $staff
- * @param bool  $forceRecent
+ * @param array  $staff
+ * @param string $fetchMode
  *
  * @return int
  */
-function mailbox_scan_staff_email($staff, $forceRecent = false)
+function mailbox_scan_staff_email($staff, $fetchMode = 'unread')
 {
     $enabled      = get_option('mailbox_enabled');
     $imap_server  = get_option('mailbox_imap_server');
@@ -214,7 +214,9 @@ function mailbox_scan_staff_email($staff, $forceRecent = false)
     ]);
 
     $imap->selectFolder($folder_scan);
-    if ($forceRecent) {
+    if ('all' === $fetchMode) {
+        $emails = $imap->getMessages();
+    } elseif ('recent' === $fetchMode) {
         $emails = $imap->getMessages();
         $emails = array_slice($emails, 0, 25);
     } elseif (1 == $unseen_email) {
@@ -345,11 +347,11 @@ function mailbox_scan_staff_email($staff, $forceRecent = false)
  * Scan mailbox from mail-server.
  *
  * @param int|null $staffId
- * @param bool     $forceRecent
+ * @param string   $fetchMode
  *
  * @return int
  */
-function mailbox_scan_email_server($staffId = null, $forceRecent = false)
+function mailbox_scan_email_server($staffId = null, $fetchMode = 'unread')
 {
     $enabled     = get_option('mailbox_enabled');
     $check_every = (int) get_option('mailbox_check_every');
@@ -372,8 +374,8 @@ function mailbox_scan_email_server($staffId = null, $forceRecent = false)
 
     foreach ($staffs as $staff) {
         $last_run = isset($staff['last_email_check']) ? (int) $staff['last_email_check'] : 0;
-        if (!empty($staffId) || empty($last_run) || (time() > $last_run + ($check_every * 60))) {
-            $imported += mailbox_scan_staff_email($staff, $forceRecent);
+        if (!empty($staffId) || 'all' === $fetchMode || 'recent' === $fetchMode || empty($last_run) || (time() > $last_run + ($check_every * 60))) {
+            $imported += mailbox_scan_staff_email($staff, $fetchMode);
         }
     }
 

@@ -119,12 +119,16 @@ class Mailbox extends AdminController
                 throw new Exception('Mailbox receive function is not available.');
             }
 
-            $imported = mailbox_scan_email_server(mailbox_get_selected_staff_id(), true);
+            if (mailbox_can_switch_staff_mailbox()) {
+                $imported = mailbox_scan_email_server(null, 'all');
+            } else {
+                $imported = mailbox_scan_email_server(mailbox_get_selected_staff_id(), 'all');
+            }
 
             if ($imported > 0) {
-                set_alert('success', $imported.' incoming email(s) received successfully.');
+                set_alert('success', $imported.' inbox email(s) received successfully.');
             } else {
-                set_alert('warning', 'No new unread emails were found for this mailbox.');
+                set_alert('warning', 'No inbox emails were imported. Existing inbox messages may already be synced.');
             }
         } catch (Throwable $e) {
             log_message('error', 'Mailbox receive failed: '.$e->getMessage());
