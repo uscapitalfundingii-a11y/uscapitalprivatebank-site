@@ -70,7 +70,8 @@ define('APP_DB_COLLATION', 'utf8mb4_unicode_ci');
 /**
  *
  * Session handler driver
- * By default the database driver will be used.
+ * File-backed sessions are safer for a fresh deployment because they don't
+ * require the sessions table to exist before the CRM can boot.
  *
  * For files session use this config:
  * define('SESS_DRIVER', 'files');
@@ -78,8 +79,8 @@ define('APP_DB_COLLATION', 'utf8mb4_unicode_ci');
  * In case you are having problem with the SESS_SAVE_PATH consult with your hosting provider to set "session.save_path" value to php.ini
  *
  */
-define('SESS_DRIVER', 'database');
-define('SESS_SAVE_PATH', 'sessions');
+define('SESS_DRIVER', 'files');
+define('SESS_SAVE_PATH', APPPATH . 'cache/sessions');
 define('APP_SESSION_COOKIE_SAME_SITE', 'Lax');
 
 /**
