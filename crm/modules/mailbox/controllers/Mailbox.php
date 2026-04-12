@@ -70,6 +70,47 @@ class Mailbox extends AdminController
     }
 
     /**
+     * Manually receive mailbox messages for the current staff member.
+     *
+     * @return void
+     */
+    public function fetch_now()
+    {
+        try {
+            if (!function_exists('mailbox_scan_email_server') && defined('FCPATH') && file_exists(FCPATH.'modules/mailbox/mailbox.php')) {
+                require_once FCPATH.'modules/mailbox/mailbox.php';
+            }
+
+            if (!function_exists('mailbox_scan_email_server')) {
+                throw new Exception('Mailbox receive function is not available.');
+            }
+
+            $imported = mailbox_scan_email_server(get_staff_user_id(), true);
+
+            if ($imported > 0) {
+                set_alert('success', $imported.' incoming email(s) received successfully.');
+            } else {
+                set_alert('warning', 'No new unread emails were found for this mailbox.');
+            }
+        } catch (Throwable $e) {
+            log_message('error', 'Mailbox receive failed: '.$e->getMessage());
+            set_alert('danger', 'Mailbox receive failed: '.$e->getMessage());
+        }
+
+        redirect(admin_url('mailbox?group=inbox'));
+    }
+
+    /**
+     * Backward-compatible alias.
+     *
+     * @return void
+     */
+    public function receive()
+    {
+        $this->fetch_now();
+    }
+
+    /**
      * Get list email to dislay on datagrid.
      *
      * @param string $group

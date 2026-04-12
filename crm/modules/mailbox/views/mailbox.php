@@ -9,9 +9,12 @@
                     <div class="">
                         <a href="<?php echo admin_url().'mailbox/compose'; ?>" class="btn btn-info display-block">
                             <i class="fa fa-edit"></i>
-                            <?php echo _l('mailbox_compose'); ?>
+                            Send email
                         </a>
-                
+                        <a href="<?php echo admin_url('mailbox/fetch_now'); ?>" class="btn btn-default display-block mtop10">
+                            <i class="fa fa-download"></i>
+                            Receive email
+                        </a>
                     </div>
                 </div>               
 

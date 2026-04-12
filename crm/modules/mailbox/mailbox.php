@@ -107,10 +107,11 @@ function mailbox_migration_tables_to_replace_old_links($tables)
  * Scan mailbox from mail-server.
  *
  * @param array $staff
+ * @param bool  $forceRecent
  *
  * @return int
  */
-function mailbox_scan_staff_email($staff)
+function mailbox_scan_staff_email($staff, $forceRecent = false)
 {
     $enabled      = get_option('mailbox_enabled');
     $imap_server  = get_option('mailbox_imap_server');
@@ -124,6 +125,10 @@ function mailbox_scan_staff_email($staff)
     $CI = &get_instance();
     require_once APPPATH.'third_party/php-imap/Imap.php';
     include_once APPPATH.'third_party/simple_html_dom.php';
+
+    if (!column_exists('imap_uid', 'mail_inbox')) {
+        $CI->db->query('ALTER TABLE `'.db_prefix().'mail_inbox` ADD COLUMN `imap_uid` VARCHAR(191) NULL AFTER `folder`');
+    }
 
     $staff_email = $staff['email'];
     $staff_id    = $staff['staffid'];
@@ -147,7 +152,10 @@ function mailbox_scan_staff_email($staff)
     ]);
 
     $imap->selectFolder($folder_scan);
-    if (1 == $unseen_email) {
+    if ($forceRecent) {
+        $emails = $imap->getMessages();
+        $emails = array_slice($emails, 0, 25);
+    } elseif (1 == $unseen_email) {
         $emails = $imap->getUnreadMessages();
     } else {
         $emails = $imap->getMessages();
@@ -203,6 +211,11 @@ function mailbox_scan_staff_email($staff)
         $data['fromname'] = preg_replace('/(.*)<(.*)>/', '\\1', $email['from']);
         $data['fromname'] = trim(str_replace('"', '', $data['fromname']));
 
+        $imapUid             = isset($email['uid']) ? (string) $email['uid'] : null;
+        if (!empty($imapUid) && $CI->db->where('to_staff_id', $staff_id)->where('imap_uid', $imapUid)->count_all_results(db_prefix().'mail_inbox') > 0) {
+            continue;
+        }
+
         $inbox               = [];
         $inbox['from_email'] = $email['from'];
         $from_staff_id       = get_staff_id_by_email(trim($from_email));
@@ -217,6 +230,7 @@ function mailbox_scan_staff_email($staff)
         $inbox['to_staff_id']   = $staff_id;
         $inbox['date_received'] = date('Y-m-d H:i:s');
         $inbox['folder']        = 'inbox';
+        $inbox['imap_uid']      = $imapUid;
 
         $CI->db->insert(db_prefix().'mail_inbox', $inbox);
         $inbox_id = $CI->db->insert_id();
@@ -269,10 +283,11 @@ function mailbox_scan_staff_email($staff)
  * Scan mailbox from mail-server.
  *
  * @param int|null $staffId
+ * @param bool     $forceRecent
  *
  * @return int
  */
-function mailbox_scan_email_server($staffId = null)
+function mailbox_scan_email_server($staffId = null, $forceRecent = false)
 {
     $enabled     = get_option('mailbox_enabled');
     $check_every = (int) get_option('mailbox_check_every');
@@ -296,7 +311,7 @@ function mailbox_scan_email_server($staffId = null)
     foreach ($staffs as $staff) {
         $last_run = isset($staff['last_email_check']) ? (int) $staff['last_email_check'] : 0;
         if (!empty($staffId) || empty($last_run) || (time() > $last_run + ($check_every * 60))) {
-            $imported += mailbox_scan_staff_email($staff);
+            $imported += mailbox_scan_staff_email($staff, $forceRecent);
         }
     }
 
