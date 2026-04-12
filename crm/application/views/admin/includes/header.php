@@ -68,6 +68,22 @@ body.admin .dropdown.sidebar-user-profile .profile .tw-truncate {
     max-width: none !important;
 }
 </style>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var mailboxLink = document.querySelector('#side-menu a[href*="admin/mailbox"]');
+    if (!mailboxLink) {
+        return;
+    }
+
+    var icon = mailboxLink.querySelector('i');
+    mailboxLink.innerHTML = '';
+    if (icon) {
+        mailboxLink.appendChild(icon);
+        mailboxLink.appendChild(document.createTextNode(' '));
+    }
+    mailboxLink.appendChild(document.createTextNode('Mailbox'));
+});
+</script>
 <div id="header">
     <button type="button"
         class="hide-menu tw-inline-flex tw-bg-transparent tw-border-0 tw-p-1 tw-mt-4 hover:tw-bg-neutral-600/10 tw-text-neutral-600 hover:tw-text-neutral-800 focus:tw-text-neutral-800 focus:tw-outline-none tw-rounded-md tw-mx-4 ltr:md:tw-ml-4 rtl:md:tw-mr-4 ltr:tw-float-left  rtl:tw-float-right">
