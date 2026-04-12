@@ -7,6 +7,27 @@ defined('BASEPATH') or exit('No direct script access allowed');
  */
 class Mailbox extends AdminController
 {
+    private function mailboxSwitcherData()
+    {
+        $data = [
+            'selected_staff_id'          => mailbox_get_selected_staff_id(),
+            'can_switch_staff_mailbox'   => mailbox_can_switch_staff_mailbox(),
+            'mailbox_staffs'             => [],
+        ];
+
+        if ($data['can_switch_staff_mailbox']) {
+            $data['mailbox_staffs'] = $this->db
+                ->select('staffid, firstname, lastname, email, active')
+                ->from(db_prefix().'staff')
+                ->order_by('firstname', 'asc')
+                ->order_by('lastname', 'asc')
+                ->get()
+                ->result_array();
+        }
+
+        return $data;
+    }
+
     /**
      * Controler __construct function to initialize options.
      */
@@ -27,16 +48,12 @@ class Mailbox extends AdminController
             mailbox_set_selected_staff_id($this->input->get('staff_id'));
         }
 
-        $selectedStaffId = mailbox_get_selected_staff_id();
+        $switcher = $this->mailboxSwitcherData();
+        $selectedStaffId = $switcher['selected_staff_id'];
         $data['title'] = _l('mailbox');
         $group         = !$this->input->get('group') ? 'inbox' : $this->input->get('group');
         $data['group'] = $group;
-        $data['selected_staff_id'] = $selectedStaffId;
-        $data['can_switch_staff_mailbox'] = mailbox_can_switch_staff_mailbox();
-        if ($data['can_switch_staff_mailbox']) {
-            $this->load->model('staff_model');
-            $data['mailbox_staffs'] = $this->staff_model->get('', ['active' => 1]);
-        }
+        $data = array_merge($data, $switcher);
         if ('config' == $group) {
             $this->load->model('staff_model');
             $member         = $this->staff_model->get($selectedStaffId);
@@ -56,16 +73,12 @@ class Mailbox extends AdminController
      */
     public function compose($outbox_id = null)
     {
-        $selectedStaffId = mailbox_get_selected_staff_id();
+        $switcher = $this->mailboxSwitcherData();
+        $selectedStaffId = $switcher['selected_staff_id'];
         $data['title'] = _l('mailbox');
         $group         = 'compose';
         $data['group'] = $group;
-        $data['selected_staff_id'] = $selectedStaffId;
-        $data['can_switch_staff_mailbox'] = mailbox_can_switch_staff_mailbox();
-        if ($data['can_switch_staff_mailbox']) {
-            $this->load->model('staff_model');
-            $data['mailbox_staffs'] = $this->staff_model->get('', ['active' => 1]);
-        }
+        $data = array_merge($data, $switcher);
         if ($this->input->post()) {
             $data            = $this->input->post();
             $id              = $this->mailbox_model->add($data, $selectedStaffId, $outbox_id);
@@ -162,7 +175,8 @@ class Mailbox extends AdminController
      */
     public function inbox($id)
     {
-        $selectedStaffId = mailbox_get_selected_staff_id();
+        $switcher = $this->mailboxSwitcherData();
+        $selectedStaffId = $switcher['selected_staff_id'];
         $inbox = $this->mailbox_model->get($id, 'inbox');
         if (!$inbox || (int) $inbox->to_staff_id !== (int) $selectedStaffId) {
             access_denied('mailbox');
@@ -171,12 +185,7 @@ class Mailbox extends AdminController
         $data['title']       = $inbox->subject;
         $group               = 'detail';
         $data['group']       = $group;
-        $data['selected_staff_id'] = $selectedStaffId;
-        $data['can_switch_staff_mailbox'] = mailbox_can_switch_staff_mailbox();
-        if ($data['can_switch_staff_mailbox']) {
-            $this->load->model('staff_model');
-            $data['mailbox_staffs'] = $this->staff_model->get('', ['active' => 1]);
-        }
+        $data = array_merge($data, $switcher);
         $data['inbox']       = $inbox;
         $data['type']        = 'inbox';
         $data['attachments'] = $this->mailbox_model->get_mail_attachment($id, 'inbox');
@@ -192,7 +201,8 @@ class Mailbox extends AdminController
      */
     public function outbox($id)
     {
-        $selectedStaffId = mailbox_get_selected_staff_id();
+        $switcher = $this->mailboxSwitcherData();
+        $selectedStaffId = $switcher['selected_staff_id'];
         $inbox               = $this->mailbox_model->get($id, 'outbox');
         if (!$inbox || (int) $inbox->sender_staff_id !== (int) $selectedStaffId) {
             access_denied('mailbox');
@@ -200,12 +210,7 @@ class Mailbox extends AdminController
         $data['title']       = $inbox->subject;
         $group               = 'detail';
         $data['group']       = $group;
-        $data['selected_staff_id'] = $selectedStaffId;
-        $data['can_switch_staff_mailbox'] = mailbox_can_switch_staff_mailbox();
-        if ($data['can_switch_staff_mailbox']) {
-            $this->load->model('staff_model');
-            $data['mailbox_staffs'] = $this->staff_model->get('', ['active' => 1]);
-        }
+        $data = array_merge($data, $switcher);
         $data['inbox']       = $inbox;
         $data['type']        = 'outbox';
         $data['attachments'] = $this->mailbox_model->get_mail_attachment($id, 'outbox');
@@ -257,7 +262,8 @@ class Mailbox extends AdminController
      */
     public function reply($id, $method = 'reply', $type = 'inbox')
     {
-        $selectedStaffId = mailbox_get_selected_staff_id();
+        $switcher = $this->mailboxSwitcherData();
+        $selectedStaffId = $switcher['selected_staff_id'];
         $mail          = $this->mailbox_model->get($id, $type);
         if (
             !$mail
@@ -269,12 +275,7 @@ class Mailbox extends AdminController
         $data['title'] = _l('mailbox');
         $group         = 'compose';
         $data['group'] = $group;
-        $data['selected_staff_id'] = $selectedStaffId;
-        $data['can_switch_staff_mailbox'] = mailbox_can_switch_staff_mailbox();
-        if ($data['can_switch_staff_mailbox']) {
-            $this->load->model('staff_model');
-            $data['mailbox_staffs'] = $this->staff_model->get('', ['active' => 1]);
-        }
+        $data = array_merge($data, $switcher);
         if ($this->input->post()) {
             $data                  = $this->input->post();
             $data['reply_from_id'] = $id;
