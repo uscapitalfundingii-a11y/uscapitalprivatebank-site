@@ -28,6 +28,9 @@ $printUrls = [
 ];
 $extension = strtolower(pathinfo($requestedFile, PATHINFO_EXTENSION));
 $documentCode = (string) ($document['code'] ?? pathinfo($requestedFile, PATHINFO_FILENAME));
+$documentTitle = trim((string) ($document['title'] ?? pathinfo($requestedFile, PATHINFO_FILENAME)));
+$documentDescription = trim((string) ($document['notes'] ?? ''));
+$verificationPageUrl = 'https://www.uscapitalprivatebank.com/crm/verify/viewfile.php?file=' . rawurlencode($requestedFile);
 
 require_once __DIR__ . '/phpqrcode/qrlib.php';
 $qrTempDir = __DIR__ . '/tempqr';
@@ -95,6 +98,7 @@ if (in_array($extension, ['png', 'jpg', 'jpeg', 'gif', 'webp'], true)) {
                         <a class="verify-button-secondary" href="<?= htmlspecialchars($printOriginalUrl, ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener">Print Original Copy</a>
                         <a class="verify-button" href="<?= htmlspecialchars($downloadUrl, ENT_QUOTES, 'UTF-8') ?>">Download Verified Document</a>
                         <a class="verify-button-secondary" href="index.php">Verify Another Document</a>
+                        <button class="verify-button-secondary" type="button" id="copy-verify-link" data-link="<?= htmlspecialchars($verificationPageUrl, ENT_QUOTES, 'UTF-8') ?>">Copy Link</button>
                     </div>
                     <div class="verify-actions" style="margin-top:10px;">
                         <a class="verify-button-secondary" href="<?= htmlspecialchars($printUrls['legal'], ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener">Print Legal</a>
@@ -106,13 +110,18 @@ if (in_array($extension, ['png', 'jpg', 'jpeg', 'gif', 'webp'], true)) {
 
             <div class="verify-card">
                 <div class="verify-qr-panel">
-                    <div>
+                    <div class="verify-qr-copy">
+                        <div class="verify-qr-title-block">
+                            <h3 class="verify-qr-title"><?= htmlspecialchars($documentTitle, ENT_QUOTES, 'UTF-8') ?></h3>
+                        </div>
                         <div class="verify-qr-frame">
                             <img src="<?= htmlspecialchars('tempqr/' . basename($qrFilename), ENT_QUOTES, 'UTF-8') ?>" alt="Verification QR Code">
                         </div>
-                        <p class="verify-footer-note">
-                            Scan the QR code to reopen this exact verification record. This supports issuer review, third-party validation, and downstream audit confirmation.
-                        </p>
+                        <div class="verify-qr-description">
+                            <p class="verify-footer-note">
+                                <?= htmlspecialchars($documentDescription !== '' ? $documentDescription : 'Scan the QR code to reopen this exact verification record and review the verified document details.', ENT_QUOTES, 'UTF-8') ?>
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -125,5 +134,30 @@ if (in_array($extension, ['png', 'jpg', 'jpeg', 'gif', 'webp'], true)) {
             </div>
         </div>
     </div>
+    <script>
+        (function () {
+            const copyButton = document.getElementById('copy-verify-link');
+            if (!copyButton) {
+                return;
+            }
+
+            copyButton.addEventListener('click', async function () {
+                const link = copyButton.getAttribute('data-link') || '';
+                if (!link) {
+                    return;
+                }
+
+                try {
+                    await navigator.clipboard.writeText(link);
+                    copyButton.textContent = 'Link Copied';
+                    setTimeout(() => {
+                        copyButton.textContent = 'Copy Link';
+                    }, 1800);
+                } catch (error) {
+                    window.prompt('Copy this verification link:', link);
+                }
+            });
+        }());
+    </script>
 </body>
 </html>

@@ -1197,6 +1197,8 @@ function get_all_customer_attachments($id)
         foreach ($_attachments as $_att) {
             $_att['download_url'] = $attachment_types['ticket']['url'] . $_att[$attachment_types['ticket']['download_indicator']];
             $_att['upload_path']  = $attachment_types['ticket']['upload_path'] . $_att[$attachment_types['ticket']['key_indicator']] . '/' . $_att['file_name'];
+            $_att['visible_to_customer'] = 1;
+            $_att['delete_url'] = admin_url('clients/delete_ticket_attachment/' . $id . '/' . $_att['id']);
             array_push($attachments['ticket'], $_att);
         }
     }

@@ -619,6 +619,26 @@ class Clients extends AdminController
         redirect(previous_url() ?: $_SERVER['HTTP_REFERER']);
     }
 
+    public function delete_ticket_attachment($customer_id, $id)
+    {
+        if (staff_can('delete', 'customers') || is_customer_admin($customer_id)) {
+            $this->load->model('tickets_model');
+            $attachment = $this->tickets_model->get_ticket_attachment($id);
+
+            if ($attachment) {
+                $this->db->select('userid');
+                $this->db->where('ticketid', $attachment->ticketid);
+                $ticket = $this->db->get(db_prefix() . 'tickets')->row();
+
+                if ($ticket && (int) $ticket->userid === (int) $customer_id) {
+                    $this->tickets_model->delete_ticket_attachment($id);
+                }
+            }
+        }
+
+        redirect(previous_url() ?: $_SERVER['HTTP_REFERER']);
+    }
+
     /* Delete client */
     public function delete($id)
     {

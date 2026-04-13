@@ -94,10 +94,10 @@
                                                     <td>
                                                         <?php
                                                         $url = site_url() .'download/file/client/';
-                                                        $path = get_upload_path_by_type('customer') . $file['rel_id'] . '/' . $file['file_name'];
+                                                        $path = $file['upload_path'] ?? (get_upload_path_by_type('customer') . $file['rel_id'] . '/' . $file['file_name']);
                                                         $is_image = false;
                                                         if(!isset($file['external'])) {
-                                                            $attachment_url = $url . $file['attachment_key'];
+                                                            $attachment_url = $file['download_url'] ?? ($url . $file['attachment_key']);
                                                             $is_image = is_image($path);
                                                             $img_url = site_url('download/preview_image?path='.protected_file_url_by_path($path,true).'&type='.$file['filetype']);
                                                         } else if(isset($file['external']) && !empty($file['external'])){
@@ -127,8 +127,8 @@
                                                     <td data-order="<?php echo $file['dateadded']; ?>"><?php echo _dt($file['dateadded']); ?></td>
                                                     <?php if(get_option('allow_contact_to_delete_files') == 1) { ?>
                                                         <td>
-                                                            <?php if($file['contact_id'] == get_contact_user_id()){ ?>
-                                                                <a href="<?php echo site_url('clients/delete_file/'.$file['id'].'/general'); ?>"
+                                                            <?php if(!empty($file['can_delete'])){ ?>
+                                                                <a href="<?php echo $file['delete_url'] ?? site_url('clients/delete_file/'.$file['id'].'/general'); ?>"
                                                                     class="btn btn-danger btn-icon _delete file-delete"><i class="fa fa-remove"></i></a>
                                                                 <?php } ?>
                                                             </td>

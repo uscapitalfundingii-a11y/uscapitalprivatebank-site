@@ -204,7 +204,7 @@ class Download extends App_Controller
             if (! $attachment) {
                 show_404();
             }
-            if (staff_can('view', 'customers') || is_customer_admin($attachment->rel_id) || is_client_logged_in()) {
+            if (is_staff_logged_in() || (is_client_logged_in() && (int) get_client_user_id() === (int) $attachment->rel_id)) {
                 $path = get_upload_path_by_type('customer') . $attachment->rel_id . '/' . $attachment->file_name;
             }
         } elseif ($folder_indicator == 'estimate_request_attachment') {
@@ -236,6 +236,31 @@ class Download extends App_Controller
             'attachmentid' => $attachmentid,
         ]);
 
-        force_download($path, null);
+        if (empty($path) || ! file_exists($path)) {
+            show_404();
+        }
+
+        $mimeType   = function_exists('mime_content_type') ? mime_content_type($path) : 'application/octet-stream';
+        $inlineMimes = [
+            'application/pdf',
+            'image/jpeg',
+            'image/png',
+            'image/gif',
+            'image/webp',
+            'text/plain',
+        ];
+
+        if (ob_get_length()) {
+            ob_end_clean();
+        }
+
+        header('Content-Description: File Transfer');
+        header('Content-Type: ' . $mimeType);
+        header('Content-Disposition: ' . (in_array($mimeType, $inlineMimes) ? 'inline' : 'attachment') . '; filename="' . basename($path) . '"');
+        header('Content-Length: ' . filesize($path));
+        header('Cache-Control: private, max-age=0, must-revalidate');
+        header('Pragma: public');
+        readfile($path);
+        exit;
     }
 }

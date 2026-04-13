@@ -111,12 +111,12 @@
                         } ?>
                     </td>
                     <td>
-                        <div class="onoffswitch" <?php if ($type != 'customer') {?>
+                        <div class="onoffswitch" <?php if (!in_array($type, ['customer', 'ticket'])) {?>
                             data-toggle="tooltip"
                             data-title="<?= _l('customer_attachments_show_notice'); ?>"
                             <?php } ?>>
                             <input type="checkbox"
-                                <?= $type != 'customer' ? 'disabled' : ''; ?>
+                                <?= $type == 'customer' ? '' : 'disabled'; ?>
                             id="<?= e($_att['id']); ?>"
                             data-id="<?= e($_att['id']); ?>"
                             class="onoffswitch-checkbox customer_file"
@@ -167,6 +167,11 @@
                             } ?>
                             <?php if ($type == 'customer') { ?>
                             <a href="<?= admin_url('clients/delete_attachment/' . $_att['rel_id'] . '/' . $_att['id']); ?>"
+                                class="tw-text-neutral-500 hover:tw-text-neutral-700 focus:tw-text-neutral-700 _delete">
+                                <i class="fa-regular fa-trash-can fa-lg"></i>
+                            </a>
+                            <?php } elseif ($type == 'ticket' && isset($_att['delete_url'])) { ?>
+                            <a href="<?= $_att['delete_url']; ?>"
                                 class="tw-text-neutral-500 hover:tw-text-neutral-700 focus:tw-text-neutral-700 _delete">
                                 <i class="fa-regular fa-trash-can fa-lg"></i>
                             </a>

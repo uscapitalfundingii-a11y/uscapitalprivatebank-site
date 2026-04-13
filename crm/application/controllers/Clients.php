@@ -529,17 +529,49 @@ class Clients extends ClientsController
 
     public function files()
     {
-        $files_where = 'visible_to_customer = 1 AND id IN (SELECT file_id FROM ' . db_prefix() . 'shared_customer_files WHERE contact_id =' . get_contact_user_id() . ')';
-
-        $files_where = hooks()->apply_filters('customers_area_files_where', $files_where);
-
-        $files = $this->clients_model->get_customer_files(get_client_user_id(), $files_where);
+        $files = $this->get_customer_portal_files(get_client_user_id());
 
         $data['files'] = $files;
         $data['title'] = _l('customer_attachments');
         $this->data($data);
         $this->view('files');
         $this->layout();
+    }
+
+    private function get_customer_portal_files($customerId)
+    {
+        $files_where = 'visible_to_customer = 1';
+        $files_where = hooks()->apply_filters('customers_area_files_where', $files_where);
+
+        $customerFiles = $this->clients_model->get_customer_files($customerId, $files_where);
+        $allFiles      = [];
+
+        foreach ($customerFiles as $file) {
+            $file['source_type'] = 'customer';
+            $file['download_url'] = site_url('download/file/client/' . $file['attachment_key']);
+            $file['upload_path']  = get_upload_path_by_type('customer') . $file['rel_id'] . '/' . $file['file_name'];
+            $file['can_delete']   = get_option('allow_contact_to_delete_files') == 1 && (int) $file['rel_id'] === (int) $customerId;
+            $file['delete_url']   = site_url('clients/delete_file/' . $file['id'] . '/general');
+            $allFiles[] = $file;
+        }
+
+        $this->load->helper('clients');
+        $allAttachments = get_all_customer_attachments($customerId);
+        $ticketFiles    = $allAttachments['ticket'] ?? [];
+
+        foreach ($ticketFiles as $file) {
+            $file['source_type'] = 'ticket';
+            $file['visible_to_customer'] = 1;
+            $file['can_delete'] = get_option('allow_contact_to_delete_files') == 1;
+            $file['delete_url'] = site_url('clients/delete_file/' . $file['id'] . '/ticket');
+            $allFiles[] = $file;
+        }
+
+        usort($allFiles, function ($left, $right) {
+            return strtotime($right['dateadded']) <=> strtotime($left['dateadded']);
+        });
+
+        return $allFiles;
     }
 
     public function upload_files()
@@ -573,7 +605,7 @@ class Clients extends ClientsController
         if (get_option('allow_contact_to_delete_files') == 1) {
             if ($type == 'general') {
                 $file = $this->misc_model->get_file($id);
-                if ($file->contact_id == get_contact_user_id()) {
+                if ($file && (int) $file->rel_id === (int) get_client_user_id()) {
                     $this->clients_model->delete_attachment($id);
                     set_alert('success', _l('deleted', _l('file')));
                 }
@@ -593,6 +625,19 @@ class Clients extends ClientsController
                     set_alert('success', _l('deleted', _l('file')));
                 }
                 redirect(site_url('clients/project/' . $this->input->get('project_id') . '?group=project_tasks&taskid=' . $file->rel_id));
+            } elseif ($type == 'ticket') {
+                $this->load->model('tickets_model');
+                $attachment = $this->tickets_model->get_ticket_attachment($id);
+                if ($attachment) {
+                    $this->db->select('userid');
+                    $this->db->where('ticketid', $attachment->ticketid);
+                    $ticket = $this->db->get(db_prefix() . 'tickets')->row();
+                    if ($ticket && (int) $ticket->userid === (int) get_client_user_id()) {
+                        $this->tickets_model->delete_ticket_attachment($id);
+                        set_alert('success', _l('deleted', _l('file')));
+                    }
+                }
+                redirect(site_url('clients/files'));
             }
         }
         redirect(site_url());
