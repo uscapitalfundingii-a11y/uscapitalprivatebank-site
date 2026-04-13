@@ -25,7 +25,8 @@ Template source:
 - Added local CRM support for Aurora/Base44 ticket AI:
   - reply suggestion routed through a capability-aware AI service
   - follow-up message generation endpoint/button
-  - dictation mic UI with browser speech plus server transcription fallback
+  - system-wide Aurora Mic dictation layer for admin textareas, text inputs, contenteditable regions, and TinyMCE editors
+  - browser speech plus server transcription fallback
   - generic Base44 Super Agent provider scaffold and transcription service config sample
 - Added shared direct-publish helper:
   - `G:\GithubRepos\GithubUtilities\publish_ssh_files.ps1`
@@ -96,6 +97,10 @@ Template source:
   - `G:\GithubRepos\uscapitalprivatebank-site\crm\application\views\admin\tickets\partials\ticket-tabpanel-add-reply.php`
 - CRM ticket AI JS:
   - `G:\GithubRepos\uscapitalprivatebank-site\crm\assets\js\tickets.js`
+- Shared CRM dictation JS:
+  - `G:\GithubRepos\uscapitalprivatebank-site\crm\assets\js\aurora-dictation.js`
+- Shared admin script include:
+  - `G:\GithubRepos\uscapitalprivatebank-site\crm\application\views\admin\includes\scripts.php`
 - CRM AI endpoints:
   - `G:\GithubRepos\uscapitalprivatebank-site\crm\application\controllers\admin\Ai_tickets.php`
   - `G:\GithubRepos\uscapitalprivatebank-site\crm\application\controllers\admin\Ai.php`
@@ -112,11 +117,12 @@ Template source:
 - WhatsApp CRM connection is not complete because no WhatsApp Business account is yet attached in Meta.
 - The new Aurora CRM changes exist locally but are not yet live because DreamHost SSH key auth is not active yet.
 - Server transcription will only work after `APP_AI_TRANSCRIPTION_*` values are configured on the CRM host.
+- The shared mic is implemented locally through admin-wide JS injection, so it should appear broadly after deployment without patching every template one-by-one.
 
 ## Next Best Actions
 1. Install `C:\Users\uscap\.ssh\codex_deploy_ed25519.pub` into DreamHost SSH authorized keys or add an equivalent approved deploy key.
 2. Upload the changed CRM Aurora files and run remote PHP lint with `/usr/local/bin/php-8.3`.
-3. Hard refresh the CRM ticket page and verify `Revise`, `Follow-up Message`, and `Aurora Mic` appear and work.
+3. Hard refresh several CRM typing screens after deploy and verify `Aurora Mic` appears broadly, including tickets, email compose/reply, notes, and rich-text editors.
 
 ## Notes For Future Sessions
 - If working anywhere under `G:\GithubRepos`, read `G:\GithubRepos\GithubUtilities\AGENTS.md` first.

@@ -119,17 +119,6 @@
                 <?php } ?>
             </div>
             <?= render_textarea('message', '', '', ['placeholder' => _l('ticket_single_add_reply')], [], '', 'tinymce tinymce-manual'); ?>
-            <div class="tw-flex tw-items-center tw-justify-between tw-gap-3 tw-mt-3 tw-mb-1 tw-flex-wrap">
-                <p class="tw-text-sm tw-text-neutral-500 tw-mb-0">
-                    Use the mic to dictate directly into the reply editor with Aurora transcription.
-                </p>
-                <button type="button" id="btn-ticket-dictation"
-                    class="btn btn-default btn-sm tw-inline-flex tw-items-center tw-gap-2">
-                    <i class="fa-solid fa-microphone"></i>
-                    <span>Aurora Mic</span>
-                </button>
-            </div>
-            <div id="ticket-dictation-status" class="tw-text-sm tw-text-neutral-500 hide"></div>
         </div>
         <div class="ticket-reply-tools">
             <div>
