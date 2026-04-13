@@ -121,12 +121,12 @@
             <?= render_textarea('message', '', '', ['placeholder' => _l('ticket_single_add_reply')], [], '', 'tinymce tinymce-manual'); ?>
             <div class="tw-flex tw-items-center tw-justify-between tw-gap-3 tw-mt-3 tw-mb-1 tw-flex-wrap">
                 <p class="tw-text-sm tw-text-neutral-500 tw-mb-0">
-                    Use the mic to dictate directly into the reply editor.
+                    Use the mic to dictate directly into the reply editor with Aurora transcription.
                 </p>
                 <button type="button" id="btn-ticket-dictation"
                     class="btn btn-default btn-sm tw-inline-flex tw-items-center tw-gap-2">
                     <i class="fa-solid fa-microphone"></i>
-                    <span>Aurora Dictation</span>
+                    <span>Aurora Mic</span>
                 </button>
             </div>
             <div id="ticket-dictation-status" class="tw-text-sm tw-text-neutral-500 hide"></div>
@@ -207,13 +207,13 @@
                                 data-rephrase-text="<?= _l('ticket_rephrase_reply'); ?>"
                                 data-loading-text="<?= _l('wait_text'); ?>">
                                 <i class="fa-solid fa-robot"></i>
-                                Reply (Super Agent)
+                                Revise
                             </button>
                             <button id="btn-ai-followup" type="button"
                                 class="btn btn-secondary tw-w-full sm:tw-w-auto tw-mt-2 sm:tw-mt-0"
                                 data-loading-text="<?= _l('wait_text'); ?>">
                                 <i class="fa-solid fa-user-clock"></i>
-                                Follow-up (Super Agent)
+                                Follow-up Message
                             </button>
                             <?php } ?>
                             <button type="submit" class="btn btn-primary tw-w-full sm:tw-w-auto tw-mt-2 sm:tw-mt-0"
