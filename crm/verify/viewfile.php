@@ -31,6 +31,7 @@ $documentCode = (string) ($document['code'] ?? pathinfo($requestedFile, PATHINFO
 $documentTitle = trim((string) ($document['title'] ?? pathinfo($requestedFile, PATHINFO_FILENAME)));
 $documentDescription = trim((string) ($document['notes'] ?? ''));
 $verificationPageUrl = 'https://www.uscapitalprivatebank.com/crm/verify/viewfile.php?file=' . rawurlencode($requestedFile);
+$canManageDocuments = verify_is_admin();
 
 require_once __DIR__ . '/phpqrcode/qrlib.php';
 $qrTempDir = __DIR__ . '/tempqr';
@@ -98,6 +99,9 @@ if (in_array($extension, ['png', 'jpg', 'jpeg', 'gif', 'webp'], true)) {
                         <a class="verify-button-secondary" href="<?= htmlspecialchars($printOriginalUrl, ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener">Print Original Copy</a>
                         <a class="verify-button" href="<?= htmlspecialchars($downloadUrl, ENT_QUOTES, 'UTF-8') ?>">Download Verified Document</a>
                         <a class="verify-button-secondary" href="index.php">Verify Another Document</a>
+                        <?php if ($canManageDocuments): ?>
+                        <a class="verify-button-secondary" href="documents.php">View Document Library</a>
+                        <?php endif; ?>
                         <button class="verify-button-secondary" type="button" id="copy-verify-link" data-link="<?= htmlspecialchars($verificationPageUrl, ENT_QUOTES, 'UTF-8') ?>">Copy Link</button>
                     </div>
                     <div class="verify-actions" style="margin-top:10px;">
