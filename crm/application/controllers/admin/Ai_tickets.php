@@ -81,6 +81,28 @@ class Ai_tickets extends AdminController
         }
     }
 
+    public function suggest_followup($ticketId): void
+    {
+        if (get_option('ai_enable_ticket_reply_suggestions') == 0) {
+            show_404(_l('Ticket Reply suggestion is disabled'));
+        }
+
+        try {
+            $reply = $this->aiTicket->suggestTicketFollowUp($this->prepareTicket($ticketId));
+
+            echo json_encode([
+                'success' => true,
+                'message' => $reply,
+            ]);
+        } catch (Exception $e) {
+            http_response_code(400);
+            echo json_encode([
+                'success' => false,
+                'error'   => $e->getMessage(),
+            ]);
+        }
+    }
+
     private function prepareTicket($ticketId): Ticket
     {
         $ticket = $this->tickets_model->get($ticketId);

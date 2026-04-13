@@ -92,3 +92,35 @@ define('APP_CSRF_PROTECTION', true);
  * Use the same value as CRM_SSO_SECRET in the Laravel .env file.
  */
 // define('APP_CRM_SSO_SECRET', 'replace-with-a-long-random-secret');
+
+/**
+ * Optional Base44 Super Agent integration.
+ * You can either provide direct URLs per capability or use a base URL + endpoint template.
+ *
+ * Examples:
+ * define('APP_BASE44_SUPERAGENT_API_KEY', 'replace-with-api-key');
+ * define('APP_BASE44_SUPERAGENT_RESPONSE_URL', 'https://your-base44-endpoint-for-replies');
+ * define('APP_BASE44_SUPERAGENT_FOLLOWUP_URL', 'https://your-base44-endpoint-for-followups');
+ * define('APP_BASE44_SUPERAGENT_SUMMARY_URL', 'https://your-base44-endpoint-for-summaries');
+ *
+ * Or:
+ * define('APP_BASE44_SUPERAGENT_BASE_URL', 'https://your-base44-api-host');
+ * define('APP_BASE44_SUPERAGENT_ENDPOINT_TEMPLATE', '/agents/%s/messages');
+ * define('APP_BASE44_SUPERAGENT_RESPONSE_AGENT', 'support_response_agent');
+ * define('APP_BASE44_SUPERAGENT_FOLLOWUP_AGENT', 'support_followup_agent');
+ * define('APP_BASE44_SUPERAGENT_SUMMARY_AGENT', 'support_response_agent');
+ */
+
+/**
+ * Optional higher-accuracy dictation/transcription service for CRM reply boxes.
+ * If this is configured, the CRM records audio and sends it to your transcription API.
+ * If not configured, the CRM falls back to the browser speech engine.
+ *
+ * Examples:
+ * define('APP_AI_TRANSCRIPTION_URL', 'https://api.openai.com/v1/audio/transcriptions');
+ * define('APP_AI_TRANSCRIPTION_API_KEY', 'replace-with-api-key');
+ * define('APP_AI_TRANSCRIPTION_AUTH_HEADER', 'Authorization');
+ * define('APP_AI_TRANSCRIPTION_AUTH_PREFIX', 'Bearer');
+ * define('APP_AI_TRANSCRIPTION_MODEL', 'whisper-1');
+ * define('APP_AI_TRANSCRIPTION_LANGUAGE', 'en');
+ */

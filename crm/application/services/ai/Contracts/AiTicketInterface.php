@@ -11,4 +11,6 @@ interface AiTicketInterface
     public function summarizeTicket(Ticket $ticket): string;
 
     public function suggestTicketReply(Ticket $ticket): string;
+
+    public function suggestTicketFollowUp(Ticket $ticket): string;
 }

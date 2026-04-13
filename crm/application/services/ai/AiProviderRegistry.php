@@ -3,6 +3,7 @@
 namespace app\services\ai;
 
 use app\services\ai\Contracts\AiProviderInterface;
+use app\services\ai\Providers\Base44SuperagentProvider;
 use RuntimeException;
 
 defined('BASEPATH') or exit('No direct script access allowed');
@@ -13,6 +14,7 @@ class AiProviderRegistry
      * @var array<string, AiProviderInterface>
      */
     private static array $providers = [];
+    private static bool $booted = false;
 
     /**
      * Register a new AI provider with a unique name.
@@ -25,6 +27,19 @@ class AiProviderRegistry
         self::$providers[$identifier] = $provider;
     }
 
+    private static function bootProviders(): void
+    {
+        if (self::$booted) {
+            return;
+        }
+
+        self::$booted = true;
+
+        if (! isset(self::$providers['base44_superagent'])) {
+            self::registerProvider('base44_superagent', new Base44SuperagentProvider());
+        }
+    }
+
     /**
      * Retrieve an AI provider by its name.
      *
@@ -33,6 +48,12 @@ class AiProviderRegistry
      */
     public static function getProvider(string $identifier): AiProviderInterface
     {
+        self::bootProviders();
+
+        if (! isset(self::$providers[$identifier]) && isset(self::$providers['base44_superagent'])) {
+            return self::$providers['base44_superagent'];
+        }
+
         if (!isset(self::$providers[$identifier])) {
             throw new RuntimeException("AI provider not found: $identifier");
         }
@@ -47,6 +68,8 @@ class AiProviderRegistry
      */
     public static function getAllProviders(): array
     {
+        self::bootProviders();
+
         return collect(self::$providers)
             ->mapWithKeys(function (AiProviderInterface $provider, string $identifier) {
                 return [$identifier => [
