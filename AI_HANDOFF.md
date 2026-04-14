@@ -45,6 +45,7 @@ Template source:
 - Restored missing CRM backup content from the local `crm_pre_synology_20260406` snapshot into the active repo so repo-side inspection is possible again:
   - restored archived CRM folders: `backups`, `sitebackup`, `xtraapps`
   - restored CRM modules: `backup`, `einvoice`, `exports`, `goals`, `ideal`, `menu_setup`, `openai`, `surveys`, `theme_style`, `whatsapp`, `zoom_meetings`
+- Removed repo-wide Git ignore filtering for this site by deleting all `.gitignore` files under `G:\GithubRepos\uscapitalprivatebank-site`, so PDFs, assets, vendor trees, backup folders, and other previously hidden files now appear in Git status and local repo browsing.
 
 ## In Progress
 - Perfex CRM sidebar width and profile presentation are being tuned live.
@@ -153,6 +154,7 @@ Template source:
 - Server transcription will only work after `APP_AI_TRANSCRIPTION_*` values are configured on the CRM host.
 - The shared Dictation Mic is implemented locally through shared layout/script injection, so it should appear broadly after deployment without patching every template one-by-one.
 - The active repo has now been hydrated from the local `crm_pre_synology_20260406` backup so the missing CRM modules/folders are available for inspection, but this is not yet a confirmed mirror of the current live DreamHost server.
+- Because the repo is no longer ignoring bulky paths, `git status` is now expected to show a very large number of newly visible files until the repository is intentionally staged/organized.
 
 ## Next Best Actions
 1. Install `C:\Users\uscap\.ssh\codex_deploy_ed25519.pub` into DreamHost SSH authorized keys or add an equivalent approved deploy key.
