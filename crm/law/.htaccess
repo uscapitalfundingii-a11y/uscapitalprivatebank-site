@@ -1,0 +1,157 @@
+# invoke rewrite engine
+RewriteEngine On
+RewriteBase /
+
+Options -Indexes
+<IfModule mod_negotiation.c>
+	Options -MultiViews
+</IfModule>
+
+# Redirect to www
+RewriteCond %{HTTP_HOST} !^www\.
+RewriteRule ^(.*)$ http://www.%{HTTP_HOST}/$1 [R=301,L]
+
+# Specific redirections
+RewriteRule ^index.html$ / [L,R=301]
+
+RewriteCond %{QUERY_STRING} ^type\=1$
+RewriteRule ^register_search\.php$ register_search_type_1.html? [L,R=301]
+RewriteCond %{QUERY_STRING} ^type\=2$
+RewriteRule ^register_search\.php$ register_search_type_2.html? [L,R=301]
+RewriteCond %{QUERY_STRING} ^q\=520$
+RewriteRule ^register_unique_ledger_entry\.php$ register_unique_ledger_entry_q_520.html? [L,R=301]
+RewriteCond %{QUERY_STRING} ^q\=521$
+RewriteRule ^register_unique_ledger_entry\.php$ register_unique_ledger_entry_q_521.html? [L,R=301]
+RewriteCond %{QUERY_STRING} ^q\=522$
+RewriteRule ^register_unique_ledger_entry\.php$ register_unique_ledger_entry_q_522.html? [L,R=301]
+RewriteCond %{QUERY_STRING} ^q\=523$
+RewriteRule ^register_unique_ledger_entry\.php$ register_unique_ledger_entry_q_523.html? [L,R=301]
+RewriteCond %{QUERY_STRING} ^$
+RewriteRule ^home\.asp$ home_asp.html? [L,R=301]
+RewriteCond %{QUERY_STRING} ^type\=union$
+RewriteRule ^register_search_location\.php$ register_search_location_type_union.html? [L,R=301]
+RewriteCond %{QUERY_STRING} ^type\=university$
+RewriteRule ^register_search_location\.php$ register_search_location_type_university.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/roman\scult\.html$ lexica/en/define/roman_cult.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/bona\sfide\.html$ lexica/en/define/bona_fide.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/positive\slaw\.html$ lexica/en/define/positive_law.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/astrum\siuris\sdivini\scanonum\.html$ lexica/en/define/astrum_iuris_divini_canonum.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/pactum\sde\ssingularis\scaelum\.html$ lexica/en/define/pactum_de_singularis_caelum.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/canon\slaw\.html$ lexica/en/define/canon_law.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/rule\sof\slaw\.html$ lexica/en/define/rule_of_law.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/one\sheaven\.html$ lexica/en/define/one_heaven.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/unique\scollective\sawareness\.html$ lexica/en/define/unique_collective_awareness.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/natural\slaw\.html$ lexica/en/define/natural_law.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/human\sbeing\.html$ lexica/en/define/human_being.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/level\s6\sself\saware\slife\sform\.html$ lexica/en/define/level_6_self_aware_life_form.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/divine\slaw\.html$ lexica/en/define/divine_law.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/divine\swill\.html$ lexica/en/define/divine_will.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/divine\strust\.html$ lexica/en/define/divine_trust.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/superior\strust\.html$ lexica/en/define/superior_trust.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/true\strust\.html$ lexica/en/define/true_trust.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/common\slaw\.html$ lexica/en/define/common_law.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/negotiable\sinstrument\.html$ lexica/en/define/negotiable_instrument.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/ucadian\smodel\.html$ lexica/en/define/ucadian_model.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/roman\slaw\.html$ lexica/en/define/roman_law.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/holy\ssee\.html$ lexica/en/define/holy_see.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/great\sregister\.html$ lexica/en/define/great_register.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/cognitive\slaw\.html$ lexica/en/define/cognitive_law.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/divine\screator\.html$ lexica/en/define/divine_creator.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/natural\sperson\.html$ lexica/en/define/natural_person.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/real\sproperty\.html$ lexica/en/define/real_property.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/cartae\ssacrorum\sde\scongregatio\sglobus\.html$ lexica/en/define/cartae_sacrorum_de_congregatio_globus.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/body\scorporate\.html$ lexica/en/define/body_corporate.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/personal\sproperty\.html$ lexica/en/define/personal_property.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/original\srights\.html$ lexica/en/define/original_rights.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/executor\sde\sson\stort\.html$ lexica/en/define/executor_de_son_tort.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/full\sdisclosure\.html$ lexica/en/define/full_disclosure.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/due\sprocess\sof\slaw\.html$ lexica/en/define/due_process_of_law.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/good\sfaith\.html$ lexica/en/define/good_faith.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/valuable\sconsideration\.html$ lexica/en/define/valuable_consideration.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/sacred\soath\.html$ lexica/en/define/sacred_oath.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/letters\spatent\.html$ lexica/en/define/letters_patent.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/great\sseal\.html$ lexica/en/define/great_seal.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/international\slaw\.html$ lexica/en/define/international_law.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/formal\sproceedings\.html$ lexica/en/define/formal_proceedings.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/lawful\sprocess\.html$ lexica/en/define/lawful_process.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/mens\srea\.html$ lexica/en/define/mens_rea.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/actus\sreus\.html$ lexica/en/define/actus_reus.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/amicus\scuriae\.html$ lexica/en/define/amicus_curiae.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/res\sjudicata\.html$ lexica/en/define/res_judicata.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/head\sof\sstate\.html$ lexica/en/define/head_of_state.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/will\sand\stestament\.html$ lexica/en/define/will_and_testament.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/in\spersonam\.html$ lexica/en/define/in_personam.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/codes\sof\slaw\.html$ lexica/en/define/codes_of_law.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/legal\srepresentative\.html$ lexica/en/define/legal_representative.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/guardian\sde\sson\stort\.html$ lexica/en/define/guardian_de_son_tort.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/compos\smentis\.html$ lexica/en/define/compos_mentis.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/divine\sgrace\.html$ lexica/en/define/divine_grace.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/false\sdoctrine\.html$ lexica/en/define/false_doctrine.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/sedes\ssacrorum\.html$ lexica/en/define/sedes_sacrorum.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/receipt\sof\sgoods\.html$ lexica/en/define/receipt_of_goods.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/ipso\sfacto\.html$ lexica/en/define/ipso_facto.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/age\sof\smajority\.html$ lexica/en/define/age_of_majority.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/ritus\sverum\.html$ lexica/en/define/ritus_verum.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/medical\spractitioner\.html$ lexica/en/define/medical_practitioner.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/therapeutic\shealer\.html$ lexica/en/define/therapeutic_healer.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/interested\sperson\.html$ lexica/en/define/interested_person.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/law\senforcement\sofficials\.html$ lexica/en/define/law_enforcement_officials.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/manor\sroll\.html$ lexica/en/define/manor_roll.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/lower\scase\.html$ lexica/en/define/lower_case.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/pacta\ssunt\sservanda\.html$ lexica/en/define/pacta_sunt_servanda.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/servi\scamerae\sregis\.html$ lexica/en/define/servi_camerae_regis.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/minister\sgeneral\.html$ lexica/en/define/minister_general.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/in\smundi\.html$ lexica/en/define/in_mundi.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/apostolic\smendicant\sminister\.html$ lexica/en/define/apostolic_mendicant_minister.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/peccatum\soriginale\.html$ lexica/en/define/peccatum_originale.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/chartered\scompany\.html$ lexica/en/define/chartered_company.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/certificated\ssecurity\.html$ lexica/en/define/certificated_security.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/governing\sinstrument\.html$ lexica/en/define/governing_instrument.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/registered\ssecurity\.html$ lexica/en/define/registered_security.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/upper\scase\.html$ lexica/en/define/upper_case.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/case\slaw\.html$ lexica/en/define/case_law.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/bank\saccount\.html$ lexica/en/define/bank_account.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/de\sjure\.html$ lexica/en/define/de_jure.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/letter\sof\scredit\.html$ lexica/en/define/letter_of_credit.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/personal\srepresentative\.html$ lexica/en/define/personal_representative.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/divine\sstandard\smodel\sof\suniversal\selements\.html$ lexica/en/define/divine_standard_model_of_universal_elements.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/unique\sledger\skey\.html$ lexica/en/define/unique_ledger_key.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/virtute\sofficii\.html$ lexica/en/define/virtute_officii.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/foreign\scourt\.html$ lexica/en/define/foreign_court.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/book\sentry\.html$ lexica/en/define/book_entry.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/incapacitated\sperson\.html$ lexica/en/define/incapacitated_person.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/higher\sorder\sself\saware\slife\sform\.html$ lexica/en/define/higher_order_self_aware_life_form.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/foreign\sjurisdiction\.html$ lexica/en/define/foreign_jurisdiction.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/jus\ssanguinis\.html$ lexica/en/define/jus_sanguinis.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/successor\spersonal\srepresentative\.html$ lexica/en/define/successor_personal_representative.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/special\sadministrator\.html$ lexica/en/define/special_administrator.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/testacy\sproceeding\.html$ lexica/en/define/testacy_proceeding.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/duces\stecum\.html$ lexica/en/define/duces_tecum.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/illuminated\smind\.html$ lexica/en/define/illuminated_mind.html? [L,R=301]
+RewriteRule ^lexica\/en\/define\/divine\ssystems\.html$ lexica/en/define/divine_systems.html? [L,R=301]
+RewriteCond %{QUERY_STRING} ^ledger1\=999999&amp;ledger2\=999999&amp;ledger3\=999999$
+RewriteRule ^register_unique_ledger_entry\.asp$ register_unique_ledger_entry_ledger1_999999_ledger2_999999_ledger3_999999.html? [L,R=301]
+RewriteRule ^constitution\/heaven_0080\.htm'\)$ constitution/heaven_0080__.html? [L,R=301]
+RewriteRule ^constitution\/heaven_0110\.htm'\)$ constitution/heaven_0110__.html? [L,R=301]
+RewriteRule ^constitution\/heaven_0120\.htm'\)$ constitution/heaven_0120__.html? [L,R=301]
+RewriteRule ^constitution\/heaven_0060\.htm'\)$ constitution/heaven_0060__.html? [L,R=301]
+RewriteRule ^constitution\/heaven_0740\.htm'\)$ constitution/heaven_0740__.html? [L,R=301]
+
+# Redirect all extensions to html
+RewriteCond %{QUERY_STRING} ^$
+RewriteRule ^(.*)\.shtml$ $1.html [L,NC,R=301]
+RewriteCond %{QUERY_STRING} ^$
+RewriteRule ^(.*)\.phtml$ $1.html [L,NC,R=301]
+RewriteCond %{QUERY_STRING} ^$
+RewriteRule ^(.*)\.jhtml$ $1.html [L,NC,R=301]
+RewriteCond %{QUERY_STRING} ^$
+RewriteRule ^(.*)\.htm$ $1.html [L,NC,R=301]
+RewriteCond %{QUERY_STRING} ^$
+RewriteRule ^(.*)\.php$ $1.html [L,NC,R=301]
+RewriteCond %{QUERY_STRING} ^$
+RewriteRule ^(.*)\.aspx$ $1.html [L,NC,R=301]
+RewriteCond %{QUERY_STRING} ^$
+RewriteRule ^(.*)\.asp$ $1.html [L,NC,R=301]
+RewriteCond %{QUERY_STRING} ^$
+RewriteRule ^(.*)\.jsp$ $1.html [L,NC,R=301]
+# End: Redirect all extensions to html

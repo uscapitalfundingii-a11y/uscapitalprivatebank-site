@@ -1,0 +1,1 @@
+var firebaseConfig = {"apiKey":"AIzaSyDGiFr8iyOio5U7OeV5XkjrzJcNI8sho5w","authDomain":"uscapitalprivatebank-24c24.firebaseapp.com","projectId":"uscapitalprivatebank-24c24","storageBucket":"uscapitalprivatebank-24c24.firebasestorage.app","messagingSenderId":"917694172817","appId":"1:917694172817:web:47ff8c2851bfba718cb930","measurementId":"Unknown"}
