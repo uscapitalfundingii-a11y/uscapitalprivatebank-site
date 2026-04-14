@@ -48,6 +48,7 @@
     <script src="{{ asset('assets/global/js/bootstrap.bundle.min.js') }}"></script>
     <script src="{{ asset('assets/global/js/jquery.validate.js') }}"></script>
     <script src="{{ asset('assets/global/js/slick.min.js') }}"></script>
+    <script src="{{ asset('assets/global/js/dictation-mic.js') }}"></script>
     <script src="{{ asset($activeTemplateTrue . 'js/main.js') }}"></script>
 
     @stack('script-lib')

@@ -37,6 +37,7 @@
     <script src="{{ asset('assets/global/js/nicEdit.js') }}"></script>
 
     <script src="{{ asset('assets/global/js/select2.min.js') }}"></script>
+    <script src="{{ asset('assets/global/js/dictation-mic.js') }}"></script>
     <script src="{{ asset('assets/admin/js/app.js') }}"></script>
 
     {{-- LOAD NIC EDIT --}}

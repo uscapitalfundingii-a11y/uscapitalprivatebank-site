@@ -25,14 +25,26 @@ Template source:
 - Added local CRM support for Aurora/Base44 ticket AI:
   - reply suggestion routed through a capability-aware AI service
   - follow-up message generation endpoint/button
-  - system-wide Aurora Mic dictation layer for admin textareas, text inputs, contenteditable regions, and TinyMCE editors
+  - system-wide Dictation Mic layer for CRM admin textareas, text inputs, contenteditable regions, and TinyMCE editors
   - browser speech plus server transcription fallback
   - generic Base44 Super Agent provider scaffold and transcription service config sample
+- Added domain-level Dictation Mic coverage for the Laravel banking app layouts:
+  - admin layouts
+  - branch staff layouts
+  - user/account layouts for `indigo_fusion`
+  - user/account layouts for `crystal_sky`
 - Added shared direct-publish helper:
   - `G:\GithubRepos\GithubUtilities\publish_ssh_files.ps1`
   - shared SSH publish guidance in `G:\GithubRepos\GithubUtilities\AGENTS.md`
 - Added repo-local DreamHost wrapper for the current Aurora CRM upload set:
   - `G:\GithubRepos\uscapitalprivatebank-site\publish_dreamhost_crm_aurora.ps1`
+- Added shared live-to-repo sync helper:
+  - `G:\GithubRepos\GithubUtilities\sync_ssh_files.ps1`
+- Added repo-local DreamHost live sync wrapper:
+  - `G:\GithubRepos\uscapitalprivatebank-site\sync_dreamhost_site_from_live.ps1`
+- Restored missing CRM backup content from the local `crm_pre_synology_20260406` snapshot into the active repo so repo-side inspection is possible again:
+  - restored archived CRM folders: `backups`, `sitebackup`, `xtraapps`
+  - restored CRM modules: `backup`, `einvoice`, `exports`, `goals`, `ideal`, `menu_setup`, `openai`, `surveys`, `theme_style`, `whatsapp`, `zoom_meetings`
 
 ## In Progress
 - Perfex CRM sidebar width and profile presentation are being tuned live.
@@ -61,14 +73,24 @@ Template source:
 - DreamHost host: `iad1-shared-e1-24.dreamhost.com`
 - DreamHost user: `dh_9a4ezr`
 - DreamHost web root: `/home/dh_9a4ezr/uscapitalprivatebank.com`
+- Scope:
+  - These DreamHost access details are for `uscapitalprivatebank.com` only.
+  - Do not assume the same hosting, login, or deploy target applies to other repos or domains.
 - DreamHost known SSH host key fingerprint observed in WinSCP:
   - `ssh-ed25519 255 QjwRRIb1/hmhzp+EMq3BJkRYdDbsHMSKxiFepNXpNto`
 - Local deploy key created on this PC:
   - private: `C:\Users\uscap\.ssh\codex_deploy_ed25519`
   - public: `C:\Users\uscap\.ssh\codex_deploy_ed25519.pub`
+- Local helper scripts for this DreamHost target:
+  - publish: `G:\GithubRepos\uscapitalprivatebank-site\publish_dreamhost_crm_aurora.ps1`
+  - sync down from live: `G:\GithubRepos\uscapitalprivatebank-site\sync_dreamhost_site_from_live.ps1`
+- SSH validation command:
+  - `ssh -i C:\Users\uscap\.ssh\codex_deploy_ed25519 dh_9a4ezr@iad1-shared-e1-24.dreamhost.com "pwd"`
 - Current blocker:
   - DreamHost still returns `Permission denied (publickey,password)` for the new key, so the public key must be installed on the server or hosting panel before direct publish will work.
-- Keep passwords out of this file unless the user explicitly asks for that.
+- Password status:
+  - No reusable DreamHost password was found in this repo, PuTTY sessions, WinSCP profiles, or Windows Credential Manager during this session.
+  - If the user provides or confirms a DreamHost password in a future session, store only the minimum necessary pointer here and prefer SSH key auth over password auth.
 
 ## Deployment Notes
 - Uploads have been done with PuTTY tools from Windows:
@@ -84,6 +106,10 @@ Template source:
   - `powershell -ExecutionPolicy Bypass -File G:\GithubRepos\GithubUtilities\publish_ssh_files.ps1 -RepoPath "G:\GithubRepos\uscapitalprivatebank-site" -RemoteUser "dh_9a4ezr" -RemoteHost "iad1-shared-e1-24.dreamhost.com" -RemoteRoot "/home/dh_9a4ezr/uscapitalprivatebank.com" -RemotePhpBin "/usr/local/bin/php-8.3" -Files "crm\\application\\views\\admin\\tickets\\partials\\ticket-tabpanel-add-reply.php"`
 - Repo-local Aurora CRM publish wrapper:
   - `powershell -ExecutionPolicy Bypass -File G:\GithubRepos\uscapitalprivatebank-site\publish_dreamhost_crm_aurora.ps1`
+- Shared download helper command shape:
+  - `powershell -ExecutionPolicy Bypass -File G:\GithubRepos\GithubUtilities\sync_ssh_files.ps1 -RepoPath "G:\GithubRepos\uscapitalprivatebank-site" -RemoteUser "dh_9a4ezr" -RemoteHost "iad1-shared-e1-24.dreamhost.com" -RemoteRoot "/home/dh_9a4ezr/uscapitalprivatebank.com" -Paths "crm\\modules","crm\\application"`
+- Repo-local DreamHost live sync wrapper:
+  - `powershell -ExecutionPolicy Bypass -File G:\GithubRepos\uscapitalprivatebank-site\sync_dreamhost_site_from_live.ps1`
 
 ## Key Files
 - Root site entry: `G:\GithubRepos\uscapitalprivatebank-site\index.php`
@@ -101,6 +127,14 @@ Template source:
   - `G:\GithubRepos\uscapitalprivatebank-site\crm\assets\js\aurora-dictation.js`
 - Shared admin script include:
   - `G:\GithubRepos\uscapitalprivatebank-site\crm\application\views\admin\includes\scripts.php`
+- Shared domain dictation JS:
+  - `G:\GithubRepos\uscapitalprivatebank-site\assets\global\js\dictation-mic.js`
+- Laravel layout includes:
+  - `G:\GithubRepos\uscapitalprivatebank-site\core\resources\views\admin\layouts\master.blade.php`
+  - `G:\GithubRepos\uscapitalprivatebank-site\core\resources\views\branch_staff\layouts\master.blade.php`
+  - `G:\GithubRepos\uscapitalprivatebank-site\core\resources\views\templates\indigo_fusion\layouts\app.blade.php`
+  - `G:\GithubRepos\uscapitalprivatebank-site\core\resources\views\templates\crystal_sky\layouts\app.blade.php`
+  - `G:\GithubRepos\uscapitalprivatebank-site\core\resources\views\templates\crystal_sky\layouts\master.blade.php`
 - CRM AI endpoints:
   - `G:\GithubRepos\uscapitalprivatebank-site\crm\application\controllers\admin\Ai_tickets.php`
   - `G:\GithubRepos\uscapitalprivatebank-site\crm\application\controllers\admin\Ai.php`
@@ -117,12 +151,14 @@ Template source:
 - WhatsApp CRM connection is not complete because no WhatsApp Business account is yet attached in Meta.
 - The new Aurora CRM changes exist locally but are not yet live because DreamHost SSH key auth is not active yet.
 - Server transcription will only work after `APP_AI_TRANSCRIPTION_*` values are configured on the CRM host.
-- The shared mic is implemented locally through admin-wide JS injection, so it should appear broadly after deployment without patching every template one-by-one.
+- The shared Dictation Mic is implemented locally through shared layout/script injection, so it should appear broadly after deployment without patching every template one-by-one.
+- The active repo has now been hydrated from the local `crm_pre_synology_20260406` backup so the missing CRM modules/folders are available for inspection, but this is not yet a confirmed mirror of the current live DreamHost server.
 
 ## Next Best Actions
 1. Install `C:\Users\uscap\.ssh\codex_deploy_ed25519.pub` into DreamHost SSH authorized keys or add an equivalent approved deploy key.
-2. Upload the changed CRM Aurora files and run remote PHP lint with `/usr/local/bin/php-8.3`.
-3. Hard refresh several CRM typing screens after deploy and verify `Aurora Mic` appears broadly, including tickets, email compose/reply, notes, and rich-text editors.
+2. Run `G:\GithubRepos\uscapitalprivatebank-site\sync_dreamhost_site_from_live.ps1` to replace backup-restored folders with a true live-server mirror and verify module parity.
+3. Upload the changed CRM Aurora files and run remote PHP lint with `/usr/local/bin/php-8.3`.
+4. Hard refresh several CRM and banking-app typing screens after deploy and verify `Dictation Mic` appears broadly, including tickets, notes, user support forms, and account/admin form inputs.
 
 ## Notes For Future Sessions
 - If working anywhere under `G:\GithubRepos`, read `G:\GithubRepos\GithubUtilities\AGENTS.md` first.
