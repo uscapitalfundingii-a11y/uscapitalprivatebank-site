@@ -12,17 +12,102 @@ if (empty($_SESSION['upload_authenticated']) || empty($_SESSION['username'])) {
 }
 
 $username = (string) $_SESSION['username'];
-$canManageDocuments = verify_is_admin();
-$currentRole = $canManageDocuments ? 'Admin' : 'Trustee';
+$currentRole = ucwords(str_replace('_', ' ', verify_current_role()));
+$canViewRepository = verify_has_permission('view_repository');
+$canReviewDocuments = verify_has_permission('review_documents');
+$canApproveDocuments = verify_has_permission('approve_documents');
+$canEditDocuments = verify_has_permission('edit_documents');
+$canReplaceDocuments = verify_has_permission('replace_documents');
+$canDeleteDocuments = verify_has_permission('delete_documents');
+$canPrintDocuments = verify_has_permission('print_documents');
+$canDownloadDocuments = verify_has_permission('download_documents');
 $filesDir = __DIR__ . '/files';
 $documents = verify_load_documents();
 
 $message = '';
 $error = '';
 
+if (!$canViewRepository) {
+    header('Location: dashboard.php?error=' . urlencode('Your account is not permitted to open the verification document library.'));
+    exit;
+}
+
+function verify_replace_uploaded_document_file(array $file, string $targetPath, string $expectedExtension): bool
+{
+    if (($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK || !is_uploaded_file((string) ($file['tmp_name'] ?? ''))) {
+        return false;
+    }
+
+    $incomingExtension = strtolower(pathinfo((string) ($file['name'] ?? ''), PATHINFO_EXTENSION));
+    if ($incomingExtension !== strtolower($expectedExtension)) {
+        return false;
+    }
+
+    $tempPath = $targetPath . '.replacement-' . substr(md5(uniqid((string) mt_rand(), true)), 0, 8);
+    if (!move_uploaded_file((string) $file['tmp_name'], $tempPath)) {
+        return false;
+    }
+
+    $backupPath = $targetPath . '.backup-' . substr(md5(uniqid((string) mt_rand(), true)), 0, 8);
+    if (is_file($targetPath) && !@rename($targetPath, $backupPath)) {
+        @unlink($tempPath);
+        return false;
+    }
+
+    if (!@rename($tempPath, $targetPath)) {
+        if (is_file($backupPath)) {
+            @rename($backupPath, $targetPath);
+        }
+        @unlink($tempPath);
+        return false;
+    }
+
+    if (is_file($backupPath)) {
+        @unlink($backupPath);
+    }
+
+    return true;
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['approve_file'])) {
+    if (!$canApproveDocuments) {
+        $error = 'Your account is not permitted to approve verification documents.';
+    } else {
+        $targetFile = basename((string) $_POST['approve_file']);
+        if (!isset($documents[$targetFile])) {
+            $error = 'That document could not be found for approval.';
+        } else {
+            $documents[$targetFile]['status'] = 'approved';
+            $documents[$targetFile]['approved_by'] = $username;
+            $documents[$targetFile]['approved_at'] = date('c');
+            $documents[$targetFile]['rejection_note'] = '';
+            verify_save_documents($documents);
+            $message = 'The document has been approved and is now live through its existing verification code, link, and QR flow.';
+        }
+    }
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reject_file'])) {
+    if (!$canApproveDocuments) {
+        $error = 'Your account is not permitted to reject verification documents.';
+    } else {
+        $targetFile = basename((string) $_POST['reject_file']);
+        if (!isset($documents[$targetFile])) {
+            $error = 'That document could not be found for rejection.';
+        } else {
+            $documents[$targetFile]['status'] = 'rejected';
+            $documents[$targetFile]['approved_by'] = '';
+            $documents[$targetFile]['approved_at'] = '';
+            $documents[$targetFile]['rejection_note'] = trim((string) ($_POST['rejection_note'] ?? ''));
+            verify_save_documents($documents);
+            $message = 'The document has been rejected and removed from the live verification flow.';
+        }
+    }
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_file'])) {
-    if (!$canManageDocuments) {
-        $error = 'Only verification administrators can delete repository documents.';
+    if (!$canDeleteDocuments) {
+        $error = 'Your account is not permitted to delete repository documents.';
     } else {
     $deleteFile = basename((string) $_POST['delete_file']);
     $deletePath = $filesDir . '/' . $deleteFile;
@@ -48,8 +133,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_file'])) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_file'])) {
-    if (!$canManageDocuments) {
-        $error = 'Only verification administrators can edit repository documents.';
+    if (!$canEditDocuments) {
+        $error = 'Your account is not permitted to edit repository documents.';
     } else {
         $targetFile = basename((string) $_POST['update_file']);
         if (!isset($documents[$targetFile])) {
@@ -81,13 +166,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_file'])) {
     }
 }
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['replace_file'])) {
+    if (!$canReplaceDocuments) {
+        $error = 'Your account is not permitted to replace document revisions.';
+    } else {
+        $targetFile = basename((string) $_POST['replace_file']);
+        $targetPath = $filesDir . '/' . $targetFile;
+        if (!isset($documents[$targetFile]) || !is_file($targetPath)) {
+            $error = 'That document could not be found for replacement.';
+        } elseif (!isset($_FILES['replacement_file'])) {
+            $error = 'Please choose a replacement file.';
+        } else {
+            $expectedExtension = strtolower(pathinfo($targetFile, PATHINFO_EXTENSION));
+            if (!verify_replace_uploaded_document_file($_FILES['replacement_file'], $targetPath, $expectedExtension)) {
+                $error = 'The replacement file could not be applied. Use the same file type as the current document and try again.';
+            } else {
+                $documents[$targetFile]['status'] = 'approved';
+                $documents[$targetFile]['approved_by'] = $username;
+                $documents[$targetFile]['approved_at'] = date('c');
+                $documents[$targetFile]['rejection_note'] = '';
+                verify_save_documents($documents);
+                $message = 'The document revision was replaced successfully. The document code, verification link, and QR destination were preserved.';
+            }
+        }
+    }
+}
+
 $entries = [];
 if (is_dir($filesDir)) {
     $files = glob($filesDir . '/*.*') ?: [];
     foreach ($files as $path) {
         $file = basename($path);
         $meta = $documents[$file] ?? [];
-        if (!$canManageDocuments) {
+        if (!$canReviewDocuments) {
             $status = (string) ($meta['status'] ?? 'approved');
             $uploadedBy = (string) ($meta['uploaded_by'] ?? '');
             if ($status !== 'approved' && $uploadedBy !== $username) {
@@ -167,7 +278,13 @@ usort($entries, static function ($a, $b) {
                         <div class="verify-meta-list">
                             <div class="verify-meta-item"><strong>Visible Records</strong><span><?= count($entries) ?></span></div>
                             <div class="verify-meta-item"><strong>Access Level</strong><span><?= htmlspecialchars($currentRole, ENT_QUOTES, 'UTF-8') ?></span></div>
-                            <div class="verify-meta-item"><strong>Available Actions</strong><span><?= htmlspecialchars($canManageDocuments ? 'Review, approve, reject, edit, delete, and publish' : 'Track upload status and use approved verification links', ENT_QUOTES, 'UTF-8') ?></span></div>
+                            <div class="verify-meta-item"><strong>Available Actions</strong><span><?= htmlspecialchars(
+                                $canApproveDocuments || $canEditDocuments || $canReplaceDocuments || $canDeleteDocuments
+                                    ? 'Review workflow, document controls, and live link preservation'
+                                    : 'Track visible records and use approved verification links',
+                                ENT_QUOTES,
+                                'UTF-8'
+                            ) ?></span></div>
                         </div>
                     </div>
                 </div>
@@ -234,15 +351,31 @@ usort($entries, static function ($a, $b) {
                                     <td><?= htmlspecialchars(date('M j, Y g:i A', strtotime($entry['uploaded_at'])), ENT_QUOTES, 'UTF-8') ?></td>
                                     <td>
                                         <?php if ($entry['status'] === 'approved'): ?>
-                                            <a class="verify-link" href="<?= htmlspecialchars($entry['print_url'], ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener">Print</a>
+                                            <?php if ($canPrintDocuments): ?>
+                                                <a class="verify-link" href="<?= htmlspecialchars($entry['print_url'], ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener">Print</a>
+                                            <?php endif; ?>
                                             <a class="verify-link" href="<?= htmlspecialchars($entry['view_url'], ENT_QUOTES, 'UTF-8') ?>">View</a>
-                                            <a class="verify-link" href="<?= htmlspecialchars($entry['download_url'], ENT_QUOTES, 'UTF-8') ?>">Download</a>
+                                            <?php if ($canDownloadDocuments): ?>
+                                                <a class="verify-link" href="<?= htmlspecialchars($entry['download_url'], ENT_QUOTES, 'UTF-8') ?>">Download</a>
+                                            <?php endif; ?>
                                             <a class="verify-link" href="<?= htmlspecialchars($entry['verify_url'], ENT_QUOTES, 'UTF-8') ?>">Verify</a>
                                         <?php else: ?>
                                             <span class="verify-link" style="opacity:.7; cursor:default;">Awaiting Admin Review</span>
                                         <?php endif; ?>
-                                        <?php if ($canManageDocuments): ?>
+                                        <?php if ($canApproveDocuments): ?>
+                                            <form class="verify-inline-form" method="post" style="display:inline-flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                                                <input type="hidden" name="approve_file" value="<?= htmlspecialchars($entry['file'], ENT_QUOTES, 'UTF-8') ?>">
+                                                <button class="verify-link" type="submit" style="cursor:pointer;">Approve</button>
+                                            </form>
+                                            <button class="verify-link" type="button" style="cursor:pointer;" data-edit-target="review-<?= htmlspecialchars(md5($entry['file']), ENT_QUOTES, 'UTF-8') ?>">Reject</button>
+                                        <?php endif; ?>
+                                        <?php if ($canEditDocuments): ?>
                                             <button class="verify-link" type="button" style="cursor:pointer;" data-edit-target="edit-<?= htmlspecialchars(md5($entry['file']), ENT_QUOTES, 'UTF-8') ?>">Edit</button>
+                                        <?php endif; ?>
+                                        <?php if ($canReplaceDocuments): ?>
+                                            <button class="verify-link" type="button" style="cursor:pointer;" data-edit-target="replace-<?= htmlspecialchars(md5($entry['file']), ENT_QUOTES, 'UTF-8') ?>">Replace</button>
+                                        <?php endif; ?>
+                                        <?php if ($canDeleteDocuments): ?>
                                             <form class="verify-inline-form" method="post" onsubmit="return confirm('Delete this document and remove its verification code from the system?');">
                                                 <input type="hidden" name="delete_file" value="<?= htmlspecialchars($entry['file'], ENT_QUOTES, 'UTF-8') ?>">
                                                 <button class="verify-link" type="submit" style="cursor:pointer;">Delete</button>
@@ -250,7 +383,24 @@ usort($entries, static function ($a, $b) {
                                         <?php endif; ?>
                                     </td>
                                 </tr>
-                                <?php if ($canManageDocuments): ?>
+                                <?php if ($canApproveDocuments): ?>
+                                    <tr id="review-<?= htmlspecialchars(md5($entry['file']), ENT_QUOTES, 'UTF-8') ?>" data-search="<?= htmlspecialchars(mb_strtolower($searchBlob), ENT_QUOTES, 'UTF-8') ?>" style="display:none;">
+                                        <td colspan="6">
+                                            <form method="post" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:16px; align-items:end;">
+                                                <input type="hidden" name="reject_file" value="<?= htmlspecialchars($entry['file'], ENT_QUOTES, 'UTF-8') ?>">
+                                                <div style="grid-column: 1 / -1;">
+                                                    <label class="verify-label">Rejection note</label>
+                                                    <textarea class="verify-textarea" name="rejection_note" rows="3" placeholder="Optional note explaining what must be corrected before this document can go live."><?= htmlspecialchars($entry['rejection_note'], ENT_QUOTES, 'UTF-8') ?></textarea>
+                                                </div>
+                                                <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                                                    <button class="verify-button" type="submit">Reject Document</button>
+                                                    <button class="verify-button-secondary" type="button" data-edit-target="review-<?= htmlspecialchars(md5($entry['file']), ENT_QUOTES, 'UTF-8') ?>">Cancel</button>
+                                                </div>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                <?php endif; ?>
+                                <?php if ($canEditDocuments): ?>
                                     <tr id="edit-<?= htmlspecialchars(md5($entry['file']), ENT_QUOTES, 'UTF-8') ?>" data-search="<?= htmlspecialchars(mb_strtolower($searchBlob), ENT_QUOTES, 'UTF-8') ?>" style="display:none;">
                                         <td colspan="6">
                                             <form method="post" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:16px; align-items:end;">
@@ -270,6 +420,26 @@ usort($entries, static function ($a, $b) {
                                                 <div style="display:flex; gap:12px; flex-wrap:wrap;">
                                                     <button class="verify-button" type="submit">Save Changes</button>
                                                     <button class="verify-button-secondary" type="button" data-edit-target="edit-<?= htmlspecialchars(md5($entry['file']), ENT_QUOTES, 'UTF-8') ?>">Cancel</button>
+                                                </div>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                <?php endif; ?>
+                                <?php if ($canReplaceDocuments): ?>
+                                    <tr id="replace-<?= htmlspecialchars(md5($entry['file']), ENT_QUOTES, 'UTF-8') ?>" data-search="<?= htmlspecialchars(mb_strtolower($searchBlob), ENT_QUOTES, 'UTF-8') ?>" style="display:none;">
+                                        <td colspan="6">
+                                            <form method="post" enctype="multipart/form-data" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:16px; align-items:end;">
+                                                <input type="hidden" name="replace_file" value="<?= htmlspecialchars($entry['file'], ENT_QUOTES, 'UTF-8') ?>">
+                                                <div>
+                                                    <label class="verify-label">Replace stored revision</label>
+                                                    <input class="verify-input" type="file" name="replacement_file" required>
+                                                </div>
+                                                <div style="grid-column: 1 / -1; color:var(--verify-muted);">
+                                                    Replacing a document keeps the same stored filename, document code, verification link, and QR destination. Use the same file type as the original file.
+                                                </div>
+                                                <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                                                    <button class="verify-button" type="submit">Replace Revision</button>
+                                                    <button class="verify-button-secondary" type="button" data-edit-target="replace-<?= htmlspecialchars(md5($entry['file']), ENT_QUOTES, 'UTF-8') ?>">Cancel</button>
                                                 </div>
                                             </form>
                                         </td>
@@ -327,7 +497,7 @@ usort($entries, static function ($a, $b) {
                         return;
                     }
                     const isOpen = row.style.display !== 'none';
-                    document.querySelectorAll('tr[id^="edit-"]').forEach((editRow) => {
+                    document.querySelectorAll('tr[id^="edit-"], tr[id^="review-"], tr[id^="replace-"]').forEach((editRow) => {
                         editRow.style.display = 'none';
                     });
                     row.style.display = isOpen ? 'none' : 'table-row';
