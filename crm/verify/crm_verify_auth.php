@@ -403,6 +403,7 @@ function verify_normalize_document_record($filename, $entry)
         'approved_at' => (string) ($entry['approved_at'] ?? ''),
         'rejection_note' => (string) ($entry['rejection_note'] ?? ''),
         'allowed_roles' => verify_normalize_roles($entry['allowed_roles'] ?? []),
+        'allowed_users' => verify_normalize_document_users($entry['allowed_users'] ?? []),
     ];
 }
 
@@ -463,9 +464,31 @@ function verify_document_allowed_roles(array $document): array
     return verify_normalize_roles($document['allowed_roles'] ?? [], '');
 }
 
+function verify_normalize_document_users($users): array
+{
+    $normalized = [];
+    if (!is_array($users)) {
+        $users = [$users];
+    }
+
+    foreach ($users as $username) {
+        $value = trim((string) $username);
+        if ($value !== '' && !in_array($value, $normalized, true)) {
+            $normalized[] = $value;
+        }
+    }
+
+    return $normalized;
+}
+
+function verify_document_allowed_users(array $document): array
+{
+    return verify_normalize_document_users($document['allowed_users'] ?? []);
+}
+
 function verify_document_is_restricted(array $document): bool
 {
-    return !empty(verify_document_allowed_roles($document));
+    return !empty(verify_document_allowed_roles($document)) || !empty(verify_document_allowed_users($document));
 }
 
 function verify_document_matches_roles(array $document, array $roles): bool
@@ -483,6 +506,16 @@ function verify_document_matches_roles(array $document, array $roles): bool
     return count(array_intersect($allowedRoles, $normalizedRoles)) > 0;
 }
 
+function verify_document_matches_users(array $document, string $username): bool
+{
+    $allowedUsers = verify_document_allowed_users($document);
+    if (empty($allowedUsers)) {
+        return true;
+    }
+
+    return $username !== '' && in_array($username, $allowedUsers, true);
+}
+
 function verify_current_user_can_access_document(array $document): bool
 {
     if (verify_has_any_permission(['review_documents', 'approve_documents', 'edit_documents', 'replace_documents', 'delete_documents'])) {
@@ -494,7 +527,18 @@ function verify_current_user_can_access_document(array $document): bool
         return true;
     }
 
-    return verify_document_matches_roles($document, verify_current_roles());
+    $hasUserRestriction = !empty(verify_document_allowed_users($document));
+    $hasRoleRestriction = !empty(verify_document_allowed_roles($document));
+
+    if ($hasUserRestriction && verify_document_matches_users($document, $currentUsername)) {
+        return true;
+    }
+
+    if ($hasRoleRestriction && verify_document_matches_roles($document, verify_current_roles())) {
+        return true;
+    }
+
+    return !$hasUserRestriction && !$hasRoleRestriction;
 }
 
 function verify_id_cards_file_path()
