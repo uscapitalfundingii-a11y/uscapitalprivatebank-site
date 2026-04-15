@@ -33,6 +33,7 @@ if (is_dir($filesDir)) {
             'notes' => (string) ($meta['notes'] ?? ''),
             'status' => (string) ($meta['status'] ?? 'pending'),
             'allowed_roles' => verify_document_allowed_roles($meta),
+            'allowed_users' => verify_document_allowed_users($meta),
             'view_url' => 'viewfile.php?file=' . rawurlencode($file),
             'print_url' => 'print.php?file=' . rawurlencode($file),
             'download_url' => 'download.php?file=' . rawurlencode($file),
@@ -127,6 +128,7 @@ usort($entries, static function ($a, $b) {
                                             <div style="margin-top:6px; color:var(--verify-muted);"><?= htmlspecialchars($entry['notes'], ENT_QUOTES, 'UTF-8') ?></div>
                                         <?php endif; ?>
                                         <div style="margin-top:6px; color:var(--verify-muted);"><strong>Access groups:</strong> <?= htmlspecialchars(empty($entry['allowed_roles']) ? 'All approved groups' : implode(', ', array_map(static fn($role) => ucwords(str_replace('_', ' ', $role)), $entry['allowed_roles'])), ENT_QUOTES, 'UTF-8') ?></div>
+                                        <div style="margin-top:6px; color:var(--verify-muted);"><strong>Allowed users:</strong> <?= htmlspecialchars(empty($entry['allowed_users']) ? 'No user-only list' : implode(', ', $entry['allowed_users']), ENT_QUOTES, 'UTF-8') ?></div>
                                     </td>
                                     <td><?= htmlspecialchars($entry['code'], ENT_QUOTES, 'UTF-8') ?></td>
                                     <td><span class="verify-status <?= htmlspecialchars($entry['status'], ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($entry['status'], ENT_QUOTES, 'UTF-8') ?></span></td>

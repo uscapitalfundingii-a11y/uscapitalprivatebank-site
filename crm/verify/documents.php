@@ -22,6 +22,13 @@ $canDeleteDocuments = verify_has_permission('delete_documents');
 $canPrintDocuments = verify_has_permission('print_documents');
 $canDownloadDocuments = verify_has_permission('download_documents');
 $roleOptions = array_filter(verify_available_roles(), static fn($role) => $role !== 'admin');
+$approvedUsers = [];
+foreach (verify_load_users() as $accountName => $entry) {
+    if ($accountName === 'admin' || !is_array($entry) || (string) ($entry['status'] ?? 'pending') !== 'approved') {
+        continue;
+    }
+    $approvedUsers[] = (string) $accountName;
+}
 $filesDir = __DIR__ . '/files';
 $documents = verify_load_documents();
 
@@ -160,6 +167,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_file'])) {
             $documents[$targetFile]['uploaded_by'] = (string) ($documents[$targetFile]['uploaded_by'] ?? $username);
             $documents[$targetFile]['uploaded_at'] = (string) ($documents[$targetFile]['uploaded_at'] ?? date('c'));
             $documents[$targetFile]['allowed_roles'] = verify_normalize_roles($_POST['allowed_roles'] ?? [], '');
+            $documents[$targetFile]['allowed_users'] = verify_normalize_document_users($_POST['allowed_users'] ?? []);
 
             verify_save_documents($documents);
 
@@ -201,6 +209,7 @@ if (is_dir($filesDir)) {
         $file = basename($path);
         $meta = $documents[$file] ?? [];
         $allowedRoles = verify_document_allowed_roles($meta);
+        $allowedUsers = verify_document_allowed_users($meta);
         if (!$canReviewDocuments) {
             $status = (string) ($meta['status'] ?? 'approved');
             $uploadedBy = (string) ($meta['uploaded_by'] ?? '');
@@ -224,6 +233,7 @@ if (is_dir($filesDir)) {
             'approved_at' => (string) ($meta['approved_at'] ?? ''),
             'rejection_note' => (string) ($meta['rejection_note'] ?? ''),
             'allowed_roles' => $allowedRoles,
+            'allowed_users' => $allowedUsers,
             'view_url' => 'viewfile.php?file=' . rawurlencode($file),
             'print_url' => 'print.php?file=' . rawurlencode($file),
             'download_url' => 'download.php?file=' . rawurlencode($file),
@@ -345,6 +355,7 @@ usort($entries, static function ($a, $b) {
                                     date('Y-m-d H:i:s', strtotime($entry['uploaded_at'])),
                                     $entry['notes'],
                                     implode(' ', $entry['allowed_roles']),
+                                    implode(' ', $entry['allowed_users']),
                                 ]);
                                 ?>
                                 <tr data-search="<?= htmlspecialchars(mb_strtolower($searchBlob), ENT_QUOTES, 'UTF-8') ?>">
@@ -354,6 +365,7 @@ usort($entries, static function ($a, $b) {
                                             <div style="margin-top:6px; color:var(--verify-muted);"><?= htmlspecialchars($entry['notes'], ENT_QUOTES, 'UTF-8') ?></div>
                                         <?php endif; ?>
                                         <div style="margin-top:6px; color:var(--verify-muted);"><strong>Access groups:</strong> <?= htmlspecialchars(empty($entry['allowed_roles']) ? 'All approved groups' : implode(', ', array_map(static fn($role) => ucwords(str_replace('_', ' ', $role)), $entry['allowed_roles'])), ENT_QUOTES, 'UTF-8') ?></div>
+                                        <div style="margin-top:6px; color:var(--verify-muted);"><strong>Allowed users:</strong> <?= htmlspecialchars(empty($entry['allowed_users']) ? 'No user-only list' : implode(', ', $entry['allowed_users']), ENT_QUOTES, 'UTF-8') ?></div>
                                         <?php if ($entry['rejection_note'] !== ''): ?>
                                             <div style="margin-top:6px; color:var(--verify-danger);"><strong>Admin note:</strong> <?= htmlspecialchars($entry['rejection_note'], ENT_QUOTES, 'UTF-8') ?></div>
                                         <?php endif; ?>
@@ -444,6 +456,18 @@ usort($entries, static function ($a, $b) {
                                                         <?php endforeach; ?>
                                                     </div>
                                                     <div style="margin-top:10px; color:var(--verify-muted);">Leave every group unselected to allow all approved role groups to use this document once approved.</div>
+                                                </div>
+                                                <div style="grid-column: 1 / -1;">
+                                                    <label class="verify-label">Allowed individual users</label>
+                                                    <div style="display:flex; flex-wrap:wrap; gap:12px;">
+                                                        <?php foreach ($approvedUsers as $approvedUser): ?>
+                                                            <label style="display:flex; gap:10px; align-items:flex-start; min-width:220px; padding:12px 14px; border-radius:16px; border:1px solid rgba(148, 163, 184, 0.16); background:rgba(15, 23, 42, 0.28);">
+                                                                <input type="checkbox" name="allowed_users[]" value="<?= htmlspecialchars($approvedUser, ENT_QUOTES, 'UTF-8') ?>"<?= in_array($approvedUser, $entry['allowed_users'], true) ? ' checked' : '' ?> style="margin-top:4px;">
+                                                                <span style="display:block; font-weight:700; color:#f8fafc;"><?= htmlspecialchars($approvedUser, ENT_QUOTES, 'UTF-8') ?></span>
+                                                            </label>
+                                                        <?php endforeach; ?>
+                                                    </div>
+                                                    <div style="margin-top:10px; color:var(--verify-muted);">Use this list for exact user-by-user access. Anyone left unselected will not get access through the individual allow list.</div>
                                                 </div>
                                                 <div style="display:flex; gap:12px; flex-wrap:wrap;">
                                                     <button class="verify-button" type="submit">Save Changes</button>

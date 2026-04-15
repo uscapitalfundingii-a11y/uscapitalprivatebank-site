@@ -27,6 +27,14 @@ $success = '';
 $uploaded = null;
 $roleOptions = array_filter(verify_available_roles(), static fn($role) => $role !== 'admin');
 $allowedRoles = verify_normalize_roles($_POST['allowed_roles'] ?? [], '');
+$allowedUsers = verify_normalize_document_users($_POST['allowed_users'] ?? []);
+$approvedUsers = [];
+foreach (verify_load_users() as $accountName => $entry) {
+    if ($accountName === 'admin' || !is_array($entry) || (string) ($entry['status'] ?? 'pending') !== 'approved') {
+        continue;
+    }
+    $approvedUsers[] = (string) $accountName;
+}
 
 function verify_slugify($value)
 {
@@ -87,6 +95,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'approved_by' => '',
                     'approved_at' => '',
                     'allowed_roles' => $allowedRoles,
+                    'allowed_users' => $allowedUsers,
                 ];
                 verify_save_documents($documents);
                 $success = 'Your document has been uploaded and is now pending administrator approval before verification, viewing, printing, or download.';
@@ -192,6 +201,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 </div>
                                 <div style="margin-top:10px; color:var(--verify-muted);">Leave every role unselected to allow all approved groups to access this document after approval.</div>
                             </div>
+                            <div class="verify-form-group">
+                                <label class="verify-label">Allowed Individual Users</label>
+                                <div style="display:flex; flex-wrap:wrap; gap:12px;">
+                                    <?php foreach ($approvedUsers as $approvedUser): ?>
+                                        <label style="display:flex; gap:10px; align-items:flex-start; min-width:220px; padding:12px 14px; border-radius:16px; border:1px solid rgba(148, 163, 184, 0.16); background:rgba(15, 23, 42, 0.28);">
+                                            <input type="checkbox" name="allowed_users[]" value="<?= htmlspecialchars($approvedUser, ENT_QUOTES, 'UTF-8') ?>"<?= in_array($approvedUser, $allowedUsers, true) ? ' checked' : '' ?> style="margin-top:4px;">
+                                            <span style="display:block; font-weight:700; color:#f8fafc;"><?= htmlspecialchars($approvedUser, ENT_QUOTES, 'UTF-8') ?></span>
+                                        </label>
+                                    <?php endforeach; ?>
+                                </div>
+                                <div style="margin-top:10px; color:var(--verify-muted);">Use this to grant access to specific approved users even when the document should not be open to everyone in a role group.</div>
+                            </div>
                         </div>
                         <div>
                             <div class="verify-form-group">
@@ -216,6 +237,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <div class="verify-meta-item"><strong>Stored File</strong><span><?= htmlspecialchars($uploaded['file'], ENT_QUOTES, 'UTF-8') ?></span></div>
                                     <div class="verify-meta-item"><strong>Status</strong><span>Pending Admin Approval</span></div>
                                     <div class="verify-meta-item"><strong>Allowed Groups</strong><span><?= htmlspecialchars(empty($allowedRoles) ? 'All approved groups' : implode(', ', array_map(static fn($role) => ucwords(str_replace('_', ' ', $role)), $allowedRoles)), ENT_QUOTES, 'UTF-8') ?></span></div>
+                                    <div class="verify-meta-item"><strong>Allowed Users</strong><span><?= htmlspecialchars(empty($allowedUsers) ? 'No individual user-only list' : implode(', ', $allowedUsers), ENT_QUOTES, 'UTF-8') ?></span></div>
                                 </div>
                             </div>
                         </div>
