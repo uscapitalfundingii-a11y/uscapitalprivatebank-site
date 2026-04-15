@@ -31,6 +31,16 @@ function verify_role_label(string $role): string
     return VERIFY_ROLE_OPTIONS[$role] ?? ucfirst(str_replace('_', ' ', $role));
 }
 
+function verify_entry_roles(array $entry): array
+{
+    return verify_normalize_roles($entry['roles'] ?? ($entry['role'] ?? 'trustee'));
+}
+
+function verify_role_labels_for_entry(array $entry): array
+{
+    return array_map('verify_role_label', verify_entry_roles($entry));
+}
+
 function verify_send_approval_email(string $username, array $entry, string $role): bool
 {
     $email = trim((string) ($entry['email'] ?? ''));
@@ -105,6 +115,7 @@ if (!empty($_SESSION['verify_admin_authenticated'])) {
             if (isset($users[$target]) && is_array($users[$target])) {
                 $users[$target]['status'] = 'approved';
                 $users[$target]['role'] = $role;
+                $users[$target]['roles'] = verify_normalize_roles($_POST['roles'] ?? [$role], $role);
                 verify_save_users($users);
                 $mailSent = verify_send_approval_email($target, $users[$target], $role);
                 $message = "Approved {$target} as {$role}." . ($mailSent ? ' Confirmation email sent.' : ' Approval saved, but confirmation email could not be sent.');
@@ -136,9 +147,29 @@ if (!empty($_SESSION['verify_admin_authenticated'])) {
             }
             if (isset($users[$target]) && is_array($users[$target]) && $target !== 'admin') {
                 $users[$target]['role'] = $role;
+                $users[$target]['roles'] = verify_normalize_roles([$role], $role);
                 verify_save_users($users);
                 $mailSent = verify_send_approval_email($target, $users[$target], $role);
                 $message = "Updated {$target} to {$role}." . ($mailSent ? ' Confirmation email sent.' : ' Role saved, but confirmation email could not be sent.');
+            }
+        }
+    }
+
+    if (isset($_POST['save_user_roles'])) {
+        if (!$canManageUsers) {
+            $error = 'Your account is not permitted to change user role groups.';
+        } else {
+            $target = (string) ($_POST['target_user'] ?? '');
+            if (!isset($users[$target]) || !is_array($users[$target])) {
+                $error = 'The requested user could not be found for role group changes.';
+            } elseif ($target === 'admin') {
+                $error = 'The built-in admin account always keeps the Admin role group.';
+            } else {
+                $selectedRoles = verify_normalize_roles($_POST['roles'] ?? [], (string) ($users[$target]['role'] ?? 'trustee'));
+                $users[$target]['roles'] = $selectedRoles;
+                $users[$target]['role'] = (string) ($selectedRoles[0] ?? 'trustee');
+                verify_save_users($users);
+                $message = 'Role groups were updated for ' . $target . '.';
             }
         }
     }
@@ -340,13 +371,15 @@ if (!empty($_SESSION['verify_admin_authenticated'])) {
                                         <th>User</th>
                                         <th>Email</th>
                                         <th>Status</th>
-                                        <th>Role</th>
-                                        <th>Rights</th>
+                                        <th>Role Groups</th>
+                                        <th>Access Controls</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <?php foreach ($approved as $username => $entry): ?>
                                         <?php
+                                        $entryRoles = verify_entry_roles($entry);
+                                        $roleLabels = verify_role_labels_for_entry($entry);
                                         $overrideCount = 0;
                                         foreach (($entry['permission_overrides'] ?? []) as $value) {
                                             if ($value !== 'inherit') {
@@ -358,27 +391,55 @@ if (!empty($_SESSION['verify_admin_authenticated'])) {
                                             <td><?= htmlspecialchars($username, ENT_QUOTES, 'UTF-8') ?></td>
                                             <td><?= htmlspecialchars((string) ($entry['email'] ?? ''), ENT_QUOTES, 'UTF-8') ?></td>
                                             <td><span class="verify-status approved">approved</span></td>
-                                            <td><?= htmlspecialchars(verify_role_label((string) ($entry['role'] ?? 'trustee')), ENT_QUOTES, 'UTF-8') ?></td>
                                             <td>
-                                                <?php if ($canManageUsers): ?>
-                                                    <form class="verify-inline-form" method="post" style="display:inline-flex; gap:8px; align-items:center; flex-wrap:wrap;">
-                                                        <input type="hidden" name="update_role_user" value="<?= htmlspecialchars($username, ENT_QUOTES, 'UTF-8') ?>">
-                                                        <select class="verify-input" name="role" style="min-height:40px; width:auto; min-width:120px;">
-                                                            <?php foreach (VERIFY_ROLE_OPTIONS as $roleValue => $roleLabel): ?>
-                                                                <option value="<?= htmlspecialchars($roleValue, ENT_QUOTES, 'UTF-8') ?>"<?= (($entry['role'] ?? 'trustee') === $roleValue) ? ' selected' : '' ?>><?= htmlspecialchars($roleLabel, ENT_QUOTES, 'UTF-8') ?></option>
-                                                            <?php endforeach; ?>
-                                                        </select>
-                                                        <button class="verify-link" type="submit" style="cursor:pointer;">Save Role</button>
-                                                    </form>
-                                                <?php endif; ?>
-                                                <?php if ($canManageUserPermissions && ($entry['role'] ?? '') !== 'admin'): ?>
-                                                    <button class="verify-link" type="button" style="cursor:pointer;" data-edit-target="user-rights-<?= htmlspecialchars(md5($username), ENT_QUOTES, 'UTF-8') ?>">Individual Rights<?= $overrideCount > 0 ? ' (' . $overrideCount . ')' : '' ?></button>
-                                                <?php elseif (($entry['role'] ?? '') === 'admin'): ?>
-                                                    <span class="verify-link" style="opacity:.7; cursor:default;">Admin has full access</span>
-                                                <?php endif; ?>
+                                                <div style="display:flex; flex-wrap:wrap; gap:8px;">
+                                                    <?php foreach ($roleLabels as $roleLabel): ?>
+                                                        <span class="verify-status approved" style="text-transform:none; letter-spacing:.04em;"><?= htmlspecialchars($roleLabel, ENT_QUOTES, 'UTF-8') ?></span>
+                                                    <?php endforeach; ?>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div style="display:flex; flex-wrap:wrap; gap:10px;">
+                                                    <?php if ($canManageUsers): ?>
+                                                        <button class="verify-link" type="button" style="cursor:pointer;" data-edit-target="user-roles-<?= htmlspecialchars(md5($username), ENT_QUOTES, 'UTF-8') ?>">Manage Roles</button>
+                                                    <?php endif; ?>
+                                                    <?php if ($canManageUserPermissions && !in_array('admin', $entryRoles, true)): ?>
+                                                        <button class="verify-link" type="button" style="cursor:pointer;" data-edit-target="user-rights-<?= htmlspecialchars(md5($username), ENT_QUOTES, 'UTF-8') ?>">Individual Rights<?= $overrideCount > 0 ? ' (' . $overrideCount . ')' : '' ?></button>
+                                                    <?php elseif (in_array('admin', $entryRoles, true)): ?>
+                                                        <span class="verify-link" style="opacity:.7; cursor:default;">Admin has full access</span>
+                                                    <?php endif; ?>
+                                                </div>
                                             </td>
                                         </tr>
-                                        <?php if ($canManageUserPermissions && ($entry['role'] ?? '') !== 'admin'): ?>
+                                        <?php if ($canManageUsers): ?>
+                                            <tr id="user-roles-<?= htmlspecialchars(md5($username), ENT_QUOTES, 'UTF-8') ?>" style="display:none;">
+                                                <td colspan="5">
+                                                    <form method="post" style="display:grid; gap:16px;">
+                                                        <input type="hidden" name="target_user" value="<?= htmlspecialchars($username, ENT_QUOTES, 'UTF-8') ?>">
+                                                        <input type="hidden" name="save_user_roles" value="1">
+                                                        <div style="padding:18px 20px; border-radius:22px; background:rgba(15, 23, 42, 0.35); border:1px solid rgba(148, 163, 184, 0.14);">
+                                                            <div style="display:flex; flex-wrap:wrap; gap:14px;">
+                                                                <?php foreach (VERIFY_ROLE_OPTIONS as $roleValue => $roleLabel): ?>
+                                                                    <label style="display:flex; gap:10px; align-items:flex-start; min-width:200px; padding:12px 14px; border-radius:16px; border:1px solid rgba(148, 163, 184, 0.16); background:rgba(15, 23, 42, 0.38);">
+                                                                        <input type="checkbox" name="roles[]" value="<?= htmlspecialchars($roleValue, ENT_QUOTES, 'UTF-8') ?>"<?= in_array($roleValue, $entryRoles, true) ? ' checked' : '' ?> style="margin-top:4px;">
+                                                                        <span>
+                                                                            <span style="display:block; font-weight:700; color:#f8fafc;"><?= htmlspecialchars($roleLabel, ENT_QUOTES, 'UTF-8') ?></span>
+                                                                            <span style="display:block; margin-top:4px; font-size:13px; color:rgba(226, 232, 240, 0.72);"><?= htmlspecialchars($roleValue, ENT_QUOTES, 'UTF-8') ?></span>
+                                                                        </span>
+                                                                    </label>
+                                                                <?php endforeach; ?>
+                                                            </div>
+                                                            <p class="verify-copy" style="margin:14px 0 0;">Select the role groups this user should keep. Their final access comes from the combined rights of every selected group plus any individual overrides.</p>
+                                                        </div>
+                                                        <div class="verify-actions">
+                                                            <button class="verify-button" type="submit">Save Role Groups</button>
+                                                            <button class="verify-button-secondary" type="button" data-edit-target="user-roles-<?= htmlspecialchars(md5($username), ENT_QUOTES, 'UTF-8') ?>">Cancel</button>
+                                                        </div>
+                                                    </form>
+                                                </td>
+                                            </tr>
+                                        <?php endif; ?>
+                                        <?php if ($canManageUserPermissions && !in_array('admin', $entryRoles, true)): ?>
                                             <tr id="user-rights-<?= htmlspecialchars(md5($username), ENT_QUOTES, 'UTF-8') ?>" style="display:none;">
                                                 <td colspan="5">
                                                     <form method="post" style="display:grid; gap:16px;">
