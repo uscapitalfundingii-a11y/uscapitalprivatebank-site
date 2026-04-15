@@ -30,6 +30,9 @@ if ($canManageUsers) {
         }
     }
 
+}
+
+if ($canApproveDocuments) {
     foreach (verify_load_documents() as $document) {
         if (!verify_is_document_approved($document)) {
             $pendingDocuments++;
