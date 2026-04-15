@@ -13,7 +13,9 @@ if (!empty($_SESSION['upload_authenticated']) && verify_has_any_permission([
     'manage_id_cards',
     'manage_certificates',
 ])) {
-    $_SESSION['verify_admin_authenticated'] = true;
+    if (empty($_SESSION['verify_admin_authenticated'])) {
+        $_SESSION['verify_admin_authenticated'] = 'linked';
+    }
 }
 
 const VERIFY_ROLE_OPTIONS = [
@@ -77,7 +79,7 @@ if (isset($_GET['logout'])) {
 
 if (isset($_POST['admin_password'])) {
     if (hash_equals($adminPassword, (string) $_POST['admin_password'])) {
-        $_SESSION['verify_admin_authenticated'] = true;
+        $_SESSION['verify_admin_authenticated'] = 'password';
         header('Location: index.php');
         exit;
     }
