@@ -402,6 +402,7 @@ function verify_normalize_document_record($filename, $entry)
         'approved_by' => (string) ($entry['approved_by'] ?? ''),
         'approved_at' => (string) ($entry['approved_at'] ?? ''),
         'rejection_note' => (string) ($entry['rejection_note'] ?? ''),
+        'allowed_roles' => verify_normalize_roles($entry['allowed_roles'] ?? []),
     ];
 }
 
@@ -455,6 +456,45 @@ function verify_find_document_by_code(string $code)
     }
 
     return null;
+}
+
+function verify_document_allowed_roles(array $document): array
+{
+    return verify_normalize_roles($document['allowed_roles'] ?? [], '');
+}
+
+function verify_document_is_restricted(array $document): bool
+{
+    return !empty(verify_document_allowed_roles($document));
+}
+
+function verify_document_matches_roles(array $document, array $roles): bool
+{
+    $allowedRoles = verify_document_allowed_roles($document);
+    if (empty($allowedRoles)) {
+        return true;
+    }
+
+    $normalizedRoles = verify_normalize_roles($roles, '');
+    if (in_array('admin', $normalizedRoles, true)) {
+        return true;
+    }
+
+    return count(array_intersect($allowedRoles, $normalizedRoles)) > 0;
+}
+
+function verify_current_user_can_access_document(array $document): bool
+{
+    if (verify_has_any_permission(['review_documents', 'approve_documents', 'edit_documents', 'replace_documents', 'delete_documents'])) {
+        return true;
+    }
+
+    $currentUsername = verify_current_username();
+    if ($currentUsername !== '' && (string) ($document['uploaded_by'] ?? '') === $currentUsername) {
+        return true;
+    }
+
+    return verify_document_matches_roles($document, verify_current_roles());
 }
 
 function verify_id_cards_file_path()

@@ -21,6 +21,7 @@ $canReplaceDocuments = verify_has_permission('replace_documents');
 $canDeleteDocuments = verify_has_permission('delete_documents');
 $canPrintDocuments = verify_has_permission('print_documents');
 $canDownloadDocuments = verify_has_permission('download_documents');
+$roleOptions = array_filter(verify_available_roles(), static fn($role) => $role !== 'admin');
 $filesDir = __DIR__ . '/files';
 $documents = verify_load_documents();
 
@@ -158,6 +159,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_file'])) {
             $documents[$targetFile]['code'] = $updatedCode;
             $documents[$targetFile]['uploaded_by'] = (string) ($documents[$targetFile]['uploaded_by'] ?? $username);
             $documents[$targetFile]['uploaded_at'] = (string) ($documents[$targetFile]['uploaded_at'] ?? date('c'));
+            $documents[$targetFile]['allowed_roles'] = verify_normalize_roles($_POST['allowed_roles'] ?? [], '');
 
             verify_save_documents($documents);
 
@@ -198,10 +200,14 @@ if (is_dir($filesDir)) {
     foreach ($files as $path) {
         $file = basename($path);
         $meta = $documents[$file] ?? [];
+        $allowedRoles = verify_document_allowed_roles($meta);
         if (!$canReviewDocuments) {
             $status = (string) ($meta['status'] ?? 'approved');
             $uploadedBy = (string) ($meta['uploaded_by'] ?? '');
             if ($status !== 'approved' && $uploadedBy !== $username) {
+                continue;
+            }
+            if ($status === 'approved' && !verify_document_matches_roles($meta, verify_current_roles())) {
                 continue;
             }
         }
@@ -217,6 +223,7 @@ if (is_dir($filesDir)) {
             'approved_by' => (string) ($meta['approved_by'] ?? ''),
             'approved_at' => (string) ($meta['approved_at'] ?? ''),
             'rejection_note' => (string) ($meta['rejection_note'] ?? ''),
+            'allowed_roles' => $allowedRoles,
             'view_url' => 'viewfile.php?file=' . rawurlencode($file),
             'print_url' => 'print.php?file=' . rawurlencode($file),
             'download_url' => 'download.php?file=' . rawurlencode($file),
@@ -337,6 +344,7 @@ usort($entries, static function ($a, $b) {
                                     date('M j, Y g:i A', strtotime($entry['uploaded_at'])),
                                     date('Y-m-d H:i:s', strtotime($entry['uploaded_at'])),
                                     $entry['notes'],
+                                    implode(' ', $entry['allowed_roles']),
                                 ]);
                                 ?>
                                 <tr data-search="<?= htmlspecialchars(mb_strtolower($searchBlob), ENT_QUOTES, 'UTF-8') ?>">
@@ -345,6 +353,7 @@ usort($entries, static function ($a, $b) {
                                         <?php if ($entry['notes'] !== ''): ?>
                                             <div style="margin-top:6px; color:var(--verify-muted);"><?= htmlspecialchars($entry['notes'], ENT_QUOTES, 'UTF-8') ?></div>
                                         <?php endif; ?>
+                                        <div style="margin-top:6px; color:var(--verify-muted);"><strong>Access groups:</strong> <?= htmlspecialchars(empty($entry['allowed_roles']) ? 'All approved groups' : implode(', ', array_map(static fn($role) => ucwords(str_replace('_', ' ', $role)), $entry['allowed_roles'])), ENT_QUOTES, 'UTF-8') ?></div>
                                         <?php if ($entry['rejection_note'] !== ''): ?>
                                             <div style="margin-top:6px; color:var(--verify-danger);"><strong>Admin note:</strong> <?= htmlspecialchars($entry['rejection_note'], ENT_QUOTES, 'UTF-8') ?></div>
                                         <?php endif; ?>
@@ -420,6 +429,21 @@ usort($entries, static function ($a, $b) {
                                                 <div style="grid-column: 1 / -1;">
                                                     <label class="verify-label">Notes</label>
                                                     <textarea class="verify-textarea" name="notes" rows="3" placeholder="Add internal notes or document context..."><?= htmlspecialchars($entry['notes'], ENT_QUOTES, 'UTF-8') ?></textarea>
+                                                </div>
+                                                <div style="grid-column: 1 / -1;">
+                                                    <label class="verify-label">Allowed role groups</label>
+                                                    <div style="display:flex; flex-wrap:wrap; gap:12px;">
+                                                        <?php foreach ($roleOptions as $roleValue): ?>
+                                                            <label style="display:flex; gap:10px; align-items:flex-start; min-width:180px; padding:12px 14px; border-radius:16px; border:1px solid rgba(148, 163, 184, 0.16); background:rgba(15, 23, 42, 0.28);">
+                                                                <input type="checkbox" name="allowed_roles[]" value="<?= htmlspecialchars($roleValue, ENT_QUOTES, 'UTF-8') ?>"<?= in_array($roleValue, $entry['allowed_roles'], true) ? ' checked' : '' ?> style="margin-top:4px;">
+                                                                <span>
+                                                                    <span style="display:block; font-weight:700; color:#f8fafc;"><?= htmlspecialchars(ucwords(str_replace('_', ' ', $roleValue)), ENT_QUOTES, 'UTF-8') ?></span>
+                                                                    <span style="display:block; margin-top:4px; font-size:13px; color:rgba(226, 232, 240, 0.72);"><?= htmlspecialchars($roleValue, ENT_QUOTES, 'UTF-8') ?></span>
+                                                                </span>
+                                                            </label>
+                                                        <?php endforeach; ?>
+                                                    </div>
+                                                    <div style="margin-top:10px; color:var(--verify-muted);">Leave every group unselected to allow all approved role groups to use this document once approved.</div>
                                                 </div>
                                                 <div style="display:flex; gap:12px; flex-wrap:wrap;">
                                                     <button class="verify-button" type="submit">Save Changes</button>

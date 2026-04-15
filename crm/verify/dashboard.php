@@ -15,9 +15,17 @@ $canApproveDocuments = verify_has_permission('approve_documents');
 $canManageUsers = verify_has_any_permission(['manage_users', 'manage_role_permissions', 'manage_user_permissions']);
 $canUseIdCards = verify_has_permission('manage_id_cards');
 $canUseCertificates = verify_has_permission('manage_certificates');
+$hasOwnDocuments = false;
 $pendingRequests = 0;
 $pendingDocuments = 0;
 $pageError = trim((string) ($_GET['error'] ?? ''));
+
+foreach (verify_load_documents() as $document) {
+    if (is_array($document) && (string) ($document['uploaded_by'] ?? '') === $username) {
+        $hasOwnDocuments = true;
+        break;
+    }
+}
 
 if ($canManageUsers) {
     foreach (verify_load_users() as $accountName => $entry) {
@@ -91,6 +99,7 @@ if ($canApproveDocuments) {
                         <?php if ($canUpload): ?>
                             <a class="verify-button" href="upload.php">Go To Upload Access</a>
                         <?php endif; ?>
+                        <a class="verify-button-secondary" href="my-documents.php">My Documents<?= $hasOwnDocuments ? '' : ' (0)' ?></a>
                         <a class="verify-button<?= $canUpload ? '-secondary' : '' ?>" href="documents.php">View Document Library</a>
                         <?php if ($canManageUsers): ?>
                             <a class="verify-button-secondary" href="admin/index.php">Review Access Requests<?= $pendingRequests > 0 ? ' (' . $pendingRequests . ')' : '' ?></a>
@@ -151,6 +160,7 @@ if ($canApproveDocuments) {
                         <?php endif; ?>
                         <?php if (!$canManageUsers && !$canApproveDocuments && !$canUseIdCards && !$canUseCertificates): ?>
                             <li>Review approved documents already in the repository and track your own pending uploads.</li>
+                            <li>Open a private My Documents view that shows only the records you personally uploaded.</li>
                         <?php endif; ?>
                     </ul>
                 </div>

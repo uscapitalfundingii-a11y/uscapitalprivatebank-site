@@ -4,6 +4,7 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 require_once __DIR__ . '/crm_verify_auth.php';
+session_start();
 
 $baseDir = __DIR__ . '/files';
 $baseUrl = 'https://www.uscapitalprivatebank.com/crm/verify/files';
@@ -14,6 +15,11 @@ $document = $documents[$requestedFile] ?? null;
 
 if ($requestedFile === '' || !is_file($filePath) || !is_array($document) || !verify_is_document_approved($document)) {
     header('Location: index.php?error=' . urlencode('The requested verification file could not be located.'));
+    exit;
+}
+
+if (verify_document_is_restricted($document) && !verify_current_user_can_access_document($document)) {
+    header('Location: index.php?error=' . urlencode('That verified document is restricted to specific approved role groups.'));
     exit;
 }
 

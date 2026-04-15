@@ -25,6 +25,8 @@ $documents = verify_load_documents();
 $error = '';
 $success = '';
 $uploaded = null;
+$roleOptions = array_filter(verify_available_roles(), static fn($role) => $role !== 'admin');
+$allowedRoles = verify_normalize_roles($_POST['allowed_roles'] ?? [], '');
 
 function verify_slugify($value)
 {
@@ -37,7 +39,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $documentTitle = trim((string) ($_POST['document_title'] ?? ''));
     $documentCode = verify_slugify($_POST['document_code'] ?? '');
     $notes = trim((string) ($_POST['notes'] ?? ''));
-
     if ($documentTitle === '') {
         $error = 'Please enter a document title before uploading.';
     } elseif (!isset($_FILES['document_file']) || ($_FILES['document_file']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
@@ -85,6 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'status' => 'pending',
                     'approved_by' => '',
                     'approved_at' => '',
+                    'allowed_roles' => $allowedRoles,
                 ];
                 verify_save_documents($documents);
                 $success = 'Your document has been uploaded and is now pending administrator approval before verification, viewing, printing, or download.';
@@ -174,6 +176,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <label class="verify-label" for="document_file">Document File</label>
                                 <input class="verify-input" id="document_file" name="document_file" type="file" required>
                             </div>
+                            <div class="verify-form-group">
+                                <label class="verify-label">Allowed Role Groups</label>
+                                <div style="display:flex; flex-wrap:wrap; gap:12px;">
+                                    <?php foreach ($roleOptions as $roleValue): ?>
+                                        <?php $isChecked = in_array($roleValue, verify_normalize_roles($_POST['allowed_roles'] ?? [], ''), true); ?>
+                                        <label style="display:flex; gap:10px; align-items:flex-start; min-width:180px; padding:12px 14px; border-radius:16px; border:1px solid rgba(148, 163, 184, 0.16); background:rgba(15, 23, 42, 0.28);">
+                                            <input type="checkbox" name="allowed_roles[]" value="<?= htmlspecialchars($roleValue, ENT_QUOTES, 'UTF-8') ?>"<?= $isChecked ? ' checked' : '' ?> style="margin-top:4px;">
+                                            <span>
+                                                <span style="display:block; font-weight:700; color:#f8fafc;"><?= htmlspecialchars(ucwords(str_replace('_', ' ', $roleValue)), ENT_QUOTES, 'UTF-8') ?></span>
+                                                <span style="display:block; margin-top:4px; font-size:13px; color:rgba(226, 232, 240, 0.72);"><?= htmlspecialchars($roleValue, ENT_QUOTES, 'UTF-8') ?></span>
+                                            </span>
+                                        </label>
+                                    <?php endforeach; ?>
+                                </div>
+                                <div style="margin-top:10px; color:var(--verify-muted);">Leave every role unselected to allow all approved groups to access this document after approval.</div>
+                            </div>
                         </div>
                         <div>
                             <div class="verify-form-group">
@@ -197,6 +215,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <div class="verify-meta-item"><strong>Document Code</strong><span><?= htmlspecialchars($uploaded['code'], ENT_QUOTES, 'UTF-8') ?></span></div>
                                     <div class="verify-meta-item"><strong>Stored File</strong><span><?= htmlspecialchars($uploaded['file'], ENT_QUOTES, 'UTF-8') ?></span></div>
                                     <div class="verify-meta-item"><strong>Status</strong><span>Pending Admin Approval</span></div>
+                                    <div class="verify-meta-item"><strong>Allowed Groups</strong><span><?= htmlspecialchars(empty($allowedRoles) ? 'All approved groups' : implode(', ', array_map(static fn($role) => ucwords(str_replace('_', ' ', $role)), $allowedRoles)), ENT_QUOTES, 'UTF-8') ?></span></div>
                                 </div>
                             </div>
                         </div>
