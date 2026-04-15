@@ -250,7 +250,9 @@ usort($entries, static function ($a, $b) {
             <div class="verify-links">
                 <a class="verify-link" href="https://www.uscapitalprivatebank.com/">Home</a>
                 <a class="verify-link" href="dashboard.php">Dashboard</a>
-                <a class="verify-link" href="upload.php">Upload Desk</a>
+                <?php if (verify_has_permission('upload_documents')): ?>
+                    <a class="verify-link" href="upload.php">Upload Desk</a>
+                <?php endif; ?>
                 <a class="verify-button-secondary" href="logout.php">Sign Out</a>
             </div>
         </div>
@@ -265,7 +267,9 @@ usort($entries, static function ($a, $b) {
                         Only administrator-approved documents can be verified, viewed, printed, or downloaded publicly.
                     </p>
                     <div class="verify-actions">
-                        <a class="verify-button" href="upload.php">Upload New Document</a>
+                        <?php if (verify_has_permission('upload_documents')): ?>
+                            <a class="verify-button" href="upload.php">Upload New Document</a>
+                        <?php endif; ?>
                         <a class="verify-button-secondary" href="index.php#code-verification">Open Code Lookup</a>
                     </div>
                 </div>

@@ -110,7 +110,7 @@ if ($canManageUsers) {
                         <div class="verify-meta-list">
                             <div class="verify-meta-item"><strong>Session Status</strong><span>Authenticated</span></div>
                             <div class="verify-meta-item"><strong>Workspace</strong><span>Verification Operations</span></div>
-                            <div class="verify-meta-item"><strong>Role</strong><span><?= htmlspecialchars($userRole !== '' ? ucfirst($userRole) : 'User', ENT_QUOTES, 'UTF-8') ?></span></div>
+                            <div class="verify-meta-item"><strong>Role</strong><span><?= htmlspecialchars($userRole !== '' ? ucwords(str_replace('_', ' ', $userRole)) : 'User', ENT_QUOTES, 'UTF-8') ?></span></div>
                             <?php if ($canManageUsers): ?>
                                 <div class="verify-meta-item"><strong>Pending Requests</strong><span><?= htmlspecialchars((string) $pendingRequests, ENT_QUOTES, 'UTF-8') ?></span></div>
                             <?php endif; ?>
