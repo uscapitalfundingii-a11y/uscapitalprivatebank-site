@@ -270,7 +270,7 @@ function verify_has_any_permission(array $permissions)
 
 function verify_admin_session_via_password()
 {
-    return !empty($_SESSION['verify_admin_authenticated']) && (empty($_SESSION['upload_authenticated']) || empty($_SESSION['username']));
+    return (string) ($_SESSION['verify_admin_authenticated'] ?? '') === 'password';
 }
 
 function verify_management_session_has_permission(string $permission)
