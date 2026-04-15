@@ -201,9 +201,9 @@ class UserController extends Controller
     public function userData()
     {
         $user = auth()->user();
-        $user->syncProfileCompletionFlag();
+        $this->syncProfileCompletionFlagSafely($user);
 
-        if (!$user->needsProfileCompletion()) {
+        if (!$this->needsProfileCompletionSafely($user)) {
             return to_route('user.home');
         }
 
@@ -211,7 +211,7 @@ class UserController extends Controller
         $info       = json_decode(json_encode(getIpInfo()), true);
         $mobileCode = @implode(',', $info['code']);
         $countries  = json_decode(file_get_contents(resource_path('views/partials/country.json')));
-        $missingFieldLabels = array_values($user->missingProfileFields());
+        $missingFieldLabels = array_values($this->missingProfileFieldsSafely($user));
         $courtesyMessage = count($missingFieldLabels)
             ? 'Please add your ' . implode(', ', $missingFieldLabels) . ' so we can finish setting up your account.'
             : 'Please answer a few quick questions so we can finish setting up your account.';
@@ -223,9 +223,9 @@ class UserController extends Controller
     {
 
         $user = auth()->user();
-        $user->syncProfileCompletionFlag();
+        $this->syncProfileCompletionFlagSafely($user);
 
-        if (!$user->needsProfileCompletion()) {
+        if (!$this->needsProfileCompletionSafely($user)) {
             return to_route('user.home');
         }
 
@@ -272,9 +272,71 @@ class UserController extends Controller
 
         $user->profile_complete = Status::YES;
         $user->save();
-        $user->syncProfileCompletionFlag();
+        $this->syncProfileCompletionFlagSafely($user);
 
         return to_route('user.home');
+    }
+
+    protected function missingProfileFieldsSafely(User $user): array
+    {
+        if (method_exists($user, 'missingProfileFields')) {
+            return $user->missingProfileFields();
+        }
+
+        $requiredFields = [
+            'country_name' => 'country',
+            'country_code' => 'country code',
+            'dial_code'    => 'mobile code',
+            'mobile'       => 'phone number',
+            'address'      => 'address',
+            'city'         => 'city',
+            'state'        => 'state',
+        ];
+
+        $missingFields = [];
+
+        foreach ($requiredFields as $field => $label) {
+            $value = $user->{$field} ?? null;
+
+            if (is_string($value)) {
+                $value = trim($value);
+            }
+
+            if (blank($value)) {
+                $missingFields[$field] = $label;
+            }
+        }
+
+        return $missingFields;
+    }
+
+    protected function needsProfileCompletionSafely(User $user): bool
+    {
+        if (method_exists($user, 'needsProfileCompletion')) {
+            return $user->needsProfileCompletion();
+        }
+
+        return $user->profile_complete != Status::YES || !empty($this->missingProfileFieldsSafely($user));
+    }
+
+    protected function syncProfileCompletionFlagSafely(User $user): void
+    {
+        if (method_exists($user, 'syncProfileCompletionFlag')) {
+            $user->syncProfileCompletionFlag();
+            return;
+        }
+
+        $targetStatus = empty($this->missingProfileFieldsSafely($user)) ? Status::YES : Status::NO;
+
+        if ((int) $user->profile_complete !== (int) $targetStatus) {
+            $user->forceFill(['profile_complete' => $targetStatus]);
+
+            if (method_exists($user, 'saveQuietly')) {
+                $user->saveQuietly();
+            } else {
+                $user->save();
+            }
+        }
     }
 
     protected function generateAutoUsername(User $user): string

@@ -16,6 +16,7 @@ use App\Models\Loan;
 use App\Models\NotificationLog;
 use App\Models\ReferralSetting;
 use App\Models\Transaction;
+use App\Models\User;
 use App\Models\Withdrawal;
 use App\Rules\FileTypeValidate;
 use Illuminate\Http\Request;
@@ -58,9 +59,9 @@ class UserController extends Controller {
 
     public function userDataSubmit(Request $request) {
         $user = auth()->user();
-        $user->syncProfileCompletionFlag();
+        $this->syncProfileCompletionFlagSafely($user);
 
-        if (!$user->needsProfileCompletion()) {
+        if (!$this->needsProfileCompletionSafely($user)) {
             $notify[] = 'You\'ve already completed your profile';
             return responseError('already_completed', $notify);
         }
@@ -107,10 +108,72 @@ class UserController extends Controller {
 
         $user->profile_complete = Status::YES;
         $user->save();
-        $user->syncProfileCompletionFlag();
+        $this->syncProfileCompletionFlagSafely($user);
 
         $notify[] = 'Profile completed successfully';
         return responseSuccess('profile_completed', $notify, ['user' => $user]);
+    }
+
+    protected function missingProfileFieldsSafely(User $user): array
+    {
+        if (method_exists($user, 'missingProfileFields')) {
+            return $user->missingProfileFields();
+        }
+
+        $requiredFields = [
+            'country_name' => 'country',
+            'country_code' => 'country code',
+            'dial_code'    => 'mobile code',
+            'mobile'       => 'phone number',
+            'address'      => 'address',
+            'city'         => 'city',
+            'state'        => 'state',
+        ];
+
+        $missingFields = [];
+
+        foreach ($requiredFields as $field => $label) {
+            $value = $user->{$field} ?? null;
+
+            if (is_string($value)) {
+                $value = trim($value);
+            }
+
+            if (blank($value)) {
+                $missingFields[$field] = $label;
+            }
+        }
+
+        return $missingFields;
+    }
+
+    protected function needsProfileCompletionSafely(User $user): bool
+    {
+        if (method_exists($user, 'needsProfileCompletion')) {
+            return $user->needsProfileCompletion();
+        }
+
+        return $user->profile_complete != Status::YES || !empty($this->missingProfileFieldsSafely($user));
+    }
+
+    protected function syncProfileCompletionFlagSafely(User $user): void
+    {
+        if (method_exists($user, 'syncProfileCompletionFlag')) {
+            $user->syncProfileCompletionFlag();
+            return;
+        }
+
+        $targetStatus = empty($this->missingProfileFieldsSafely($user)) ? Status::YES : Status::NO;
+
+        if ((int) $user->profile_complete !== (int) $targetStatus) {
+            $user->forceFill(['profile_complete' => $targetStatus]);
+
+            if (method_exists($user, 'saveQuietly')) {
+                $user->saveQuietly();
+            } else {
+                $user->save();
+            }
+        }
     }
 
     public function kycForm() {
