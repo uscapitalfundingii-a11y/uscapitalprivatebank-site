@@ -474,6 +474,21 @@ if (!empty($_SESSION['verify_admin_authenticated'])) {
                     </div>
                 </div>
 
+                <div class="verify-card">
+                    <div class="verify-card-inner">
+                        <h3 style="margin:0 0 18px; font-size:24px;">Group Roles</h3>
+                        <p class="verify-copy" style="margin-bottom:20px;">These are the role groups available for approved users. You can assign one or several groups to a profile, and the account will inherit the combined access of every selected role group before any individual rights overrides are applied.</p>
+                        <div style="display:flex; flex-wrap:wrap; gap:12px 16px;">
+                            <?php foreach (VERIFY_ROLE_OPTIONS as $roleValue => $roleLabel): ?>
+                                <div style="padding:14px 16px; border-radius:18px; border:1px solid rgba(148, 163, 184, 0.18); background:rgba(15, 23, 42, 0.35); min-width:160px;">
+                                    <div style="font-size:16px; font-weight:700; color:#f8fafc;"><?= htmlspecialchars($roleLabel, ENT_QUOTES, 'UTF-8') ?></div>
+                                    <div style="margin-top:6px; font-size:13px; color:rgba(226, 232, 240, 0.78);"><?= htmlspecialchars($roleValue, ENT_QUOTES, 'UTF-8') ?></div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                </div>
+
                 <?php if ($canManageRolePermissions): ?>
                     <div class="verify-card">
                         <div class="verify-card-inner">
@@ -519,7 +534,7 @@ if (!empty($_SESSION['verify_admin_authenticated'])) {
                     }
 
                     const isOpen = row.style.display !== 'none';
-                    document.querySelectorAll('tr[id^="user-rights-"]').forEach((editRow) => {
+                    document.querySelectorAll('tr[id^="user-rights-"], tr[id^="user-roles-"]').forEach((editRow) => {
                         editRow.style.display = 'none';
                     });
                     row.style.display = isOpen ? 'none' : 'table-row';
