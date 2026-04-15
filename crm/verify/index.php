@@ -24,7 +24,8 @@ if (isset($_POST['username'], $_POST['password'], $_POST['login'])) {
     $storedCredentials = $validCredentials[$username] ?? null;
     $storedPassword = is_array($storedCredentials) ? ($storedCredentials['password'] ?? null) : null;
     $storedStatus = is_array($storedCredentials) ? ($storedCredentials['status'] ?? 'pending') : 'pending';
-    $storedRole = is_array($storedCredentials) ? ($storedCredentials['role'] ?? 'trustee') : 'trustee';
+    $storedRoles = is_array($storedCredentials) ? ($storedCredentials['roles'] ?? ($storedCredentials['role'] ?? 'trustee')) : 'trustee';
+    $storedRole = verify_normalize_roles($storedRoles)[0] ?? 'trustee';
 
     if ($storedPassword !== null && hash_equals((string) $storedPassword, $password) && $storedStatus !== 'pending') {
         $_SESSION['upload_authenticated'] = true;

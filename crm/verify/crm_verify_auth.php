@@ -14,8 +14,41 @@ function verify_default_admin_record()
         'reference' => '',
         'status' => 'approved',
         'role' => 'admin',
+        'roles' => ['admin'],
         'created_at' => date('c'),
     ];
+}
+
+function verify_available_roles()
+{
+    return array_keys(verify_default_role_permissions());
+}
+
+function verify_normalize_roles($roles, string $fallback = 'trustee')
+{
+    $availableRoles = verify_available_roles();
+    $normalized = [];
+
+    if (!is_array($roles)) {
+        $roles = [$roles];
+    }
+
+    foreach ($roles as $role) {
+        $roleKey = trim((string) $role);
+        if ($roleKey !== '' && in_array($roleKey, $availableRoles, true) && !in_array($roleKey, $normalized, true)) {
+            $normalized[] = $roleKey;
+        }
+    }
+
+    if (in_array('admin', $normalized, true)) {
+        return ['admin'];
+    }
+
+    if (empty($normalized)) {
+        $normalized[] = in_array($fallback, $availableRoles, true) ? $fallback : 'trustee';
+    }
+
+    return $normalized;
 }
 
 function verify_normalize_user_record($username, $entry)
@@ -28,13 +61,17 @@ function verify_normalize_user_record($username, $entry)
         return null;
     }
 
+    $fallbackRole = $username === 'admin' ? 'admin' : 'trustee';
+    $normalizedRoles = verify_normalize_roles($entry['roles'] ?? ($entry['role'] ?? $fallbackRole), $fallbackRole);
+
     return [
         'password' => (string) ($entry['password'] ?? ''),
         'email' => (string) ($entry['email'] ?? ''),
         'organization' => (string) ($entry['organization'] ?? ''),
         'reference' => (string) ($entry['reference'] ?? ''),
         'status' => (string) ($entry['status'] ?? 'pending'),
-        'role' => (string) ($entry['role'] ?? ($username === 'admin' ? 'admin' : 'trustee')),
+        'role' => (string) ($normalizedRoles[0] ?? $fallbackRole),
+        'roles' => $normalizedRoles,
         'permission_overrides' => verify_normalize_permission_overrides(is_array($entry['permission_overrides'] ?? null) ? $entry['permission_overrides'] : []),
         'created_at' => (string) ($entry['created_at'] ?? date('c')),
     ];
@@ -79,7 +116,19 @@ function verify_load_users()
 
 function verify_save_users(array $users)
 {
-    file_put_contents(verify_users_file_path(), json_encode($users, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+    $normalized = [];
+    foreach ($users as $username => $entry) {
+        $userRecord = verify_normalize_user_record((string) $username, $entry);
+        if ($userRecord !== null) {
+            $normalized[(string) $username] = $userRecord;
+        }
+    }
+
+    if (!isset($normalized['admin'])) {
+        $normalized['admin'] = verify_default_admin_record();
+    }
+
+    file_put_contents(verify_users_file_path(), json_encode($normalized, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 }
 
 function verify_permission_catalog()
@@ -205,10 +254,20 @@ function verify_save_role_permissions(array $rolePermissions)
     file_put_contents(verify_role_permissions_file_path(), json_encode($normalized, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 }
 
-function verify_resolve_permissions(string $role, array $overrides = [])
+function verify_resolve_permissions($roles, array $overrides = [])
 {
     $rolePermissions = verify_load_role_permissions();
-    $resolved = $rolePermissions[$role] ?? verify_default_role_permissions()['trustee'];
+    $resolved = verify_normalize_permission_set([]);
+    $normalizedRoles = verify_normalize_roles($roles);
+
+    foreach ($normalizedRoles as $role) {
+        $permissionSet = $rolePermissions[$role] ?? verify_default_role_permissions()['trustee'];
+        foreach ($permissionSet as $permission => $isAllowed) {
+            if ($isAllowed) {
+                $resolved[$permission] = true;
+            }
+        }
+    }
 
     foreach (verify_normalize_permission_overrides($overrides) as $permission => $value) {
         if ($value === 'allow') {
@@ -218,7 +277,7 @@ function verify_resolve_permissions(string $role, array $overrides = [])
         }
     }
 
-    if ($role === 'admin') {
+    if (in_array('admin', $normalizedRoles, true)) {
         $resolved = array_fill_keys(array_keys(verify_permission_catalog()), true);
     }
 
@@ -238,7 +297,7 @@ function verify_permissions_for_user(string $username, ?array $users = null)
         return verify_normalize_permission_set([]);
     }
 
-    return verify_resolve_permissions((string) ($user['role'] ?? 'trustee'), is_array($user['permission_overrides'] ?? null) ? $user['permission_overrides'] : []);
+    return verify_resolve_permissions($user['roles'] ?? ($user['role'] ?? 'trustee'), is_array($user['permission_overrides'] ?? null) ? $user['permission_overrides'] : []);
 }
 
 function verify_current_permissions()
@@ -287,19 +346,35 @@ function verify_management_session_has_any_permission(array $permissions)
     return verify_has_any_permission($permissions);
 }
 
+function verify_current_roles()
+{
+    $username = verify_current_username();
+    if ($username !== '') {
+        $users = verify_load_users();
+        $user = $users[$username] ?? null;
+        if (is_array($user)) {
+            return verify_normalize_roles($user['roles'] ?? ($user['role'] ?? 'trustee'));
+        }
+    }
+
+    $sessionRole = trim((string) ($_SESSION['user_role'] ?? ''));
+    return $sessionRole === '' ? [] : verify_normalize_roles([$sessionRole]);
+}
+
 function verify_current_role()
 {
-    return (string) ($_SESSION['user_role'] ?? '');
+    $roles = verify_current_roles();
+    return (string) ($roles[0] ?? '');
 }
 
 function verify_is_admin()
 {
-    return verify_current_role() === 'admin';
+    return in_array('admin', verify_current_roles(), true);
 }
 
 function verify_is_trustee()
 {
-    return verify_current_role() === 'trustee';
+    return in_array('trustee', verify_current_roles(), true);
 }
 
 function verify_documents_file_path()
