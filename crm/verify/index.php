@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
@@ -8,6 +8,35 @@ require_once __DIR__ . '/crm_verify_auth.php';
 $validCredentials = verify_load_users();
 
 session_start();
+
+function verify_find_login_record(array $users, string $identifier): ?array
+{
+    $identifier = trim($identifier);
+    if ($identifier === '') {
+        return null;
+    }
+
+    if (isset($users[$identifier]) && is_array($users[$identifier])) {
+        return ['username' => $identifier, 'record' => $users[$identifier]];
+    }
+
+    foreach ($users as $username => $record) {
+        if (!is_array($record)) {
+            continue;
+        }
+
+        if (strcasecmp((string) $username, $identifier) === 0) {
+            return ['username' => (string) $username, 'record' => $record];
+        }
+
+        $email = trim((string) ($record['email'] ?? ''));
+        if ($email !== '' && strcasecmp($email, $identifier) === 0) {
+            return ['username' => (string) $username, 'record' => $record];
+        }
+    }
+
+    return null;
+}
 
 $message = '';
 $error = '';
@@ -19,17 +48,19 @@ if (isset($_GET['logout'])) {
 }
 
 if (isset($_POST['username'], $_POST['password'], $_POST['login'])) {
-    $username = trim((string) $_POST['username']);
+    $identifier = trim((string) $_POST['username']);
     $password = (string) $_POST['password'];
-    $storedCredentials = $validCredentials[$username] ?? null;
+    $resolvedLogin = verify_find_login_record($validCredentials, $identifier);
+    $resolvedUsername = is_array($resolvedLogin) ? (string) ($resolvedLogin['username'] ?? '') : '';
+    $storedCredentials = is_array($resolvedLogin) ? ($resolvedLogin['record'] ?? null) : null;
     $storedPassword = is_array($storedCredentials) ? ($storedCredentials['password'] ?? null) : null;
-    $storedStatus = is_array($storedCredentials) ? ($storedCredentials['status'] ?? 'pending') : 'pending';
+    $storedStatus = is_array($storedCredentials) ? strtolower(trim((string) ($storedCredentials['status'] ?? 'pending'))) : 'pending';
     $storedRoles = is_array($storedCredentials) ? ($storedCredentials['roles'] ?? ($storedCredentials['role'] ?? 'trustee')) : 'trustee';
     $storedRole = verify_normalize_roles($storedRoles)[0] ?? 'trustee';
 
-    if ($storedPassword !== null && hash_equals((string) $storedPassword, $password) && $storedStatus !== 'pending') {
+    if ($storedPassword !== null && hash_equals((string) $storedPassword, $password) && $storedStatus === 'approved') {
         $_SESSION['upload_authenticated'] = true;
-        $_SESSION['username'] = $username;
+        $_SESSION['username'] = $resolvedUsername;
         $_SESSION['user_role'] = $storedRole;
         header('Location: dashboard.php');
         exit;
@@ -37,8 +68,10 @@ if (isset($_POST['username'], $_POST['password'], $_POST['login'])) {
 
     if ($storedStatus === 'pending') {
         $error = 'Your registration is pending approval. Please check back shortly.';
+    } elseif ($storedStatus === 'rejected') {
+        $error = 'Your verification access request has not been approved. Please contact the verification desk.';
     } else {
-        $error = 'Invalid username or password';
+        $error = 'Invalid username, email, or password';
     }
 }
 
@@ -593,7 +626,7 @@ $isAuthenticated = isset($_SESSION['upload_authenticated']) && $_SESSION['upload
                 <div class="action-grid">
                     <article class="action-panel" id="code-verification">
                         <h3>Official Document Verification Portal</h3>
-                        <p>This verification process serves to confirm the document’s authenticity, integrity, and official registration within the authorized records system. Documents validated through this system may qualify as self-authenticating, requiring no extrinsic evidence of authenticity when properly verified.</p>
+                        <p>This verification process serves to confirm the documentâ€™s authenticity, integrity, and official registration within the authorized records system. Documents validated through this system may qualify as self-authenticating, requiring no extrinsic evidence of authenticity when properly verified.</p>
                         <p>All entries must match the issued code precisely. Any deviation, omission, or alteration may result in an invalid or rejected verification response.</p>
                         <form method="get" action="verifycode.php" autocomplete="off" class="stack">
                             <div>
@@ -701,3 +734,4 @@ $isAuthenticated = isset($_SESSION['upload_authenticated']) && $_SESSION['upload
     </script>
 </body>
 </html>
+
