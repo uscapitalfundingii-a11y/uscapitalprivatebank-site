@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 function verify_users_file_path()
 {
@@ -284,6 +284,34 @@ function verify_resolve_permissions($roles, array $overrides = [])
     return $resolved;
 }
 
+function verify_find_user_record(array $users, string $identifier): ?array
+{
+    $identifier = trim($identifier);
+    if ($identifier === '') {
+        return null;
+    }
+
+    if (isset($users[$identifier]) && is_array($users[$identifier])) {
+        return ['username' => $identifier, 'record' => $users[$identifier]];
+    }
+
+    foreach ($users as $username => $record) {
+        if (!is_array($record)) {
+            continue;
+        }
+
+        if (strcasecmp((string) $username, $identifier) === 0) {
+            return ['username' => (string) $username, 'record' => $record];
+        }
+
+        $email = trim((string) ($record['email'] ?? ''));
+        if ($email !== '' && strcasecmp($email, $identifier) === 0) {
+            return ['username' => (string) $username, 'record' => $record];
+        }
+    }
+
+    return null;
+}
 function verify_current_username()
 {
     return (string) ($_SESSION['username'] ?? '');
@@ -946,3 +974,4 @@ function verify_save_certificate_design(array $settings): void
     $normalized = verify_normalize_certificate_design($settings);
     file_put_contents(verify_certificate_design_settings_path(), json_encode($normalized, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 }
+

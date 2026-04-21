@@ -9,34 +9,6 @@ $validCredentials = verify_load_users();
 
 session_start();
 
-function verify_find_login_record(array $users, string $identifier): ?array
-{
-    $identifier = trim($identifier);
-    if ($identifier === '') {
-        return null;
-    }
-
-    if (isset($users[$identifier]) && is_array($users[$identifier])) {
-        return ['username' => $identifier, 'record' => $users[$identifier]];
-    }
-
-    foreach ($users as $username => $record) {
-        if (!is_array($record)) {
-            continue;
-        }
-
-        if (strcasecmp((string) $username, $identifier) === 0) {
-            return ['username' => (string) $username, 'record' => $record];
-        }
-
-        $email = trim((string) ($record['email'] ?? ''));
-        if ($email !== '' && strcasecmp($email, $identifier) === 0) {
-            return ['username' => (string) $username, 'record' => $record];
-        }
-    }
-
-    return null;
-}
 
 $message = '';
 $error = '';
@@ -50,11 +22,12 @@ if (isset($_GET['logout'])) {
 if (isset($_POST['username'], $_POST['password'], $_POST['login'])) {
     $identifier = trim((string) $_POST['username']);
     $password = (string) $_POST['password'];
-    $resolvedLogin = verify_find_login_record($validCredentials, $identifier);
-    $resolvedUsername = is_array($resolvedLogin) ? (string) ($resolvedLogin['username'] ?? '') : '';
-    $storedCredentials = is_array($resolvedLogin) ? ($resolvedLogin['record'] ?? null) : null;
+    $resolvedLogin = verify_find_user_record($validCredentials, $identifier);
+    $loginRecordFound = is_array($resolvedLogin);
+    $resolvedUsername = $loginRecordFound ? (string) ($resolvedLogin['username'] ?? '') : '';
+    $storedCredentials = $loginRecordFound ? ($resolvedLogin['record'] ?? null) : null;
     $storedPassword = is_array($storedCredentials) ? ($storedCredentials['password'] ?? null) : null;
-    $storedStatus = is_array($storedCredentials) ? strtolower(trim((string) ($storedCredentials['status'] ?? 'pending'))) : 'pending';
+    $storedStatus = is_array($storedCredentials) ? strtolower(trim((string) ($storedCredentials['status'] ?? 'pending'))) : '';
     $storedRoles = is_array($storedCredentials) ? ($storedCredentials['roles'] ?? ($storedCredentials['role'] ?? 'trustee')) : 'trustee';
     $storedRole = verify_normalize_roles($storedRoles)[0] ?? 'trustee';
 
@@ -66,9 +39,9 @@ if (isset($_POST['username'], $_POST['password'], $_POST['login'])) {
         exit;
     }
 
-    if ($storedStatus === 'pending') {
+    if ($loginRecordFound && $storedStatus === 'pending') {
         $error = 'Your registration is pending approval. Please check back shortly.';
-    } elseif ($storedStatus === 'rejected') {
+    } elseif ($loginRecordFound && $storedStatus === 'rejected') {
         $error = 'Your verification access request has not been approved. Please contact the verification desk.';
     } else {
         $error = 'Invalid username, email, or password';
@@ -734,4 +707,8 @@ $isAuthenticated = isset($_SESSION['upload_authenticated']) && $_SESSION['upload
     </script>
 </body>
 </html>
+
+
+
+
 
