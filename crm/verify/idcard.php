@@ -60,8 +60,10 @@ $backBackground = verify_card_asset_url((string) $design['back_background']);
             --metal: <?= htmlspecialchars($design['metal_color'], ENT_QUOTES, 'UTF-8') ?>;
             --headline-font: "<?= htmlspecialchars($design['headline_font'], ENT_QUOTES, 'UTF-8') ?>", "Segoe UI", sans-serif;
             --body-font: "<?= htmlspecialchars($design['body_font'], ENT_QUOTES, 'UTF-8') ?>", "Segoe UI", sans-serif;
-            --card-width: <?= $isLandscape ? '98mm' : '63mm' ?>;
-            --card-height: <?= $isLandscape ? '63mm' : '98mm' ?>;
+            --card-width: <?= htmlspecialchars(number_format((float) $design['width_mm'], 1, '.', ''), ENT_QUOTES, 'UTF-8') ?>mm;
+            --card-height: <?= htmlspecialchars(number_format((float) $design['height_mm'], 1, '.', ''), ENT_QUOTES, 'UTF-8') ?>mm;
+            --card-width-ratio: <?= htmlspecialchars(rtrim(rtrim(number_format((float) $design['width_mm'], 2, '.', ''), '0'), '.'), ENT_QUOTES, 'UTF-8') ?>;
+            --card-height-ratio: <?= htmlspecialchars(rtrim(rtrim(number_format((float) $design['height_mm'], 2, '.', ''), '0'), '.'), ENT_QUOTES, 'UTF-8') ?>;
             --card-radius: 5mm;
             --shadow: 0 28px 70px rgba(10, 18, 38, 0.18);
         }
@@ -127,12 +129,13 @@ $backBackground = verify_card_asset_url((string) $design['back_background']);
             grid-template-columns: repeat(2, minmax(0, 1fr));
             gap: 24px;
             align-items: start;
+            justify-items: center;
         }
         .badge {
             position: relative;
             width: 100%;
-            max-width: 520px;
-            min-height: 780px;
+            max-width: <?= $isLandscape ? '760px' : '460px' ?>;
+            aspect-ratio: var(--card-width-ratio) / var(--card-height-ratio);
             border-radius: 34px;
             overflow: hidden;
             box-shadow: var(--shadow);
@@ -142,6 +145,7 @@ $backBackground = verify_card_asset_url((string) $design['back_background']);
         .badge-inner {
             position: relative;
             min-height: 100%;
+            height: 100%;
             display: flex;
             flex-direction: column;
             padding: 28px;
@@ -190,7 +194,7 @@ $backBackground = verify_card_asset_url((string) $design['back_background']);
         .front-top {
             position: relative;
             display: grid;
-            grid-template-columns: minmax(0, 1fr) 120px;
+            grid-template-columns: minmax(0, 1fr) 108px;
             gap: 18px;
             align-items: start;
         }
@@ -240,7 +244,7 @@ $backBackground = verify_card_asset_url((string) $design['back_background']);
             position: relative;
             margin-top: auto;
             display: grid;
-            grid-template-columns: minmax(0, 1fr) 210px;
+            grid-template-columns: minmax(0, 1fr) 168px;
             gap: 18px;
             align-items: end;
         }
@@ -360,16 +364,38 @@ $backBackground = verify_card_asset_url((string) $design['back_background']);
         }
         .landscape {
             max-width: 760px;
-            min-height: 520px;
         }
         .landscape .front-top,
         .landscape .front-bottom {
-            grid-template-columns: minmax(0, 1.1fr) 180px;
+            grid-template-columns: minmax(0, 1.08fr) 180px;
         }
         .landscape .photo-frame { aspect-ratio: 4 / 3; }
         @media (max-width: 980px) {
             .stage { grid-template-columns: 1fr; }
-            .badge, .landscape { max-width: 100%; min-height: 680px; }
+            .badge, .landscape { max-width: min(100%, 560px); }
+        }
+        @media (max-width: 680px) {
+            .page { padding: 20px 14px 32px; }
+            .notice { padding: 20px 18px; border-radius: 20px; }
+            .badge-inner { padding: 18px; }
+            .band {
+                margin: -18px -18px 18px;
+                padding: 18px 18px 16px;
+            }
+            .front-top,
+            .front-bottom,
+            .landscape .front-top,
+            .landscape .front-bottom {
+                grid-template-columns: 1fr;
+            }
+            .crest {
+                max-width: 92px;
+                justify-self: end;
+            }
+            .name { font-size: clamp(1.6rem, 7vw, 2.3rem); }
+            .title { font-size: 0.92rem; }
+            .meta { font-size: 0.9rem; }
+            .qr-frame { max-width: 190px; justify-self: center; width: 100%; }
         }
         @media print {
             body { background: #fff; }
@@ -378,10 +404,12 @@ $backBackground = verify_card_asset_url((string) $design['back_background']);
             .stage { gap: 8mm; }
             .badge {
                 width: var(--card-width);
-                min-height: var(--card-height);
+                height: var(--card-height);
                 box-shadow: none;
                 border-radius: var(--card-radius);
                 break-inside: avoid;
+                page-break-inside: avoid;
+                max-width: none;
             }
         }
     </style>
