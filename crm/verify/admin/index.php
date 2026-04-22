@@ -74,6 +74,28 @@ function verify_send_approval_email(string $username, array $entry, string $role
     return @mail($email, $subject, $message, $headers);
 }
 
+function verify_send_password_reset_email(string $username, array $entry, string $resetUrl): bool
+{
+    $email = trim((string) ($entry['email'] ?? ''));
+    if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        return false;
+    }
+
+    $subject = 'Reset Your Verification Portal Password';
+    $message = "Hello {$username},\n\n"
+        . "The verification desk has sent you a secure password reset link for the U.S. Capital Private Bank verification portal.\n\n"
+        . "Reset your password here:\n{$resetUrl}\n\n"
+        . "This link expires in 2 hours. If you did not request a reset, please contact the verification desk immediately.\n\n"
+        . "U.S. Capital Private Bank Verification Desk";
+    $headers = implode("\r\n", [
+        'From: noreply@uscapitalprivatebank.com',
+        'Reply-To: chairman@uscapitalprivatebank.com',
+        'Content-Type: text/plain; charset=UTF-8',
+    ]);
+
+    return @mail($email, $subject, $message, $headers);
+}
+
 $users = verify_load_users();
 $rolePermissions = verify_load_role_permissions();
 $permissionCatalog = verify_permission_catalog();
@@ -209,6 +231,27 @@ if (!empty($_SESSION['verify_admin_authenticated'])) {
                 $users[$target]['permission_overrides'] = $overrides;
                 verify_save_users($users);
                 $message = 'Individual rights were updated for ' . $target . '.';
+            }
+        }
+    }
+
+    if (isset($_POST['send_password_reset'])) {
+        if (!$canManageUsers) {
+            $error = 'Your account is not permitted to send password reset links.';
+        } else {
+            $target = (string) ($_POST['send_password_reset'] ?? '');
+            if (!isset($users[$target]) || !is_array($users[$target])) {
+                $error = 'The requested user could not be found for password reset.';
+            } else {
+                $issuedReset = verify_issue_password_reset($users, $target);
+                if ($issuedReset === null) {
+                    $error = 'A secure password reset token could not be generated.';
+                } else {
+                    verify_save_users($users);
+                    $resetUrl = 'https://www.uscapitalprivatebank.com/crm/verify/reset-password.php?token=' . urlencode((string) $issuedReset['token']);
+                    $mailSent = verify_send_password_reset_email($target, $users[$target], $resetUrl);
+                    $message = 'Password reset link created for ' . $target . '.' . ($mailSent ? ' Reset email sent.' : ' Reset saved, but the email could not be sent.');
+                }
             }
         }
     }
@@ -398,13 +441,17 @@ if (!empty($_SESSION['verify_admin_authenticated'])) {
                                                     <?php endforeach; ?>
                                                 </div>
                                             </td>
-                                            <td>
-                                                <div style="display:flex; flex-wrap:wrap; gap:10px;">
-                                                    <?php if ($canManageUsers): ?>
-                                                        <button class="verify-link" type="button" style="cursor:pointer;" data-edit-target="user-roles-<?= htmlspecialchars(md5($username), ENT_QUOTES, 'UTF-8') ?>">Manage Roles</button>
-                                                    <?php endif; ?>
-                                                    <?php if ($canManageUserPermissions && !in_array('admin', $entryRoles, true)): ?>
-                                                        <button class="verify-link" type="button" style="cursor:pointer;" data-edit-target="user-rights-<?= htmlspecialchars(md5($username), ENT_QUOTES, 'UTF-8') ?>">Individual Rights<?= $overrideCount > 0 ? ' (' . $overrideCount . ')' : '' ?></button>
+                                             <td>
+                                                 <div style="display:flex; flex-wrap:wrap; gap:10px;">
+                                                     <?php if ($canManageUsers): ?>
+                                                         <button class="verify-link" type="button" style="cursor:pointer;" data-edit-target="user-roles-<?= htmlspecialchars(md5($username), ENT_QUOTES, 'UTF-8') ?>">Manage Roles</button>
+                                                         <form class="verify-inline-form" method="post" style="display:inline-flex;">
+                                                             <input type="hidden" name="send_password_reset" value="<?= htmlspecialchars($username, ENT_QUOTES, 'UTF-8') ?>">
+                                                             <button class="verify-link" type="submit" style="cursor:pointer;">Send Reset Link</button>
+                                                         </form>
+                                                     <?php endif; ?>
+                                                     <?php if ($canManageUserPermissions && !in_array('admin', $entryRoles, true)): ?>
+                                                         <button class="verify-link" type="button" style="cursor:pointer;" data-edit-target="user-rights-<?= htmlspecialchars(md5($username), ENT_QUOTES, 'UTF-8') ?>">Individual Rights<?= $overrideCount > 0 ? ' (' . $overrideCount . ')' : '' ?></button>
                                                     <?php elseif (in_array('admin', $entryRoles, true)): ?>
                                                         <span class="verify-link" style="opacity:.7; cursor:default;">Admin has full access</span>
                                                     <?php endif; ?>

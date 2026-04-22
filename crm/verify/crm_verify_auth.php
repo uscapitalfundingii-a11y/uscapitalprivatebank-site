@@ -15,6 +15,9 @@ function verify_default_admin_record()
         'status' => 'approved',
         'role' => 'admin',
         'roles' => ['admin'],
+        'password_reset_token' => '',
+        'password_reset_expires_at' => '',
+        'password_reset_requested_at' => '',
         'created_at' => date('c'),
     ];
 }
@@ -73,6 +76,9 @@ function verify_normalize_user_record($username, $entry)
         'role' => (string) ($normalizedRoles[0] ?? $fallbackRole),
         'roles' => $normalizedRoles,
         'permission_overrides' => verify_normalize_permission_overrides(is_array($entry['permission_overrides'] ?? null) ? $entry['permission_overrides'] : []),
+        'password_reset_token' => trim((string) ($entry['password_reset_token'] ?? '')),
+        'password_reset_expires_at' => trim((string) ($entry['password_reset_expires_at'] ?? '')),
+        'password_reset_requested_at' => trim((string) ($entry['password_reset_requested_at'] ?? '')),
         'created_at' => (string) ($entry['created_at'] ?? date('c')),
     ];
 }
@@ -311,6 +317,66 @@ function verify_find_user_record(array $users, string $identifier): ?array
     }
 
     return null;
+}
+
+function verify_issue_password_reset(array &$users, string $username, int $ttlSeconds = 7200): ?array
+{
+    if (!isset($users[$username]) || !is_array($users[$username])) {
+        return null;
+    }
+
+    $token = bin2hex(random_bytes(24));
+    $requestedAt = date('c');
+    $expiresAt = date('c', time() + max(300, $ttlSeconds));
+
+    $users[$username]['password_reset_token'] = $token;
+    $users[$username]['password_reset_requested_at'] = $requestedAt;
+    $users[$username]['password_reset_expires_at'] = $expiresAt;
+
+    return [
+        'token' => $token,
+        'requested_at' => $requestedAt,
+        'expires_at' => $expiresAt,
+    ];
+}
+
+function verify_find_user_by_reset_token(array $users, string $token): ?array
+{
+    $token = trim($token);
+    if ($token === '') {
+        return null;
+    }
+
+    foreach ($users as $username => $entry) {
+        if (!is_array($entry)) {
+            continue;
+        }
+
+        $entryToken = trim((string) ($entry['password_reset_token'] ?? ''));
+        if ($entryToken === '' || !hash_equals($entryToken, $token)) {
+            continue;
+        }
+
+        $expiresAt = trim((string) ($entry['password_reset_expires_at'] ?? ''));
+        if ($expiresAt === '' || strtotime($expiresAt) === false || strtotime($expiresAt) < time()) {
+            return null;
+        }
+
+        return ['username' => (string) $username, 'record' => $entry];
+    }
+
+    return null;
+}
+
+function verify_clear_password_reset(array &$users, string $username): void
+{
+    if (!isset($users[$username]) || !is_array($users[$username])) {
+        return;
+    }
+
+    $users[$username]['password_reset_token'] = '';
+    $users[$username]['password_reset_requested_at'] = '';
+    $users[$username]['password_reset_expires_at'] = '';
 }
 function verify_current_username()
 {
