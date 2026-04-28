@@ -53,7 +53,7 @@ class User extends Authenticatable {
                     'account_type' => UserAccount::where('account_number', $user->account_number)->value('account_type') ?: 'checking',
                     'currency_code' => UserAccount::where('account_number', $user->account_number)->value('currency_code') ?: gs('cur_text'),
                     'currency_symbol' => UserAccount::where('account_number', $user->account_number)->value('currency_symbol') ?: gs('cur_sym'),
-                    'balance' => $user->balance,
+                    'balance' => $user->balance ?? 0,
                     'status' => $user->status == Status::USER_BAN ? Status::DISABLE : Status::ENABLE,
                     'is_primary' => 1,
                 ]
