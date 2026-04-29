@@ -826,6 +826,8 @@ class Clients extends AdminController
         }
 
         $data['groups']    = $this->clients_model->get_groups();
+        $data['importable_database_fields'] = $this->import->getImportableDatabaseFields();
+        $data['importable_custom_fields']   = $this->import->getCustomFields();
         $data['title']     = _l('import');
         $data['bodyclass'] = 'dynamic-create-groups';
         $this->load->view('admin/clients/import', $data);

@@ -228,6 +228,16 @@ function app_init_admin_sidebar_menu_items()
         'badge'    => [],
     ]);
 
+    if (staff_can('create', 'customers')) {
+        $CI->app_menu->add_sidebar_children_item('utilities', [
+            'slug'     => 'import-csv-customers',
+            'name'     => _l('utility_import_csv'),
+            'href'     => admin_url('clients/import'),
+            'position' => 8,
+            'badge'    => [],
+        ]);
+    }
+
     if (staff_can('view',  'bulk_pdf_exporter')) {
         $CI->app_menu->add_sidebar_children_item('utilities', [
             'slug'     => 'bulk-pdf-exporter',

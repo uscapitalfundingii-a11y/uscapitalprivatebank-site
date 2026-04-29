@@ -384,6 +384,7 @@ class Import_customers extends App_import
     private function mapInsertFromHeaders($row, $databaseFields, $headerMappings, &$duplicate)
     {
         $insert = [];
+        $headerRow = $this->getHeaderRow();
 
         foreach ($databaseFields as $field) {
             if (!array_key_exists($field, $headerMappings)) {
@@ -396,15 +397,23 @@ class Import_customers extends App_import
                 continue;
             }
 
-            $insert[$field] = $this->prepareDatabaseValue($field, $row[$columnIndex], $row, $databaseFields, $duplicate, $headerMappings);
+            $sourceHeader = $headerRow[$columnIndex] ?? '';
+            $insert[$field] = $this->prepareDatabaseValue($field, $row[$columnIndex], $row, $databaseFields, $duplicate, $headerMappings, $sourceHeader);
         }
 
         return $insert;
     }
 
-    private function prepareDatabaseValue($field, $value, $row, $databaseFields, &$duplicate, $headerMappings = [])
+    private function prepareDatabaseValue($field, $value, $row, $databaseFields, &$duplicate, $headerMappings = [], $sourceHeader = '')
     {
         $value = $this->checkNullValueAddedByUser($value);
+
+        if (in_array($field, ['firstname', 'lastname'])) {
+            $splitName = $this->splitFullNameValue($value, $sourceHeader);
+            if ($splitName !== null) {
+                $value = $field === 'firstname' ? $splitName['firstname'] : $splitName['lastname'];
+            }
+        }
 
         if (in_array($field, $this->requiredFields) &&
             $value == '' &&
@@ -485,8 +494,15 @@ class Import_customers extends App_import
             $normalizedHeaders[$this->normalizeHeader($header)] = $index;
         }
 
+        $postedMappings = $this->resolvePostedFieldMappings($normalizedHeaders);
+
         $databaseMappings = [];
         foreach ($databaseFields as $field) {
+            if (isset($postedMappings['database'][$field])) {
+                $databaseMappings[$field] = $postedMappings['database'][$field];
+                continue;
+            }
+
             foreach ($this->headerAliasesForDatabaseField($field) as $alias) {
                 if (array_key_exists($alias, $normalizedHeaders)) {
                     $databaseMappings[$field] = $normalizedHeaders[$alias];
@@ -495,8 +511,12 @@ class Import_customers extends App_import
             }
         }
 
-        $customMappings = [];
+        $customMappings = $postedMappings['custom'];
         foreach ($this->getCustomFields() as $field) {
+            if (isset($customMappings[$field['id']])) {
+                continue;
+            }
+
             $normalizedCustomField = $this->normalizeHeader($field['name']);
             if (array_key_exists($normalizedCustomField, $normalizedHeaders)) {
                 $customMappings[$field['id']] = $normalizedHeaders[$normalizedCustomField];
@@ -504,9 +524,48 @@ class Import_customers extends App_import
         }
 
         $requiredMatches = array_intersect_key(array_flip($this->requiredFields), $databaseMappings);
+        $hasCombinedNameMapping = isset($normalizedHeaders['full_name']) || isset($normalizedHeaders['name']);
+        $hasEmailMapping = isset($databaseMappings['email']);
+        $hasSplitNameMappings = isset($databaseMappings['firstname']) && isset($databaseMappings['lastname']);
 
-        if (count($requiredMatches) < count($this->requiredFields)) {
+        if (!$hasEmailMapping || (!$hasSplitNameMappings && !$hasCombinedNameMapping)) {
             return ['database' => [], 'custom' => []];
+        }
+
+        return ['database' => $databaseMappings, 'custom' => $customMappings];
+    }
+
+    private function resolvePostedFieldMappings($normalizedHeaders)
+    {
+        $rawMappings = $this->ci->input->post('field_mappings');
+
+        if (!is_array($rawMappings) || count($rawMappings) === 0) {
+            return ['database' => [], 'custom' => []];
+        }
+
+        $databaseMappings = [];
+        $customMappings   = [];
+
+        foreach ($rawMappings as $sourceHeader => $targetField) {
+            $sourceHeader = $this->normalizeHeader($sourceHeader);
+            $targetField  = trim((string) $targetField);
+
+            if ($sourceHeader === '' || $targetField === '' || !array_key_exists($sourceHeader, $normalizedHeaders)) {
+                continue;
+            }
+
+            $columnIndex = $normalizedHeaders[$sourceHeader];
+
+            if (startsWith($targetField, 'custom_field:')) {
+                $customFieldId = (int) str_replace('custom_field:', '', $targetField);
+                if ($customFieldId > 0) {
+                    $customMappings[$customFieldId] = $columnIndex;
+                }
+
+                continue;
+            }
+
+            $databaseMappings[$targetField] = $columnIndex;
         }
 
         return ['database' => $databaseMappings, 'custom' => $customMappings];
@@ -520,8 +579,8 @@ class Import_customers extends App_import
         ];
 
         $additionalAliases = [
-            'firstname'           => ['first_name', 'given_name'],
-            'lastname'            => ['last_name', 'surname', 'family_name'],
+            'firstname'           => ['first_name', 'given_name', 'full_name', 'name'],
+            'lastname'            => ['last_name', 'surname', 'family_name', 'full_name', 'name'],
             'email'               => ['email_address'],
             'contact_phonenumber' => ['phone', 'phone_number', 'mobile', 'mobile_number', 'contact_phone'],
             'phonenumber'         => ['company_phone', 'business_phone'],
@@ -544,6 +603,31 @@ class Import_customers extends App_import
         $value = preg_replace('/[^a-z0-9]+/', '_', $value);
 
         return trim($value, '_');
+    }
+
+    private function splitFullNameValue($value, $sourceHeader = '')
+    {
+        $normalizedHeader = $this->normalizeHeader($sourceHeader);
+
+        if (!in_array($normalizedHeader, ['full_name', 'name'])) {
+            return null;
+        }
+
+        $value = trim(preg_replace('/\s+/', ' ', (string) $value));
+
+        if ($value === '') {
+            return [
+                'firstname' => '',
+                'lastname'  => '',
+            ];
+        }
+
+        $parts = explode(' ', $value, 2);
+
+        return [
+            'firstname' => $parts[0] ?? '',
+            'lastname'  => $parts[1] ?? '',
+        ];
     }
 
     private function getPrimaryContactForCustomer($customerId)
