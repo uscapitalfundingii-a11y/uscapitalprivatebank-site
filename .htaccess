@@ -1,8 +1,23 @@
-AddDefaultCharset utf-8
 <IfModule mod_rewrite.c>
-RewriteEngine on
-RewriteCond $1 !^(index\.php|resources|robots\.txt)
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^(.*)$ index.php?/$1 [L,QSA]
+    <IfModule mod_negotiation.c>
+        Options -MultiViews -Indexes
+    </IfModule>
+
+    RewriteEngine On
+
+    # Keep the public site on one canonical hostname so sessions and OAuth
+    # callbacks don't bounce between www and non-www.
+    RewriteCond %{HTTP_HOST} ^www\.uscapitalprivatebank\.com$ [NC]
+    RewriteRule ^ https://uscapitalprivatebank.com%{REQUEST_URI} [L,R=301,NE]
+
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_URI} (.+)/$
+    RewriteRule ^ %1 [L,R=301]
+
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^ index.php [L]
 </IfModule>
