@@ -38,6 +38,10 @@
                     echo render_select('groups_in[]', $groups, ['id', 'name'], 'customer_groups', ($this->input->post('groups_in') ? $this->input->post('groups_in') : []), ['multiple' => true, 'data-actions-box' => true], [], '', '', false);
                 }
 echo render_input('default_pass_all', 'default_pass_clients_import', $this->input->post('default_pass_all')); ?>
+                                <div class="checkbox checkbox-primary mtop10">
+                                    <input type="checkbox" id="merge_existing" name="merge_existing" value="1" <?= $this->input->post('merge_existing') === null || $this->input->post('merge_existing') === '1' ? 'checked' : ''; ?>>
+                                    <label for="merge_existing">Merge existing customers by email, or by phone plus matching company/name</label>
+                                </div>
                                 <div class="form-group">
                                     <button type="button"
                                         class="btn btn-primary import btn-import-submit"><?= _l('import'); ?></button>

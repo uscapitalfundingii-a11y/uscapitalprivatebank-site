@@ -15,6 +15,10 @@ if (!$fullPath || strpos($fullPath, $baseDir) !== 0 || !is_file($fullPath) || !i
     die("Unauthorized or missing file.");
 }
 
+if (verify_document_is_restricted($document) && !verify_current_user_can_access_document($document)) {
+    die("This verified document is restricted to specific approved role groups.");
+}
+
 header('Content-Description: File Transfer');
 header('Content-Type: application/octet-stream');
 header('Content-Disposition: attachment; filename="' . basename($fullPath) . '"');

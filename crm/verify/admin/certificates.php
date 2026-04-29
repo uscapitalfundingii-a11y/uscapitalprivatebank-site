@@ -6,11 +6,13 @@ session_start();
 
 require_once dirname(__DIR__) . '/crm_verify_auth.php';
 
-if (!empty($_SESSION['upload_authenticated']) && verify_current_role() === 'admin') {
-    $_SESSION['verify_admin_authenticated'] = true;
+if (!empty($_SESSION['upload_authenticated']) && verify_has_permission('manage_certificates')) {
+    if (empty($_SESSION['verify_admin_authenticated'])) {
+        $_SESSION['verify_admin_authenticated'] = 'linked';
+    }
 }
 
-if (empty($_SESSION['verify_admin_authenticated'])) {
+if (!verify_management_session_has_permission('manage_certificates')) {
     header('Location: index.php');
     exit;
 }

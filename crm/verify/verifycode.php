@@ -17,6 +17,11 @@ if ($document === null || !verify_is_document_approved($document)) {
     exit;
 }
 
+if (verify_document_is_restricted($document) && !verify_current_user_can_access_document($document)) {
+    header('Location: index.php?error=' . urlencode('That verified document is restricted to specific approved role groups.'));
+    exit;
+}
+
 $file = basename((string) $document['file']);
 header('Location: viewfile.php?file=' . urlencode($file));
 exit;

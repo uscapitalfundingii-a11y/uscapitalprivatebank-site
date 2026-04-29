@@ -19,7 +19,7 @@ class Import_customers extends App_import
             $this->requiredFields[] = 'company';
         }
 
-        $this->addImportGuidelinesInfo('Duplicate email rows won\'t be imported.', true);
+        $this->addImportGuidelinesInfo('When "Merge existing customers" is enabled, the importer updates existing customers by exact email match first, then by phone + company or phone + contact name. Otherwise duplicate email rows won\'t be imported.', true);
 
         $this->addImportGuidelinesInfo('Make sure you configure the default contact permission in <a href="' . admin_url('settings?group=clients') . '" target="_blank">Setup->Settings->Customers</a> to get the best results like auto assigning contact permissions and email notification settings based on the permission.');
 
@@ -32,51 +32,30 @@ class Import_customers extends App_import
 
         $databaseFields      = $this->getImportableDatabaseFields();
         $totalDatabaseFields = count($databaseFields);
+        $headerMappings      = $this->resolveHeaderMappings($databaseFields);
+        $useHeaderMappings   = count($headerMappings['database']) > 0;
 
         foreach ($this->getRows() as $rowNumber => $row) {
             $insert    = [];
             $duplicate = false;
+            $i         = $totalDatabaseFields;
 
-            for ($i = 0; $i < $totalDatabaseFields; $i++) {
-                if (!isset($row[$i])) {
-                    continue;
-                }
-
-                $row[$i] = $this->checkNullValueAddedByUser($row[$i]);
-
-                if (in_array($databaseFields[$i], $this->requiredFields) &&
-                    $row[$i] == '' &&
-                    $databaseFields[$i] != 'company'
-                    && $databaseFields[$i] != 'email') {
-                    $row[$i] = '/';
-                } elseif (in_array($databaseFields[$i], $this->countryFields)) {
-                    $row[$i] = $this->countryValue($row[$i]);
-                } elseif ($databaseFields[$i] == 'email') {
-                    $duplicate = $this->isDuplicateContact($row[$i]);
-                } elseif ($databaseFields[$i] == 'stripe_id') {
-                    if (empty($row[$i]) || (!empty($row[$i]) && !startsWith($row[$i], 'cus_'))) {
-                        $row[$i] = null;
+            if ($useHeaderMappings) {
+                $insert = $this->mapInsertFromHeaders($row, $databaseFields, $headerMappings['database'], $duplicate);
+            } else {
+                for ($i = 0; $i < $totalDatabaseFields; $i++) {
+                    if (!isset($row[$i])) {
+                        continue;
                     }
-                } elseif ($databaseFields[$i] == 'contact_phonenumber') {
-                    if (is_automatic_calling_codes_enabled() && !empty($row[$i])) {
-                        $customerCountryIndex = array_search('country', $databaseFields);
-                        if (isset($row[$customerCountryIndex]) && !empty($row[$customerCountryIndex])) {
-                            $customerCountry = $this->getCountry(null, $this->countryValue($row[$customerCountryIndex]));
 
-                            if ($customerCountry) {
-                                $callingCode = '+' . ltrim($customerCountry->calling_code, '+');
-
-                                if (startsWith($row[$i], $customerCountry->calling_code)) { // with calling code but without the + prefix
-                                    $row[$i] = '+' . $row[$i];
-                                } elseif (!startsWith($row[$i], $callingCode)) {
-                                    $row[$i] = $callingCode . $row[$i];
-                                }
-                            }
-                        }
-                    }
+                    $insert[$databaseFields[$i]] = $this->prepareDatabaseValue(
+                        $databaseFields[$i],
+                        $row[$i],
+                        $row,
+                        $databaseFields,
+                        $duplicate
+                    );
                 }
-
-                $insert[$databaseFields[$i]] = $row[$i];
             }
 
             if ($duplicate) {
@@ -86,9 +65,9 @@ class Import_customers extends App_import
             $insert = $this->trimInsertValues($insert);
 
             if (count($insert) > 0) {
-                $this->incrementImported();
-
                 $id = null;
+                $contactId = null;
+                $existingMatch = $this->shouldMergeExistingCustomers() ? $this->findExistingCustomerMatch($insert) : null;
 
                 if (!$this->isSimulation()) {
                     $insert['datecreated']           = date('Y-m-d H:i:s');
@@ -98,31 +77,50 @@ class Import_customers extends App_import
                         $insert['password'] = $this->ci->input->post('default_pass_all', false);
                     }
 
-                    if ($this->shouldAddContactUnderCustomer($insert)) {
+                    if (!$this->shouldMergeExistingCustomers() && $this->shouldAddContactUnderCustomer($insert)) {
                         $this->addContactUnderCustomer($insert);
 
                         continue;
                     }
 
-                    $insert['is_primary'] = 1;
-                    $id                   = $this->ci->clients_model->add($insert, true);
+                    if ($existingMatch) {
+                        [$id, $contactId] = $this->mergeIntoExistingCustomer($existingMatch, $insert);
+                    } else {
+                        $insert['is_primary'] = 1;
+                        $id                   = $this->ci->clients_model->add($insert, true);
 
-                    if ($id) {
-                        if ($this->ci->input->post('groups_in[]')) {
-                            $this->insertCustomerGroups($this->ci->input->post('groups_in[]'), $id);
-                        }
+                        if ($id) {
+                            $contactId = get_primary_contact_user_id($id);
 
-                        if (staff_cant('view', 'customers')) {
-                            $assign['customer_admins']   = [];
-                            $assign['customer_admins'][] = get_staff_user_id();
-                            $this->ci->clients_model->assign_admins($assign, $id);
+                            if ($this->ci->input->post('groups_in[]')) {
+                                $this->insertCustomerGroups($this->ci->input->post('groups_in[]'), $id);
+                            }
+
+                            if (staff_cant('view', 'customers')) {
+                                $assign['customer_admins']   = [];
+                                $assign['customer_admins'][] = get_staff_user_id();
+                                $this->ci->clients_model->assign_admins($assign, $id);
+                            }
                         }
                     }
                 } else {
                     $this->simulationData[$rowNumber] = $this->formatValuesForSimulation($insert);
+                    if ($existingMatch) {
+                        $this->simulationData[$rowNumber]['Import Action'] = 'Merge existing customer';
+                    } else {
+                        $this->simulationData[$rowNumber]['Import Action'] = 'Create new customer';
+                    }
                 }
 
-                $this->handleCustomFieldsInsert($id, $row, $i, $rowNumber, 'customers');
+                if ($id || $this->isSimulation()) {
+                    $this->incrementImported();
+                }
+
+                if ($useHeaderMappings) {
+                    $this->handleMappedCustomFieldsInsert($id, $row, $rowNumber, $headerMappings['custom']);
+                } else {
+                    $this->handleCustomFieldsInsert($id, $row, $i, $rowNumber, 'customers');
+                }
             }
 
             if ($this->isSimulation() && $rowNumber >= $this->maxSimulationRows) {
@@ -211,6 +209,161 @@ class Import_customers extends App_import
         return total_rows(db_prefix() . 'contacts', ['email' => $email]);
     }
 
+    private function shouldMergeExistingCustomers()
+    {
+        return $this->ci->input->post('merge_existing') === '1';
+    }
+
+    private function findExistingCustomerMatch($data)
+    {
+        $email = strtolower(trim((string) ($data['email'] ?? '')));
+        if ($email !== '') {
+            $this->ci->db->select('id, userid');
+            $this->ci->db->where('LOWER(email)', $email);
+            $this->ci->db->limit(1);
+            $contact = $this->ci->db->get(db_prefix() . 'contacts')->row();
+
+            if ($contact) {
+                return [
+                    'customer_id' => (int) $contact->userid,
+                    'contact_id'  => (int) $contact->id,
+                    'matched_by'  => 'email',
+                ];
+            }
+        }
+
+        $incomingPhone = $this->normalizePhoneForMatch($data['contact_phonenumber'] ?? $data['phonenumber'] ?? '');
+        if ($incomingPhone === '') {
+            return null;
+        }
+
+        $company = $this->normalizeTextForMatch($data['company'] ?? '');
+        if ($company !== '') {
+            $this->ci->db->select('userid, company, phonenumber');
+            $this->ci->db->where('LOWER(company)', $company);
+            $clients = $this->ci->db->get(db_prefix() . 'clients')->result();
+
+            foreach ($clients as $client) {
+                $candidatePhones = [$client->phonenumber];
+                $primaryContact  = $this->getPrimaryContactForCustomer((int) $client->userid);
+                if ($primaryContact) {
+                    $candidatePhones[] = $primaryContact->phonenumber;
+                }
+
+                foreach ($candidatePhones as $candidatePhone) {
+                    if ($this->normalizePhoneForMatch($candidatePhone) === $incomingPhone) {
+                        return [
+                            'customer_id' => (int) $client->userid,
+                            'contact_id'  => $primaryContact ? (int) $primaryContact->id : null,
+                            'matched_by'  => 'company_phone',
+                        ];
+                    }
+                }
+            }
+        }
+
+        $firstName = $this->normalizeTextForMatch($data['firstname'] ?? '');
+        $lastName  = $this->normalizeTextForMatch($data['lastname'] ?? '');
+
+        if ($firstName !== '' || $lastName !== '') {
+            $this->ci->db->select('id, userid, firstname, lastname, phonenumber');
+            if ($firstName !== '') {
+                $this->ci->db->where('LOWER(firstname)', $firstName);
+            }
+            if ($lastName !== '') {
+                $this->ci->db->where('LOWER(lastname)', $lastName);
+            }
+            $contacts = $this->ci->db->get(db_prefix() . 'contacts')->result();
+
+            foreach ($contacts as $contact) {
+                if ($this->normalizePhoneForMatch($contact->phonenumber) === $incomingPhone) {
+                    return [
+                        'customer_id' => (int) $contact->userid,
+                        'contact_id'  => (int) $contact->id,
+                        'matched_by'  => 'name_phone',
+                    ];
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private function mergeIntoExistingCustomer($existingMatch, $insert)
+    {
+        $customerId = (int) $existingMatch['customer_id'];
+        $contactId  = !empty($existingMatch['contact_id']) ? (int) $existingMatch['contact_id'] : null;
+
+        if (!$contactId) {
+            $primaryContact = $this->getPrimaryContactForCustomer($customerId);
+            $contactId      = $primaryContact ? (int) $primaryContact->id : null;
+        }
+
+        $contactFields = $this->getContactFields();
+        $contactUpdate = [];
+        $clientUpdate  = [];
+
+        foreach ($insert as $field => $value) {
+            if ($value === '' || $value === null) {
+                continue;
+            }
+
+            if (in_array($field, $contactFields)) {
+                $targetField = $field === 'contact_phonenumber' ? 'phonenumber' : $field;
+                $contactUpdate[$targetField] = $value;
+            } else {
+                $clientUpdate[$field] = $value;
+            }
+        }
+
+        unset($clientUpdate['datecreated'], $clientUpdate['donotsendwelcomeemail'], $clientUpdate['is_primary']);
+        unset($contactUpdate['donotsendwelcomeemail'], $contactUpdate['is_primary']);
+
+        if ($contactId) {
+            $existingContact = $this->ci->clients_model->get_contact($contactId);
+            $contactUpdate   = $this->filterContactMergeFields($contactUpdate, $existingContact, $existingMatch['matched_by'] ?? '');
+
+            if (!empty($contactUpdate)) {
+                $this->ci->clients_model->update_contact($contactUpdate, $contactId);
+            }
+        }
+
+        if (!empty($clientUpdate)) {
+            $this->ci->clients_model->update($clientUpdate, $customerId);
+        }
+
+        if ($this->ci->input->post('groups_in[]')) {
+            $this->insertCustomerGroups($this->ci->input->post('groups_in[]'), $customerId);
+        }
+
+        return [$customerId, $contactId];
+    }
+
+    private function filterContactMergeFields($contactUpdate, $existingContact, $matchedBy)
+    {
+        if (!$existingContact) {
+            return $contactUpdate;
+        }
+
+        if ($matchedBy !== 'email' && !empty($existingContact->email)) {
+            unset($contactUpdate['email']);
+        }
+
+        foreach (['firstname', 'lastname', 'title'] as $field) {
+            if (
+                isset($contactUpdate[$field]) &&
+                isset($existingContact->{$field}) &&
+                trim((string) $existingContact->{$field}) !== '' &&
+                trim((string) $existingContact->{$field}) !== '/' &&
+                $matchedBy !== 'email'
+            ) {
+                unset($contactUpdate[$field]);
+            }
+        }
+
+        return $contactUpdate;
+    }
+
     private function formatValuesForSimulation($values)
     {
         // ATM only country fields
@@ -226,6 +379,219 @@ class Import_customers extends App_import
         }
 
         return $values;
+    }
+
+    private function mapInsertFromHeaders($row, $databaseFields, $headerMappings, &$duplicate)
+    {
+        $insert = [];
+
+        foreach ($databaseFields as $field) {
+            if (!array_key_exists($field, $headerMappings)) {
+                continue;
+            }
+
+            $columnIndex = $headerMappings[$field];
+
+            if (!isset($row[$columnIndex])) {
+                continue;
+            }
+
+            $insert[$field] = $this->prepareDatabaseValue($field, $row[$columnIndex], $row, $databaseFields, $duplicate, $headerMappings);
+        }
+
+        return $insert;
+    }
+
+    private function prepareDatabaseValue($field, $value, $row, $databaseFields, &$duplicate, $headerMappings = [])
+    {
+        $value = $this->checkNullValueAddedByUser($value);
+
+        if (in_array($field, $this->requiredFields) &&
+            $value == '' &&
+            $field != 'company'
+            && $field != 'email') {
+            return '/';
+        }
+
+        if (in_array($field, $this->countryFields)) {
+            return $this->countryValue($value);
+        }
+
+        if ($field == 'email') {
+            if (!$this->shouldMergeExistingCustomers()) {
+                $duplicate = $this->isDuplicateContact($value);
+            }
+
+            return $value;
+        }
+
+        if ($field == 'stripe_id') {
+            if (empty($value) || (!empty($value) && !startsWith($value, 'cus_'))) {
+                return null;
+            }
+
+            return $value;
+        }
+
+        if ($field == 'contact_phonenumber' && is_automatic_calling_codes_enabled() && !empty($value)) {
+            $countryValue = $this->resolveCustomerCountryValue($row, $databaseFields, $headerMappings);
+
+            if (!empty($countryValue)) {
+                $customerCountry = $this->getCountry(null, $this->countryValue($countryValue));
+
+                if ($customerCountry) {
+                    $callingCode = '+' . ltrim($customerCountry->calling_code, '+');
+
+                    if (startsWith($value, $customerCountry->calling_code)) {
+                        return '+' . $value;
+                    }
+
+                    if (!startsWith($value, $callingCode)) {
+                        return $callingCode . $value;
+                    }
+                }
+            }
+        }
+
+        return $value;
+    }
+
+    private function resolveCustomerCountryValue($row, $databaseFields, $headerMappings = [])
+    {
+        if (!empty($headerMappings) && array_key_exists('country', $headerMappings)) {
+            return $row[$headerMappings['country']] ?? null;
+        }
+
+        $customerCountryIndex = array_search('country', $databaseFields);
+
+        if ($customerCountryIndex === false) {
+            return null;
+        }
+
+        return $row[$customerCountryIndex] ?? null;
+    }
+
+    private function resolveHeaderMappings($databaseFields)
+    {
+        $headerRow = $this->getHeaderRow();
+
+        if (empty($headerRow)) {
+            return ['database' => [], 'custom' => []];
+        }
+
+        $normalizedHeaders = [];
+
+        foreach ($headerRow as $index => $header) {
+            $normalizedHeaders[$this->normalizeHeader($header)] = $index;
+        }
+
+        $databaseMappings = [];
+        foreach ($databaseFields as $field) {
+            foreach ($this->headerAliasesForDatabaseField($field) as $alias) {
+                if (array_key_exists($alias, $normalizedHeaders)) {
+                    $databaseMappings[$field] = $normalizedHeaders[$alias];
+                    break;
+                }
+            }
+        }
+
+        $customMappings = [];
+        foreach ($this->getCustomFields() as $field) {
+            $normalizedCustomField = $this->normalizeHeader($field['name']);
+            if (array_key_exists($normalizedCustomField, $normalizedHeaders)) {
+                $customMappings[$field['id']] = $normalizedHeaders[$normalizedCustomField];
+            }
+        }
+
+        $requiredMatches = array_intersect_key(array_flip($this->requiredFields), $databaseMappings);
+
+        if (count($requiredMatches) < count($this->requiredFields)) {
+            return ['database' => [], 'custom' => []];
+        }
+
+        return ['database' => $databaseMappings, 'custom' => $customMappings];
+    }
+
+    private function headerAliasesForDatabaseField($field)
+    {
+        $aliases = [
+            $this->normalizeHeader($field),
+            $this->normalizeHeader($this->formatFieldNameForHeading($field)),
+        ];
+
+        $additionalAliases = [
+            'firstname'           => ['first_name', 'given_name'],
+            'lastname'            => ['last_name', 'surname', 'family_name'],
+            'email'               => ['email_address'],
+            'contact_phonenumber' => ['phone', 'phone_number', 'mobile', 'mobile_number', 'contact_phone'],
+            'phonenumber'         => ['company_phone', 'business_phone'],
+            'address'             => ['street', 'street_address', 'address_line_1', 'address_line1'],
+            'zip'                 => ['postal_code', 'postcode', 'zip_code', 'postal'],
+            'country'             => ['country_name'],
+            'company'             => ['organization', 'organisation', 'company_name', 'business_name'],
+        ];
+
+        if (isset($additionalAliases[$field])) {
+            $aliases = array_merge($aliases, $additionalAliases[$field]);
+        }
+
+        return array_values(array_unique($aliases));
+    }
+
+    private function normalizeHeader($value)
+    {
+        $value = strtolower(trim((string) $value));
+        $value = preg_replace('/[^a-z0-9]+/', '_', $value);
+
+        return trim($value, '_');
+    }
+
+    private function getPrimaryContactForCustomer($customerId)
+    {
+        $this->ci->db->where('userid', $customerId);
+        $this->ci->db->where('is_primary', 1);
+        $this->ci->db->limit(1);
+
+        return $this->ci->db->get(db_prefix() . 'contacts')->row();
+    }
+
+    private function normalizePhoneForMatch($value)
+    {
+        return preg_replace('/\D+/', '', (string) $value);
+    }
+
+    private function normalizeTextForMatch($value)
+    {
+        return strtolower(trim((string) $value));
+    }
+
+    private function handleMappedCustomFieldsInsert($rel_id, $row, $rowNumber, $customMappings)
+    {
+        foreach ($this->getCustomFields() as $field) {
+            if (!isset($customMappings[$field['id']])) {
+                continue;
+            }
+
+            $value = $row[$customMappings[$field['id']]] ?? '';
+
+            if ($this->isSimulation()) {
+                $this->simulationData[$rowNumber][$field['name']] = $value;
+                continue;
+            }
+
+            if ($value != '' && $value !== 'NULL' && $value !== 'null') {
+                if ($field['type'] === 'link' && !\app\services\utilities\Str::isHtml($value)) {
+                    $value = sprintf('<a href="%s" target="_blank">%s</a>', $value, $value);
+                }
+
+                $this->ci->db->insert(db_prefix() . 'customfieldsvalues', [
+                    'relid'   => $rel_id,
+                    'fieldid' => $field['id'],
+                    'value'   => trim($value),
+                    'fieldto' => 'customers',
+                ]);
+            }
+        }
     }
 
     private function getCountry($search = null, $id = null)

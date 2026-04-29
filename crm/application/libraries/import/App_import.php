@@ -67,6 +67,12 @@ abstract class App_import
     protected $rows;
 
     /**
+     * CSV header row
+     * @var array
+     */
+    protected $headerRow = [];
+
+    /**
      * Total rows
      * Total count from $rows
      * @var mixed
@@ -250,6 +256,26 @@ abstract class App_import
     public function getRows()
     {
         return $this->rows;
+    }
+
+    /**
+     * Set header row from CSV file
+     * @param array $row
+     */
+    public function setHeaderRow($row)
+    {
+        $this->headerRow = $row;
+
+        return $this;
+    }
+
+    /**
+     * Get header row from CSV file
+     * @return array
+     */
+    public function getHeaderRow()
+    {
+        return $this->headerRow;
     }
 
     /**
@@ -630,6 +656,8 @@ abstract class App_import
             set_alert('warning', 'Not enought rows for importing');
             redirect($this->failureRedirectURL());
         }
+
+        $this->setHeaderRow($rows[0] ?? []);
 
         unset($rows[0]);
 

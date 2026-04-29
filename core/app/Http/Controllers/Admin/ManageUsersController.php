@@ -126,33 +126,12 @@ class ManageUsersController extends Controller
 
     protected function userData($scope = null)
     {
-        $users = User::query();
-        if ($scope) {
-            $users = User::$scope();
-        }
-
-        if(request()->has('staff_id')) {
-            $users->where('users.branch_staff_id', request()->staff_id);
-        }
-
-        if(request()->has('branch_id')) {
-            $users->where('users.branch_id', request()->branch_id);
-        }
-
+        $users = $this->usersListQuery($scope);
         $request = request();
 
-        $fullNameColumn = 'CONCAT(users.firstname, " ", users.lastname)';
-        $users->selectRaw(' users.*, branch_staff.name as staff_name, active_user_account.currency_code as account_currency_code, ' . $fullNameColumn . ' AS fullname, CASE WHEN users.branch_id = 0 THEN "Online" ELSE branches.name END AS branch_name
-        ')
-            ->searchable(['username', 'firstname', 'lastname', 'email', 'mobile', 'account_number', $fullNameColumn])
-            ->filterable()
-            ->leftJoin('branches', 'users.branch_id', '=', 'branches.id')
-            ->leftJoin('branch_staff', 'users.branch_staff_id', '=', 'branch_staff.id')
-            ->leftJoin('user_accounts as active_user_account', function ($join) {
-                $join->on('users.id', '=', 'active_user_account.user_id')
-                    ->where('active_user_account.is_primary', '=', 1);
-            })
-            ->orderable();
+        if ($request->input('export') === 'crm_csv') {
+            return $this->exportUsersForCrm($users, $scope);
+        }
 
         if ($request->has('notify')) {
             $count = $users->count();
@@ -170,6 +149,121 @@ class ManageUsersController extends Controller
 
         $pageTitle = $this->pageTitle;
         return view('admin.users.list', compact('pageTitle', 'users'));
+    }
+
+    protected function usersListQuery($scope = null)
+    {
+        $users = User::query()->with('referrer:id,username,firstname,lastname');
+
+        if ($scope) {
+            $users = User::$scope()->with('referrer:id,username,firstname,lastname');
+        }
+
+        if (request()->has('staff_id')) {
+            $users->where('users.branch_staff_id', request()->staff_id);
+        }
+
+        if (request()->has('branch_id')) {
+            $users->where('users.branch_id', request()->branch_id);
+        }
+
+        $fullNameColumn = 'CONCAT(users.firstname, " ", users.lastname)';
+
+        return $users->selectRaw('users.*, branch_staff.name as staff_name, active_user_account.currency_code as account_currency_code, ' . $fullNameColumn . ' AS fullname, CASE WHEN users.branch_id = 0 THEN "Online" ELSE branches.name END AS branch_name')
+            ->searchable(['username', 'firstname', 'lastname', 'email', 'mobile', 'account_number', $fullNameColumn])
+            ->filterable()
+            ->leftJoin('branches', 'users.branch_id', '=', 'branches.id')
+            ->leftJoin('branch_staff', 'users.branch_staff_id', '=', 'branch_staff.id')
+            ->leftJoin('user_accounts as active_user_account', function ($join) {
+                $join->on('users.id', '=', 'active_user_account.user_id')
+                    ->where('active_user_account.is_primary', '=', 1);
+            })
+            ->orderable();
+    }
+
+    protected function exportUsersForCrm($users, $scope = null)
+    {
+        $filename = 'crm-client-export-' . ($scope ?: 'all') . '-' . now()->format('Y-m-d_H-i-s') . '.csv';
+
+        $headers = [
+            'firstname',
+            'lastname',
+            'email',
+            'contact_phonenumber',
+            'company',
+            'address',
+            'city',
+            'state',
+            'zip',
+            'country',
+            'phonenumber',
+            'website',
+            'referrer_name',
+            'referrer_username',
+            'username',
+            'account_number',
+            'branch',
+            'registered_at',
+        ];
+
+        return response()->streamDownload(function () use ($users, $headers) {
+            $stream = fopen('php://output', 'w');
+            fputcsv($stream, $headers);
+
+            $users->chunk(200, function ($chunk) use ($stream) {
+                foreach ($chunk as $user) {
+                    fputcsv($stream, $this->crmExportRow($user));
+                }
+            });
+
+            fclose($stream);
+        }, $filename, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+        ]);
+    }
+
+    protected function crmExportRow(User $user)
+    {
+        $referrer = $user->referrer;
+        $fullName = trim($user->firstname . ' ' . $user->lastname);
+
+        return [
+            $user->firstname,
+            $user->lastname,
+            $user->email,
+            $this->crmPhoneValue($user),
+            $fullName,
+            $user->address,
+            $user->city,
+            $user->state,
+            $user->zip,
+            $user->country_name,
+            $this->crmPhoneValue($user),
+            '',
+            $referrer ? trim($referrer->firstname . ' ' . $referrer->lastname) : '',
+            $referrer?->username ?? '',
+            $user->username,
+            $user->account_number,
+            $user->branch_name ?? '',
+            optional($user->created_at)->format('Y-m-d H:i:s'),
+        ];
+    }
+
+    protected function crmPhoneValue(User $user)
+    {
+        $phone = trim((string) $user->mobile);
+
+        if ($phone === '') {
+            return '';
+        }
+
+        $dialCode = trim((string) $user->dial_code, "+ \t\n\r\0\x0B");
+
+        if ($dialCode === '') {
+            return $phone;
+        }
+
+        return '+' . $dialCode . $phone;
     }
 
     public function detail($id)

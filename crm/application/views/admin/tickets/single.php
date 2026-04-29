@@ -50,7 +50,7 @@
                                 <button class="btn btn-secondary btn-ai-summarize tw-border-0"
                                     data-loading-text="<?= _l('wait_text'); ?>">
                                     <i class="fa-solid fa-robot"></i>
-                                    <?= _l('ticket_summarize_ai'); ?>
+                                    Summarize (Super Agent)
                                 </button>
                                 <?php } ?>
                                 <?php if (get_option('disable_ticket_public_url') == '0') { ?>

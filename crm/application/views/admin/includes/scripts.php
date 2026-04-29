@@ -9,6 +9,7 @@
  * Global function for custom field of type hyperlink
  */
 echo get_custom_fields_hyperlink_js_function(); ?>
+<script src="<?= base_url('assets/js/aurora-dictation.js'); ?>"></script>
 <?php
 /**
  * Check for any alerts stored in session

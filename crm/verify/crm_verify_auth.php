@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 function verify_users_file_path()
 {
@@ -14,8 +14,44 @@ function verify_default_admin_record()
         'reference' => '',
         'status' => 'approved',
         'role' => 'admin',
+        'roles' => ['admin'],
+        'password_reset_token' => '',
+        'password_reset_expires_at' => '',
+        'password_reset_requested_at' => '',
         'created_at' => date('c'),
     ];
+}
+
+function verify_available_roles()
+{
+    return array_keys(verify_default_role_permissions());
+}
+
+function verify_normalize_roles($roles, string $fallback = 'trustee')
+{
+    $availableRoles = verify_available_roles();
+    $normalized = [];
+
+    if (!is_array($roles)) {
+        $roles = [$roles];
+    }
+
+    foreach ($roles as $role) {
+        $roleKey = trim((string) $role);
+        if ($roleKey !== '' && in_array($roleKey, $availableRoles, true) && !in_array($roleKey, $normalized, true)) {
+            $normalized[] = $roleKey;
+        }
+    }
+
+    if (in_array('admin', $normalized, true)) {
+        return ['admin'];
+    }
+
+    if (empty($normalized)) {
+        $normalized[] = in_array($fallback, $availableRoles, true) ? $fallback : 'trustee';
+    }
+
+    return $normalized;
 }
 
 function verify_normalize_user_record($username, $entry)
@@ -28,13 +64,21 @@ function verify_normalize_user_record($username, $entry)
         return null;
     }
 
+    $fallbackRole = $username === 'admin' ? 'admin' : 'trustee';
+    $normalizedRoles = verify_normalize_roles($entry['roles'] ?? ($entry['role'] ?? $fallbackRole), $fallbackRole);
+
     return [
         'password' => (string) ($entry['password'] ?? ''),
         'email' => (string) ($entry['email'] ?? ''),
         'organization' => (string) ($entry['organization'] ?? ''),
         'reference' => (string) ($entry['reference'] ?? ''),
         'status' => (string) ($entry['status'] ?? 'pending'),
-        'role' => (string) ($entry['role'] ?? ($username === 'admin' ? 'admin' : 'trustee')),
+        'role' => (string) ($normalizedRoles[0] ?? $fallbackRole),
+        'roles' => $normalizedRoles,
+        'permission_overrides' => verify_normalize_permission_overrides(is_array($entry['permission_overrides'] ?? null) ? $entry['permission_overrides'] : []),
+        'password_reset_token' => trim((string) ($entry['password_reset_token'] ?? '')),
+        'password_reset_expires_at' => trim((string) ($entry['password_reset_expires_at'] ?? '')),
+        'password_reset_requested_at' => trim((string) ($entry['password_reset_requested_at'] ?? '')),
         'created_at' => (string) ($entry['created_at'] ?? date('c')),
     ];
 }
@@ -78,22 +122,353 @@ function verify_load_users()
 
 function verify_save_users(array $users)
 {
-    file_put_contents(verify_users_file_path(), json_encode($users, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+    $normalized = [];
+    foreach ($users as $username => $entry) {
+        $userRecord = verify_normalize_user_record((string) $username, $entry);
+        if ($userRecord !== null) {
+            $normalized[(string) $username] = $userRecord;
+        }
+    }
+
+    if (!isset($normalized['admin'])) {
+        $normalized['admin'] = verify_default_admin_record();
+    }
+
+    file_put_contents(verify_users_file_path(), json_encode($normalized, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+}
+
+function verify_permission_catalog()
+{
+    return [
+        'upload_documents' => 'Upload documents',
+        'view_repository' => 'Open document library',
+        'print_documents' => 'Print approved documents',
+        'download_documents' => 'Download approved documents',
+        'review_documents' => 'Review all documents',
+        'approve_documents' => 'Approve or reject documents',
+        'edit_documents' => 'Edit document details',
+        'replace_documents' => 'Replace document revisions',
+        'delete_documents' => 'Delete documents',
+        'manage_users' => 'Approve or reject users',
+        'manage_role_permissions' => 'Edit group rights',
+        'manage_user_permissions' => 'Edit individual rights',
+        'manage_id_cards' => 'Use ID card studio',
+        'manage_certificates' => 'Use certificate studio',
+    ];
+}
+
+function verify_default_role_permissions()
+{
+    $blank = array_fill_keys(array_keys(verify_permission_catalog()), false);
+
+    return [
+        'admin' => array_fill_keys(array_keys(verify_permission_catalog()), true),
+        'trustee' => array_merge($blank, [
+            'view_repository' => true,
+            'print_documents' => true,
+            'download_documents' => true,
+            'review_documents' => true,
+        ]),
+        'client' => array_merge($blank, [
+            'upload_documents' => true,
+            'view_repository' => true,
+            'print_documents' => true,
+            'download_documents' => true,
+        ]),
+        'customer' => array_merge($blank, [
+            'upload_documents' => true,
+            'view_repository' => true,
+            'print_documents' => true,
+            'download_documents' => true,
+        ]),
+        'bank_officer' => array_merge($blank, [
+            'upload_documents' => true,
+            'view_repository' => true,
+            'print_documents' => true,
+            'download_documents' => true,
+            'review_documents' => true,
+        ]),
+    ];
+}
+
+function verify_role_permissions_file_path()
+{
+    return __DIR__ . '/role_permissions.json';
+}
+
+function verify_normalize_permission_set(array $values)
+{
+    $normalized = [];
+    foreach (verify_permission_catalog() as $key => $label) {
+        $normalized[$key] = !empty($values[$key]);
+    }
+
+    return $normalized;
+}
+
+function verify_normalize_permission_overrides(array $values)
+{
+    $normalized = [];
+    foreach (verify_permission_catalog() as $key => $label) {
+        $value = strtolower(trim((string) ($values[$key] ?? 'inherit')));
+        $normalized[$key] = in_array($value, ['allow', 'deny'], true) ? $value : 'inherit';
+    }
+
+    return $normalized;
+}
+
+function verify_load_role_permissions()
+{
+    $path = verify_role_permissions_file_path();
+    $defaults = verify_default_role_permissions();
+
+    if (!file_exists($path)) {
+        file_put_contents($path, json_encode($defaults, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+        return $defaults;
+    }
+
+    $decoded = json_decode((string) file_get_contents($path), true);
+    if (!is_array($decoded)) {
+        $decoded = [];
+    }
+
+    $normalized = [];
+    foreach ($defaults as $role => $permissionSet) {
+        $normalized[$role] = verify_normalize_permission_set(is_array($decoded[$role] ?? null) ? $decoded[$role] : []);
+        if ($role === 'admin') {
+            $normalized[$role] = array_fill_keys(array_keys(verify_permission_catalog()), true);
+        }
+    }
+
+    file_put_contents($path, json_encode($normalized, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+
+    return $normalized;
+}
+
+function verify_save_role_permissions(array $rolePermissions)
+{
+    $defaults = verify_default_role_permissions();
+    $normalized = [];
+
+    foreach ($defaults as $role => $permissionSet) {
+        $normalized[$role] = verify_normalize_permission_set(is_array($rolePermissions[$role] ?? null) ? $rolePermissions[$role] : []);
+        if ($role === 'admin') {
+            $normalized[$role] = array_fill_keys(array_keys(verify_permission_catalog()), true);
+        }
+    }
+
+    file_put_contents(verify_role_permissions_file_path(), json_encode($normalized, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+}
+
+function verify_resolve_permissions($roles, array $overrides = [])
+{
+    $rolePermissions = verify_load_role_permissions();
+    $resolved = verify_normalize_permission_set([]);
+    $normalizedRoles = verify_normalize_roles($roles);
+
+    foreach ($normalizedRoles as $role) {
+        $permissionSet = $rolePermissions[$role] ?? verify_default_role_permissions()['trustee'];
+        foreach ($permissionSet as $permission => $isAllowed) {
+            if ($isAllowed) {
+                $resolved[$permission] = true;
+            }
+        }
+    }
+
+    foreach (verify_normalize_permission_overrides($overrides) as $permission => $value) {
+        if ($value === 'allow') {
+            $resolved[$permission] = true;
+        } elseif ($value === 'deny') {
+            $resolved[$permission] = false;
+        }
+    }
+
+    if (in_array('admin', $normalizedRoles, true)) {
+        $resolved = array_fill_keys(array_keys(verify_permission_catalog()), true);
+    }
+
+    return $resolved;
+}
+
+function verify_find_user_record(array $users, string $identifier): ?array
+{
+    $identifier = trim($identifier);
+    if ($identifier === '') {
+        return null;
+    }
+
+    if (isset($users[$identifier]) && is_array($users[$identifier])) {
+        return ['username' => $identifier, 'record' => $users[$identifier]];
+    }
+
+    foreach ($users as $username => $record) {
+        if (!is_array($record)) {
+            continue;
+        }
+
+        if (strcasecmp((string) $username, $identifier) === 0) {
+            return ['username' => (string) $username, 'record' => $record];
+        }
+
+        $email = trim((string) ($record['email'] ?? ''));
+        if ($email !== '' && strcasecmp($email, $identifier) === 0) {
+            return ['username' => (string) $username, 'record' => $record];
+        }
+    }
+
+    return null;
+}
+
+function verify_issue_password_reset(array &$users, string $username, int $ttlSeconds = 7200): ?array
+{
+    if (!isset($users[$username]) || !is_array($users[$username])) {
+        return null;
+    }
+
+    $token = bin2hex(random_bytes(24));
+    $requestedAt = date('c');
+    $expiresAt = date('c', time() + max(300, $ttlSeconds));
+
+    $users[$username]['password_reset_token'] = $token;
+    $users[$username]['password_reset_requested_at'] = $requestedAt;
+    $users[$username]['password_reset_expires_at'] = $expiresAt;
+
+    return [
+        'token' => $token,
+        'requested_at' => $requestedAt,
+        'expires_at' => $expiresAt,
+    ];
+}
+
+function verify_find_user_by_reset_token(array $users, string $token): ?array
+{
+    $token = trim($token);
+    if ($token === '') {
+        return null;
+    }
+
+    foreach ($users as $username => $entry) {
+        if (!is_array($entry)) {
+            continue;
+        }
+
+        $entryToken = trim((string) ($entry['password_reset_token'] ?? ''));
+        if ($entryToken === '' || !hash_equals($entryToken, $token)) {
+            continue;
+        }
+
+        $expiresAt = trim((string) ($entry['password_reset_expires_at'] ?? ''));
+        if ($expiresAt === '' || strtotime($expiresAt) === false || strtotime($expiresAt) < time()) {
+            return null;
+        }
+
+        return ['username' => (string) $username, 'record' => $entry];
+    }
+
+    return null;
+}
+
+function verify_clear_password_reset(array &$users, string $username): void
+{
+    if (!isset($users[$username]) || !is_array($users[$username])) {
+        return;
+    }
+
+    $users[$username]['password_reset_token'] = '';
+    $users[$username]['password_reset_requested_at'] = '';
+    $users[$username]['password_reset_expires_at'] = '';
+}
+function verify_current_username()
+{
+    return (string) ($_SESSION['username'] ?? '');
+}
+
+function verify_permissions_for_user(string $username, ?array $users = null)
+{
+    $users = $users ?? verify_load_users();
+    $user = $users[$username] ?? null;
+    if (!is_array($user)) {
+        return verify_normalize_permission_set([]);
+    }
+
+    return verify_resolve_permissions($user['roles'] ?? ($user['role'] ?? 'trustee'), is_array($user['permission_overrides'] ?? null) ? $user['permission_overrides'] : []);
+}
+
+function verify_current_permissions()
+{
+    $username = verify_current_username();
+    if ($username === '') {
+        return verify_normalize_permission_set([]);
+    }
+
+    return verify_permissions_for_user($username);
+}
+
+function verify_has_permission(string $permission)
+{
+    $permissions = verify_current_permissions();
+    return !empty($permissions[$permission]);
+}
+
+function verify_has_any_permission(array $permissions)
+{
+    foreach ($permissions as $permission) {
+        if (verify_has_permission((string) $permission)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+function verify_admin_session_via_password()
+{
+    return (string) ($_SESSION['verify_admin_authenticated'] ?? '') === 'password';
+}
+
+function verify_management_session_has_permission(string $permission)
+{
+    return verify_admin_session_via_password() || verify_has_permission($permission);
+}
+
+function verify_management_session_has_any_permission(array $permissions)
+{
+    if (verify_admin_session_via_password()) {
+        return true;
+    }
+
+    return verify_has_any_permission($permissions);
+}
+
+function verify_current_roles()
+{
+    $username = verify_current_username();
+    if ($username !== '') {
+        $users = verify_load_users();
+        $user = $users[$username] ?? null;
+        if (is_array($user)) {
+            return verify_normalize_roles($user['roles'] ?? ($user['role'] ?? 'trustee'));
+        }
+    }
+
+    $sessionRole = trim((string) ($_SESSION['user_role'] ?? ''));
+    return $sessionRole === '' ? [] : verify_normalize_roles([$sessionRole]);
 }
 
 function verify_current_role()
 {
-    return (string) ($_SESSION['user_role'] ?? '');
+    $roles = verify_current_roles();
+    return (string) ($roles[0] ?? '');
 }
 
 function verify_is_admin()
 {
-    return verify_current_role() === 'admin';
+    return in_array('admin', verify_current_roles(), true);
 }
 
 function verify_is_trustee()
 {
-    return verify_current_role() === 'trustee';
+    return in_array('trustee', verify_current_roles(), true);
 }
 
 function verify_documents_file_path()
@@ -121,6 +496,8 @@ function verify_normalize_document_record($filename, $entry)
         'approved_by' => (string) ($entry['approved_by'] ?? ''),
         'approved_at' => (string) ($entry['approved_at'] ?? ''),
         'rejection_note' => (string) ($entry['rejection_note'] ?? ''),
+        'allowed_roles' => verify_normalize_roles($entry['allowed_roles'] ?? []),
+        'allowed_users' => verify_normalize_document_users($entry['allowed_users'] ?? []),
     ];
 }
 
@@ -174,6 +551,88 @@ function verify_find_document_by_code(string $code)
     }
 
     return null;
+}
+
+function verify_document_allowed_roles(array $document): array
+{
+    return verify_normalize_roles($document['allowed_roles'] ?? [], '');
+}
+
+function verify_normalize_document_users($users): array
+{
+    $normalized = [];
+    if (!is_array($users)) {
+        $users = [$users];
+    }
+
+    foreach ($users as $username) {
+        $value = trim((string) $username);
+        if ($value !== '' && !in_array($value, $normalized, true)) {
+            $normalized[] = $value;
+        }
+    }
+
+    return $normalized;
+}
+
+function verify_document_allowed_users(array $document): array
+{
+    return verify_normalize_document_users($document['allowed_users'] ?? []);
+}
+
+function verify_document_is_restricted(array $document): bool
+{
+    return !empty(verify_document_allowed_roles($document)) || !empty(verify_document_allowed_users($document));
+}
+
+function verify_document_matches_roles(array $document, array $roles): bool
+{
+    $allowedRoles = verify_document_allowed_roles($document);
+    if (empty($allowedRoles)) {
+        return true;
+    }
+
+    $normalizedRoles = verify_normalize_roles($roles, '');
+    if (in_array('admin', $normalizedRoles, true)) {
+        return true;
+    }
+
+    return count(array_intersect($allowedRoles, $normalizedRoles)) > 0;
+}
+
+function verify_document_matches_users(array $document, string $username): bool
+{
+    $allowedUsers = verify_document_allowed_users($document);
+    if (empty($allowedUsers)) {
+        return true;
+    }
+
+    return $username !== '' && in_array($username, $allowedUsers, true);
+}
+
+function verify_current_user_can_access_document(array $document): bool
+{
+    if (verify_has_any_permission(['review_documents', 'approve_documents', 'edit_documents', 'replace_documents', 'delete_documents'])) {
+        return true;
+    }
+
+    $currentUsername = verify_current_username();
+    if ($currentUsername !== '' && (string) ($document['uploaded_by'] ?? '') === $currentUsername) {
+        return true;
+    }
+
+    $hasUserRestriction = !empty(verify_document_allowed_users($document));
+    $hasRoleRestriction = !empty(verify_document_allowed_roles($document));
+
+    if ($hasUserRestriction && verify_document_matches_users($document, $currentUsername)) {
+        return true;
+    }
+
+    if ($hasRoleRestriction && verify_document_matches_roles($document, verify_current_roles())) {
+        return true;
+    }
+
+    return !$hasUserRestriction && !$hasRoleRestriction;
 }
 
 function verify_id_cards_file_path()
@@ -581,3 +1040,4 @@ function verify_save_certificate_design(array $settings): void
     $normalized = verify_normalize_certificate_design($settings);
     file_put_contents(verify_certificate_design_settings_path(), json_encode($normalized, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 }
+

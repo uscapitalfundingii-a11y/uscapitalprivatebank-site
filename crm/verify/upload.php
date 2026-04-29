@@ -10,6 +10,11 @@ if (empty($_SESSION['upload_authenticated']) || empty($_SESSION['username'])) {
     exit;
 }
 
+if (!verify_has_permission('upload_documents')) {
+    header('Location: dashboard.php?error=' . urlencode('Your account is not permitted to upload verification documents.'));
+    exit;
+}
+
 $username = (string) $_SESSION['username'];
 $filesDir = __DIR__ . '/files';
 if (!is_dir($filesDir)) {
@@ -20,6 +25,16 @@ $documents = verify_load_documents();
 $error = '';
 $success = '';
 $uploaded = null;
+$roleOptions = array_filter(verify_available_roles(), static fn($role) => $role !== 'admin');
+$allowedRoles = verify_normalize_roles($_POST['allowed_roles'] ?? [], '');
+$allowedUsers = verify_normalize_document_users($_POST['allowed_users'] ?? []);
+$approvedUsers = [];
+foreach (verify_load_users() as $accountName => $entry) {
+    if ($accountName === 'admin' || !is_array($entry) || (string) ($entry['status'] ?? 'pending') !== 'approved') {
+        continue;
+    }
+    $approvedUsers[] = (string) $accountName;
+}
 
 function verify_slugify($value)
 {
@@ -32,7 +47,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $documentTitle = trim((string) ($_POST['document_title'] ?? ''));
     $documentCode = verify_slugify($_POST['document_code'] ?? '');
     $notes = trim((string) ($_POST['notes'] ?? ''));
-
     if ($documentTitle === '') {
         $error = 'Please enter a document title before uploading.';
     } elseif (!isset($_FILES['document_file']) || ($_FILES['document_file']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
@@ -77,14 +91,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'notes' => $notes,
                     'uploaded_by' => $username,
                     'uploaded_at' => date('c'),
-                    'status' => verify_is_admin() ? 'approved' : 'pending',
-                    'approved_by' => verify_is_admin() ? $username : '',
-                    'approved_at' => verify_is_admin() ? date('c') : '',
+                    'status' => 'pending',
+                    'approved_by' => '',
+                    'approved_at' => '',
+                    'allowed_roles' => $allowedRoles,
+                    'allowed_users' => $allowedUsers,
                 ];
                 verify_save_documents($documents);
-                $success = verify_is_admin()
-                    ? 'Your document has been uploaded and approved in the verification repository.'
-                    : 'Your document has been uploaded and is now pending administrator approval before verification, viewing, printing, or download.';
+                $success = 'Your document has been uploaded and is now pending administrator approval before verification, viewing, printing, or download.';
             }
         }
     }
@@ -123,9 +137,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <h2 class="verify-title">Upload a new verifiable document.</h2>
                     <p class="verify-copy">
                         Signed in as <strong><?= htmlspecialchars($username, ENT_QUOTES, 'UTF-8') ?></strong>. Use this desk to place a file into the verification repository and assign the verification code that outside parties will use.
-                        <?php if (!verify_is_admin()): ?>
-                            New uploads remain pending until a verification administrator approves them.
-                        <?php endif; ?>
+                        All new uploads remain pending until a verification administrator approves them.
                     </p>
                     <div class="verify-actions">
                         <a class="verify-button-secondary" href="dashboard.php">Back To Dashboard</a>
@@ -173,6 +185,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <label class="verify-label" for="document_file">Document File</label>
                                 <input class="verify-input" id="document_file" name="document_file" type="file" required>
                             </div>
+                            <div class="verify-form-group">
+                                <label class="verify-label">Allowed Role Groups</label>
+                                <div style="display:flex; flex-wrap:wrap; gap:12px;">
+                                    <?php foreach ($roleOptions as $roleValue): ?>
+                                        <?php $isChecked = in_array($roleValue, verify_normalize_roles($_POST['allowed_roles'] ?? [], ''), true); ?>
+                                        <label style="display:flex; gap:10px; align-items:flex-start; min-width:180px; padding:12px 14px; border-radius:16px; border:1px solid rgba(148, 163, 184, 0.16); background:rgba(15, 23, 42, 0.28);">
+                                            <input type="checkbox" name="allowed_roles[]" value="<?= htmlspecialchars($roleValue, ENT_QUOTES, 'UTF-8') ?>"<?= $isChecked ? ' checked' : '' ?> style="margin-top:4px;">
+                                            <span>
+                                                <span style="display:block; font-weight:700; color:#f8fafc;"><?= htmlspecialchars(ucwords(str_replace('_', ' ', $roleValue)), ENT_QUOTES, 'UTF-8') ?></span>
+                                                <span style="display:block; margin-top:4px; font-size:13px; color:rgba(226, 232, 240, 0.72);"><?= htmlspecialchars($roleValue, ENT_QUOTES, 'UTF-8') ?></span>
+                                            </span>
+                                        </label>
+                                    <?php endforeach; ?>
+                                </div>
+                                <div style="margin-top:10px; color:var(--verify-muted);">Leave every role unselected to allow all approved groups to access this document after approval.</div>
+                            </div>
+                            <div class="verify-form-group">
+                                <label class="verify-label">Allowed Individual Users</label>
+                                <div style="display:flex; flex-wrap:wrap; gap:12px;">
+                                    <?php foreach ($approvedUsers as $approvedUser): ?>
+                                        <label style="display:flex; gap:10px; align-items:flex-start; min-width:220px; padding:12px 14px; border-radius:16px; border:1px solid rgba(148, 163, 184, 0.16); background:rgba(15, 23, 42, 0.28);">
+                                            <input type="checkbox" name="allowed_users[]" value="<?= htmlspecialchars($approvedUser, ENT_QUOTES, 'UTF-8') ?>"<?= in_array($approvedUser, $allowedUsers, true) ? ' checked' : '' ?> style="margin-top:4px;">
+                                            <span style="display:block; font-weight:700; color:#f8fafc;"><?= htmlspecialchars($approvedUser, ENT_QUOTES, 'UTF-8') ?></span>
+                                        </label>
+                                    <?php endforeach; ?>
+                                </div>
+                                <div style="margin-top:10px; color:var(--verify-muted);">Use this to grant access to specific approved users even when the document should not be open to everyone in a role group.</div>
+                            </div>
                         </div>
                         <div>
                             <div class="verify-form-group">
@@ -195,31 +235,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <div class="verify-meta-item"><strong>Title</strong><span><?= htmlspecialchars($uploaded['title'], ENT_QUOTES, 'UTF-8') ?></span></div>
                                     <div class="verify-meta-item"><strong>Document Code</strong><span><?= htmlspecialchars($uploaded['code'], ENT_QUOTES, 'UTF-8') ?></span></div>
                                     <div class="verify-meta-item"><strong>Stored File</strong><span><?= htmlspecialchars($uploaded['file'], ENT_QUOTES, 'UTF-8') ?></span></div>
-                                    <div class="verify-meta-item"><strong>Status</strong><span><?= htmlspecialchars(verify_is_admin() ? 'Approved' : 'Pending Admin Approval', ENT_QUOTES, 'UTF-8') ?></span></div>
+                                    <div class="verify-meta-item"><strong>Status</strong><span>Pending Admin Approval</span></div>
+                                    <div class="verify-meta-item"><strong>Allowed Groups</strong><span><?= htmlspecialchars(empty($allowedRoles) ? 'All approved groups' : implode(', ', array_map(static fn($role) => ucwords(str_replace('_', ' ', $role)), $allowedRoles)), ENT_QUOTES, 'UTF-8') ?></span></div>
+                                    <div class="verify-meta-item"><strong>Allowed Users</strong><span><?= htmlspecialchars(empty($allowedUsers) ? 'No individual user-only list' : implode(', ', $allowedUsers), ENT_QUOTES, 'UTF-8') ?></span></div>
                                 </div>
                             </div>
                         </div>
                         <div class="verify-card" style="background:var(--verify-panel-soft);">
                             <div class="verify-card-inner">
                                 <h3 style="margin:0 0 16px; font-size:24px;">Next step</h3>
-                                <?php if (verify_is_admin()): ?>
-                                    <div class="verify-actions">
-                                        <a class="verify-button" href="<?= htmlspecialchars($uploaded['print_legal_url'], ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener">Print Issued Copy</a>
-                                        <a class="verify-button" href="<?= htmlspecialchars($uploaded['view_url'], ENT_QUOTES, 'UTF-8') ?>">Open Verified View</a>
-                                        <a class="verify-button-secondary" href="<?= htmlspecialchars($uploaded['verify_url'], ENT_QUOTES, 'UTF-8') ?>">Test Document Code</a>
-                                        <a class="verify-button-secondary" href="documents.php">Open Document Library</a>
-                                    </div>
-                                    <div class="verify-actions" style="margin-top:10px;">
-                                        <a class="verify-button-secondary" href="<?= htmlspecialchars($uploaded['print_legal_url'], ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener">Print Legal</a>
-                                        <a class="verify-button-secondary" href="<?= htmlspecialchars($uploaded['print_letter_url'], ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener">Print Letter</a>
-                                        <a class="verify-button-secondary" href="<?= htmlspecialchars($uploaded['print_a4_url'], ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener">Print A4</a>
-                                    </div>
-                                <?php else: ?>
-                                    <p class="verify-copy">This document is waiting for your administrator to approve it from the Admin Review desk. It will become viewable, printable, and verifiable after approval.</p>
-                                    <div class="verify-actions">
-                                        <a class="verify-button-secondary" href="documents.php">Open Document Library</a>
-                                    </div>
-                                <?php endif; ?>
+                                <p class="verify-copy">This document is waiting for your administrator to approve it from the Admin Review desk. It will become viewable, printable, and verifiable after approval.</p>
+                                <div class="verify-actions">
+                                    <a class="verify-button-secondary" href="documents.php">Open Document Library</a>
+                                </div>
                             </div>
                         </div>
                     </div>

@@ -6,8 +6,16 @@ session_start();
 
 require_once dirname(__DIR__) . '/crm_verify_auth.php';
 
-if (!empty($_SESSION['upload_authenticated']) && verify_current_role() === 'admin') {
-    $_SESSION['verify_admin_authenticated'] = true;
+if (!empty($_SESSION['upload_authenticated']) && verify_has_any_permission([
+    'manage_users',
+    'manage_role_permissions',
+    'manage_user_permissions',
+    'manage_id_cards',
+    'manage_certificates',
+])) {
+    if (empty($_SESSION['verify_admin_authenticated'])) {
+        $_SESSION['verify_admin_authenticated'] = 'linked';
+    }
 }
 
 const VERIFY_ROLE_OPTIONS = [
@@ -21,6 +29,16 @@ const VERIFY_ROLE_OPTIONS = [
 function verify_role_label(string $role): string
 {
     return VERIFY_ROLE_OPTIONS[$role] ?? ucfirst(str_replace('_', ' ', $role));
+}
+
+function verify_entry_roles(array $entry): array
+{
+    return verify_normalize_roles($entry['roles'] ?? ($entry['role'] ?? 'trustee'));
+}
+
+function verify_role_labels_for_entry(array $entry): array
+{
+    return array_map('verify_role_label', verify_entry_roles($entry));
 }
 
 function verify_send_approval_email(string $username, array $entry, string $role): bool
@@ -56,9 +74,32 @@ function verify_send_approval_email(string $username, array $entry, string $role
     return @mail($email, $subject, $message, $headers);
 }
 
-$users = verify_load_users();
-$adminPassword = (string) ($users['admin']['password'] ?? verify_default_admin_record()['password']);
+function verify_send_password_reset_email(string $username, array $entry, string $resetUrl): bool
+{
+    $email = trim((string) ($entry['email'] ?? ''));
+    if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        return false;
+    }
 
+    $subject = 'Reset Your Verification Portal Password';
+    $message = "Hello {$username},\n\n"
+        . "The verification desk has sent you a secure password reset link for the U.S. Capital Private Bank verification portal.\n\n"
+        . "Reset your password here:\n{$resetUrl}\n\n"
+        . "This link expires in 2 hours. If you did not request a reset, please contact the verification desk immediately.\n\n"
+        . "U.S. Capital Private Bank Verification Desk";
+    $headers = implode("\r\n", [
+        'From: noreply@uscapitalprivatebank.com',
+        'Reply-To: chairman@uscapitalprivatebank.com',
+        'Content-Type: text/plain; charset=UTF-8',
+    ]);
+
+    return @mail($email, $subject, $message, $headers);
+}
+
+$users = verify_load_users();
+$rolePermissions = verify_load_role_permissions();
+$permissionCatalog = verify_permission_catalog();
+$adminPassword = (string) ($users['admin']['password'] ?? verify_default_admin_record()['password']);
 $error = '';
 $message = '';
 
@@ -70,7 +111,7 @@ if (isset($_GET['logout'])) {
 
 if (isset($_POST['admin_password'])) {
     if (hash_equals($adminPassword, (string) $_POST['admin_password'])) {
-        $_SESSION['verify_admin_authenticated'] = true;
+        $_SESSION['verify_admin_authenticated'] = 'password';
         header('Location: index.php');
         exit;
     }
@@ -78,43 +119,145 @@ if (isset($_POST['admin_password'])) {
 }
 
 if (!empty($_SESSION['verify_admin_authenticated'])) {
+    $canManageUsers = verify_management_session_has_permission('manage_users');
+    $canManageRolePermissions = verify_management_session_has_permission('manage_role_permissions');
+    $canManageUserPermissions = verify_management_session_has_permission('manage_user_permissions');
+    $canUseIdCards = verify_management_session_has_permission('manage_id_cards');
+    $canUseCertificates = verify_management_session_has_permission('manage_certificates');
+
     if (isset($_POST['approve_user'])) {
-        $target = (string) $_POST['approve_user'];
-        $role = (string) ($_POST['role'] ?? 'trustee');
-        if (!array_key_exists($role, VERIFY_ROLE_OPTIONS)) {
-            $role = 'trustee';
-        }
-        if (isset($users[$target]) && is_array($users[$target])) {
-            $users[$target]['status'] = 'approved';
-            $users[$target]['role'] = $role;
-            verify_save_users($users);
-            $mailSent = verify_send_approval_email($target, $users[$target], $role);
-            $message = "Approved {$target} as {$role}." . ($mailSent ? ' Confirmation email sent.' : ' Approval saved, but confirmation email could not be sent.');
+        if (!$canManageUsers) {
+            $error = 'Your account is not permitted to approve verification users.';
+        } else {
+            $target = (string) $_POST['approve_user'];
+            $role = (string) ($_POST['role'] ?? 'trustee');
+            if (!array_key_exists($role, VERIFY_ROLE_OPTIONS)) {
+                $role = 'trustee';
+            }
+            if (isset($users[$target]) && is_array($users[$target])) {
+                $users[$target]['status'] = 'approved';
+                $users[$target]['role'] = $role;
+                $users[$target]['roles'] = verify_normalize_roles($_POST['roles'] ?? [$role], $role);
+                verify_save_users($users);
+                $mailSent = verify_send_approval_email($target, $users[$target], $role);
+                $message = "Approved {$target} as {$role}." . ($mailSent ? ' Confirmation email sent.' : ' Approval saved, but confirmation email could not be sent.');
+            }
         }
     }
 
     if (isset($_POST['reject_user'])) {
-        $target = (string) $_POST['reject_user'];
-        if (isset($users[$target]) && is_array($users[$target])) {
-            $users[$target]['status'] = 'rejected';
-            verify_save_users($users);
-            $message = "Rejected {$target}.";
+        if (!$canManageUsers) {
+            $error = 'Your account is not permitted to reject verification users.';
+        } else {
+            $target = (string) $_POST['reject_user'];
+            if (isset($users[$target]) && is_array($users[$target])) {
+                $users[$target]['status'] = 'rejected';
+                verify_save_users($users);
+                $message = "Rejected {$target}.";
+            }
         }
     }
 
     if (isset($_POST['update_role_user'])) {
-        $target = (string) $_POST['update_role_user'];
-        $role = (string) ($_POST['role'] ?? 'trustee');
-        if (!array_key_exists($role, VERIFY_ROLE_OPTIONS)) {
-            $role = 'trustee';
-        }
-        if (isset($users[$target]) && is_array($users[$target]) && $target !== 'admin') {
-            $users[$target]['role'] = $role;
-            verify_save_users($users);
-            $mailSent = verify_send_approval_email($target, $users[$target], $role);
-            $message = "Updated {$target} to {$role}." . ($mailSent ? ' Confirmation email sent.' : ' Role saved, but confirmation email could not be sent.');
+        if (!$canManageUsers) {
+            $error = 'Your account is not permitted to change user roles.';
+        } else {
+            $target = (string) $_POST['update_role_user'];
+            $role = (string) ($_POST['role'] ?? 'trustee');
+            if (!array_key_exists($role, VERIFY_ROLE_OPTIONS)) {
+                $role = 'trustee';
+            }
+            if (isset($users[$target]) && is_array($users[$target]) && $target !== 'admin') {
+                $users[$target]['role'] = $role;
+                $users[$target]['roles'] = verify_normalize_roles([$role], $role);
+                verify_save_users($users);
+                $mailSent = verify_send_approval_email($target, $users[$target], $role);
+                $message = "Updated {$target} to {$role}." . ($mailSent ? ' Confirmation email sent.' : ' Role saved, but confirmation email could not be sent.');
+            }
         }
     }
+
+    if (isset($_POST['save_user_roles'])) {
+        if (!$canManageUsers) {
+            $error = 'Your account is not permitted to change user role groups.';
+        } else {
+            $target = (string) ($_POST['target_user'] ?? '');
+            if (!isset($users[$target]) || !is_array($users[$target])) {
+                $error = 'The requested user could not be found for role group changes.';
+            } elseif ($target === 'admin') {
+                $error = 'The built-in admin account always keeps the Admin role group.';
+            } else {
+                $selectedRoles = verify_normalize_roles($_POST['roles'] ?? [], (string) ($users[$target]['role'] ?? 'trustee'));
+                $users[$target]['roles'] = $selectedRoles;
+                $users[$target]['role'] = (string) ($selectedRoles[0] ?? 'trustee');
+                verify_save_users($users);
+                $message = 'Role groups were updated for ' . $target . '.';
+            }
+        }
+    }
+
+    if (isset($_POST['save_role_permissions'])) {
+        if (!$canManageRolePermissions) {
+            $error = 'Your account is not permitted to change group rights.';
+        } else {
+            $targetRole = (string) ($_POST['target_role'] ?? '');
+            if ($targetRole === 'admin' || !array_key_exists($targetRole, $rolePermissions)) {
+                $error = 'The requested role permission set could not be changed.';
+            } else {
+                $updatedRolePermissions = $rolePermissions;
+                $updatedRolePermissions[$targetRole] = [];
+                foreach ($permissionCatalog as $permission => $label) {
+                    $updatedRolePermissions[$targetRole][$permission] = !empty($_POST['role_permissions'][$permission]);
+                }
+                verify_save_role_permissions($updatedRolePermissions);
+                $message = 'Group rights were updated for ' . verify_role_label($targetRole) . '.';
+            }
+        }
+    }
+
+    if (isset($_POST['save_user_permissions'])) {
+        if (!$canManageUserPermissions) {
+            $error = 'Your account is not permitted to change individual user rights.';
+        } else {
+            $target = (string) ($_POST['target_user'] ?? '');
+            if (!isset($users[$target]) || !is_array($users[$target])) {
+                $error = 'The requested user could not be found for individual rights changes.';
+            } else {
+                $overrides = [];
+                foreach ($permissionCatalog as $permission => $label) {
+                    $value = strtolower(trim((string) ($_POST['permission_overrides'][$permission] ?? 'inherit')));
+                    $overrides[$permission] = in_array($value, ['allow', 'deny'], true) ? $value : 'inherit';
+                }
+                $users[$target]['permission_overrides'] = $overrides;
+                verify_save_users($users);
+                $message = 'Individual rights were updated for ' . $target . '.';
+            }
+        }
+    }
+
+    if (isset($_POST['send_password_reset'])) {
+        if (!$canManageUsers) {
+            $error = 'Your account is not permitted to send password reset links.';
+        } else {
+            $target = (string) ($_POST['send_password_reset'] ?? '');
+            if (!isset($users[$target]) || !is_array($users[$target])) {
+                $error = 'The requested user could not be found for password reset.';
+            } else {
+                $issuedReset = verify_issue_password_reset($users, $target);
+                if ($issuedReset === null) {
+                    $error = 'A secure password reset token could not be generated.';
+                } else {
+                    verify_save_users($users);
+                    $resetUrl = 'https://www.uscapitalprivatebank.com/crm/verify/reset-password.php?token=' . urlencode((string) $issuedReset['token']);
+                    $mailSent = verify_send_password_reset_email($target, $users[$target], $resetUrl);
+                    $message = 'Password reset link created for ' . $target . '.' . ($mailSent ? ' Reset email sent.' : ' Reset saved, but the email could not be sent.');
+                }
+            }
+        }
+    }
+
+    $users = verify_load_users();
+    $rolePermissions = verify_load_role_permissions();
 
     $pending = [];
     $approved = [];
@@ -151,8 +294,10 @@ if (!empty($_SESSION['verify_admin_authenticated'])) {
             <div class="verify-links">
                 <a class="verify-link" href="https://www.uscapitalprivatebank.com/">Home</a>
                 <a class="verify-link" href="../index.php">Verification Home</a>
-                <?php if (!empty($_SESSION['verify_admin_authenticated'])): ?>
+                <?php if (!empty($_SESSION['verify_admin_authenticated']) && (!isset($canUseIdCards) || $canUseIdCards)): ?>
                     <a class="verify-link" href="idcards.php">ID Card Studio</a>
+                <?php endif; ?>
+                <?php if (!empty($_SESSION['verify_admin_authenticated']) && (!isset($canUseCertificates) || $canUseCertificates)): ?>
                     <a class="verify-link" href="certificates.php">Certificate Studio</a>
                 <?php endif; ?>
                 <?php if (!empty($_SESSION['verify_admin_authenticated'])): ?>
@@ -191,65 +336,70 @@ if (!empty($_SESSION['verify_admin_authenticated'])) {
         <?php else: ?>
             <div class="verify-card" style="margin-top:28px;">
                 <div class="verify-card-inner">
+                    <?php if ($error !== ''): ?>
+                        <div class="verify-alert error"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></div>
+                    <?php endif; ?>
                     <?php if ($message !== ''): ?>
                         <div class="verify-alert success"><?= htmlspecialchars($message, ENT_QUOTES, 'UTF-8') ?></div>
                     <?php endif; ?>
 
                     <span class="verify-kicker">Verification Desk</span>
-                    <h2 class="verify-title" style="max-width: 920px; font-size: clamp(30px, 3.6vw, 44px);">Pending access reviews and approved users.</h2>
-                    <p class="verify-copy">Use this control desk to approve new verification enrollments, assign roles, control who can upload versus who can only review and print records, and manage access to the employee ID and certificate studios.</p>
+                    <h2 class="verify-title" style="max-width: 920px; font-size: clamp(30px, 3.6vw, 44px);">Access reviews, group rights, and individual overrides.</h2>
+                    <p class="verify-copy">Use this control desk to approve new verification enrollments, assign roles, define what each group can do, and adjust rights individually where one account needs different access than the rest of its group.</p>
                 </div>
             </div>
 
             <div class="verify-grid" style="margin-top:26px; grid-template-columns:1fr;">
-                <div class="verify-card">
-                    <div class="verify-card-inner">
-                        <h3 style="margin:0 0 18px; font-size:24px;">Pending Requests</h3>
-                        <?php if (empty($pending)): ?>
-                            <div class="verify-empty">No pending verification requests at the moment.</div>
-                        <?php else: ?>
-                            <div style="overflow-x:auto;">
-                            <table class="verify-table">
-                                <thead>
-                                    <tr>
-                                        <th>User</th>
-                                        <th>Email</th>
-                                        <th>Status</th>
-                                        <th>Assign Role</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php foreach ($pending as $username => $entry): ?>
+                <?php if ($canManageUsers): ?>
+                    <div class="verify-card">
+                        <div class="verify-card-inner">
+                            <h3 style="margin:0 0 18px; font-size:24px;">Pending Requests</h3>
+                            <?php if (empty($pending)): ?>
+                                <div class="verify-empty">No pending verification requests at the moment.</div>
+                            <?php else: ?>
+                                <div style="overflow-x:auto;">
+                                <table class="verify-table">
+                                    <thead>
                                         <tr>
-                                            <td><?= htmlspecialchars($username, ENT_QUOTES, 'UTF-8') ?></td>
-                                            <td><?= htmlspecialchars((string) ($entry['email'] ?? ''), ENT_QUOTES, 'UTF-8') ?></td>
-                                            <td><span class="verify-status <?= htmlspecialchars((string) ($entry['status'] ?? 'pending'), ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars((string) ($entry['status'] ?? 'pending'), ENT_QUOTES, 'UTF-8') ?></span></td>
-                                            <td>
-                                                <form class="verify-inline-form" method="post" style="display:inline-flex; gap:8px; align-items:center; flex-wrap:wrap;">
-                                                    <input type="hidden" name="approve_user" value="<?= htmlspecialchars($username, ENT_QUOTES, 'UTF-8') ?>">
-                                                    <select class="verify-input" name="role" style="min-height:40px; width:auto; min-width:120px;">
-                                                        <?php foreach (VERIFY_ROLE_OPTIONS as $roleValue => $roleLabel): ?>
-                                                            <option value="<?= htmlspecialchars($roleValue, ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($roleLabel, ENT_QUOTES, 'UTF-8') ?></option>
-                                                        <?php endforeach; ?>
-                                                    </select>
-                                                    <button class="verify-link" type="submit" style="cursor:pointer;">Approve</button>
-                                                </form>
-                                            </td>
-                                            <td>
-                                                <form class="verify-inline-form" method="post" style="display:inline-flex;">
-                                                    <input type="hidden" name="reject_user" value="<?= htmlspecialchars($username, ENT_QUOTES, 'UTF-8') ?>">
-                                                    <button class="verify-link" type="submit" style="cursor:pointer;">Reject</button>
-                                                </form>
-                                            </td>
+                                            <th>User</th>
+                                            <th>Email</th>
+                                            <th>Status</th>
+                                            <th>Assign Role</th>
+                                            <th>Actions</th>
                                         </tr>
-                                    <?php endforeach; ?>
-                                </tbody>
-                            </table>
-                            </div>
-                        <?php endif; ?>
+                                    </thead>
+                                    <tbody>
+                                        <?php foreach ($pending as $username => $entry): ?>
+                                            <tr>
+                                                <td><?= htmlspecialchars($username, ENT_QUOTES, 'UTF-8') ?></td>
+                                                <td><?= htmlspecialchars((string) ($entry['email'] ?? ''), ENT_QUOTES, 'UTF-8') ?></td>
+                                                <td><span class="verify-status <?= htmlspecialchars((string) ($entry['status'] ?? 'pending'), ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars((string) ($entry['status'] ?? 'pending'), ENT_QUOTES, 'UTF-8') ?></span></td>
+                                                <td>
+                                                    <form class="verify-inline-form" method="post" style="display:inline-flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                                                        <input type="hidden" name="approve_user" value="<?= htmlspecialchars($username, ENT_QUOTES, 'UTF-8') ?>">
+                                                        <select class="verify-input" name="role" style="min-height:40px; width:auto; min-width:120px;">
+                                                            <?php foreach (VERIFY_ROLE_OPTIONS as $roleValue => $roleLabel): ?>
+                                                                <option value="<?= htmlspecialchars($roleValue, ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($roleLabel, ENT_QUOTES, 'UTF-8') ?></option>
+                                                            <?php endforeach; ?>
+                                                        </select>
+                                                        <button class="verify-link" type="submit" style="cursor:pointer;">Approve</button>
+                                                    </form>
+                                                </td>
+                                                <td>
+                                                    <form class="verify-inline-form" method="post" style="display:inline-flex;">
+                                                        <input type="hidden" name="reject_user" value="<?= htmlspecialchars($username, ENT_QUOTES, 'UTF-8') ?>">
+                                                        <button class="verify-link" type="submit" style="cursor:pointer;">Reject</button>
+                                                    </form>
+                                                </td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                                </div>
+                            <?php endif; ?>
+                        </div>
                     </div>
-                </div>
+                <?php endif; ?>
 
                 <div class="verify-card">
                     <div class="verify-card-inner">
@@ -264,29 +414,105 @@ if (!empty($_SESSION['verify_admin_authenticated'])) {
                                         <th>User</th>
                                         <th>Email</th>
                                         <th>Status</th>
-                                        <th>Role</th>
-                                        <th>Action</th>
+                                        <th>Role Groups</th>
+                                        <th>Access Controls</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <?php foreach ($approved as $username => $entry): ?>
+                                        <?php
+                                        $entryRoles = verify_entry_roles($entry);
+                                        $roleLabels = verify_role_labels_for_entry($entry);
+                                        $overrideCount = 0;
+                                        foreach (($entry['permission_overrides'] ?? []) as $value) {
+                                            if ($value !== 'inherit') {
+                                                $overrideCount++;
+                                            }
+                                        }
+                                        ?>
                                         <tr>
                                             <td><?= htmlspecialchars($username, ENT_QUOTES, 'UTF-8') ?></td>
                                             <td><?= htmlspecialchars((string) ($entry['email'] ?? ''), ENT_QUOTES, 'UTF-8') ?></td>
                                             <td><span class="verify-status approved">approved</span></td>
-                                            <td><?= htmlspecialchars(verify_role_label((string) ($entry['role'] ?? 'trustee')), ENT_QUOTES, 'UTF-8') ?></td>
                                             <td>
-                                                <form class="verify-inline-form" method="post" style="display:inline-flex; gap:8px; align-items:center;">
-                                                    <input type="hidden" name="update_role_user" value="<?= htmlspecialchars($username, ENT_QUOTES, 'UTF-8') ?>">
-                                                    <select class="verify-input" name="role" style="min-height:40px; width:auto; min-width:120px;">
-                                                        <?php foreach (VERIFY_ROLE_OPTIONS as $roleValue => $roleLabel): ?>
-                                                            <option value="<?= htmlspecialchars($roleValue, ENT_QUOTES, 'UTF-8') ?>"<?= (($entry['role'] ?? 'trustee') === $roleValue) ? ' selected' : '' ?>><?= htmlspecialchars($roleLabel, ENT_QUOTES, 'UTF-8') ?></option>
-                                                        <?php endforeach; ?>
-                                                    </select>
-                                                    <button class="verify-link" type="submit" style="cursor:pointer;">Save Role</button>
-                                                </form>
+                                                <div style="display:flex; flex-wrap:wrap; gap:8px;">
+                                                    <?php foreach ($roleLabels as $roleLabel): ?>
+                                                        <span class="verify-status approved" style="text-transform:none; letter-spacing:.04em;"><?= htmlspecialchars($roleLabel, ENT_QUOTES, 'UTF-8') ?></span>
+                                                    <?php endforeach; ?>
+                                                </div>
+                                            </td>
+                                             <td>
+                                                 <div style="display:flex; flex-wrap:wrap; gap:10px;">
+                                                     <?php if ($canManageUsers): ?>
+                                                         <button class="verify-link" type="button" style="cursor:pointer;" data-edit-target="user-roles-<?= htmlspecialchars(md5($username), ENT_QUOTES, 'UTF-8') ?>">Manage Roles</button>
+                                                         <form class="verify-inline-form" method="post" style="display:inline-flex;">
+                                                             <input type="hidden" name="send_password_reset" value="<?= htmlspecialchars($username, ENT_QUOTES, 'UTF-8') ?>">
+                                                             <button class="verify-link" type="submit" style="cursor:pointer;">Send Reset Link</button>
+                                                         </form>
+                                                     <?php endif; ?>
+                                                     <?php if ($canManageUserPermissions && !in_array('admin', $entryRoles, true)): ?>
+                                                         <button class="verify-link" type="button" style="cursor:pointer;" data-edit-target="user-rights-<?= htmlspecialchars(md5($username), ENT_QUOTES, 'UTF-8') ?>">Individual Rights<?= $overrideCount > 0 ? ' (' . $overrideCount . ')' : '' ?></button>
+                                                    <?php elseif (in_array('admin', $entryRoles, true)): ?>
+                                                        <span class="verify-link" style="opacity:.7; cursor:default;">Admin has full access</span>
+                                                    <?php endif; ?>
+                                                </div>
                                             </td>
                                         </tr>
+                                        <?php if ($canManageUsers): ?>
+                                            <tr id="user-roles-<?= htmlspecialchars(md5($username), ENT_QUOTES, 'UTF-8') ?>" style="display:none;">
+                                                <td colspan="5">
+                                                    <form method="post" style="display:grid; gap:16px;">
+                                                        <input type="hidden" name="target_user" value="<?= htmlspecialchars($username, ENT_QUOTES, 'UTF-8') ?>">
+                                                        <input type="hidden" name="save_user_roles" value="1">
+                                                        <div style="padding:18px 20px; border-radius:22px; background:rgba(15, 23, 42, 0.35); border:1px solid rgba(148, 163, 184, 0.14);">
+                                                            <div style="display:flex; flex-wrap:wrap; gap:14px;">
+                                                                <?php foreach (VERIFY_ROLE_OPTIONS as $roleValue => $roleLabel): ?>
+                                                                    <label style="display:flex; gap:10px; align-items:flex-start; min-width:200px; padding:12px 14px; border-radius:16px; border:1px solid rgba(148, 163, 184, 0.16); background:rgba(15, 23, 42, 0.38);">
+                                                                        <input type="checkbox" name="roles[]" value="<?= htmlspecialchars($roleValue, ENT_QUOTES, 'UTF-8') ?>"<?= in_array($roleValue, $entryRoles, true) ? ' checked' : '' ?> style="margin-top:4px;">
+                                                                        <span>
+                                                                            <span style="display:block; font-weight:700; color:#f8fafc;"><?= htmlspecialchars($roleLabel, ENT_QUOTES, 'UTF-8') ?></span>
+                                                                            <span style="display:block; margin-top:4px; font-size:13px; color:rgba(226, 232, 240, 0.72);"><?= htmlspecialchars($roleValue, ENT_QUOTES, 'UTF-8') ?></span>
+                                                                        </span>
+                                                                    </label>
+                                                                <?php endforeach; ?>
+                                                            </div>
+                                                            <p class="verify-copy" style="margin:14px 0 0;">Select the role groups this user should keep. Their final access comes from the combined rights of every selected group plus any individual overrides.</p>
+                                                        </div>
+                                                        <div class="verify-actions">
+                                                            <button class="verify-button" type="submit">Save Role Groups</button>
+                                                            <button class="verify-button-secondary" type="button" data-edit-target="user-roles-<?= htmlspecialchars(md5($username), ENT_QUOTES, 'UTF-8') ?>">Cancel</button>
+                                                        </div>
+                                                    </form>
+                                                </td>
+                                            </tr>
+                                        <?php endif; ?>
+                                        <?php if ($canManageUserPermissions && !in_array('admin', $entryRoles, true)): ?>
+                                            <tr id="user-rights-<?= htmlspecialchars(md5($username), ENT_QUOTES, 'UTF-8') ?>" style="display:none;">
+                                                <td colspan="5">
+                                                    <form method="post" style="display:grid; gap:16px;">
+                                                        <input type="hidden" name="target_user" value="<?= htmlspecialchars($username, ENT_QUOTES, 'UTF-8') ?>">
+                                                        <input type="hidden" name="save_user_permissions" value="1">
+                                                        <div class="verify-grid">
+                                                            <?php foreach ($permissionCatalog as $permission => $label): ?>
+                                                                <div>
+                                                                    <label class="verify-label"><?= htmlspecialchars($label, ENT_QUOTES, 'UTF-8') ?></label>
+                                                                    <select class="verify-input" name="permission_overrides[<?= htmlspecialchars($permission, ENT_QUOTES, 'UTF-8') ?>]" style="min-height:40px;">
+                                                                        <?php $currentOverride = (string) (($entry['permission_overrides'][$permission] ?? 'inherit')); ?>
+                                                                        <option value="inherit"<?= $currentOverride === 'inherit' ? ' selected' : '' ?>>Inherit group right</option>
+                                                                        <option value="allow"<?= $currentOverride === 'allow' ? ' selected' : '' ?>>Allow for this user</option>
+                                                                        <option value="deny"<?= $currentOverride === 'deny' ? ' selected' : '' ?>>Deny for this user</option>
+                                                                    </select>
+                                                                </div>
+                                                            <?php endforeach; ?>
+                                                        </div>
+                                                        <div class="verify-actions">
+                                                            <button class="verify-button" type="submit">Save Individual Rights</button>
+                                                            <button class="verify-button-secondary" type="button" data-edit-target="user-rights-<?= htmlspecialchars(md5($username), ENT_QUOTES, 'UTF-8') ?>">Cancel</button>
+                                                        </div>
+                                                    </form>
+                                                </td>
+                                            </tr>
+                                        <?php endif; ?>
                                     <?php endforeach; ?>
                                 </tbody>
                             </table>
@@ -294,8 +520,74 @@ if (!empty($_SESSION['verify_admin_authenticated'])) {
                         <?php endif; ?>
                     </div>
                 </div>
+
+                <div class="verify-card">
+                    <div class="verify-card-inner">
+                        <h3 style="margin:0 0 18px; font-size:24px;">Group Roles</h3>
+                        <p class="verify-copy" style="margin-bottom:20px;">These are the role groups available for approved users. You can assign one or several groups to a profile, and the account will inherit the combined access of every selected role group before any individual rights overrides are applied.</p>
+                        <div style="display:flex; flex-wrap:wrap; gap:12px 16px;">
+                            <?php foreach (VERIFY_ROLE_OPTIONS as $roleValue => $roleLabel): ?>
+                                <div style="padding:14px 16px; border-radius:18px; border:1px solid rgba(148, 163, 184, 0.18); background:rgba(15, 23, 42, 0.35); min-width:160px;">
+                                    <div style="font-size:16px; font-weight:700; color:#f8fafc;"><?= htmlspecialchars($roleLabel, ENT_QUOTES, 'UTF-8') ?></div>
+                                    <div style="margin-top:6px; font-size:13px; color:rgba(226, 232, 240, 0.78);"><?= htmlspecialchars($roleValue, ENT_QUOTES, 'UTF-8') ?></div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                </div>
+
+                <?php if ($canManageRolePermissions): ?>
+                    <div class="verify-card">
+                        <div class="verify-card-inner">
+                            <h3 style="margin:0 0 18px; font-size:24px;">Group Rights</h3>
+                            <p class="verify-copy" style="margin-bottom:20px;">Adjust the default rights for each non-admin group. Individual user overrides can still grant or deny a right on top of the group default.</p>
+                            <div class="verify-grid">
+                                <?php foreach ($rolePermissions as $role => $permissions): ?>
+                                    <?php if ($role === 'admin') { continue; } ?>
+                                    <div class="verify-card" style="background:var(--verify-panel-soft);">
+                                        <div class="verify-card-inner">
+                                            <h4 style="margin:0 0 16px; font-size:22px;"><?= htmlspecialchars(verify_role_label($role), ENT_QUOTES, 'UTF-8') ?></h4>
+                                            <form method="post" style="display:grid; gap:12px;">
+                                                <input type="hidden" name="save_role_permissions" value="1">
+                                                <input type="hidden" name="target_role" value="<?= htmlspecialchars($role, ENT_QUOTES, 'UTF-8') ?>">
+                                                <?php foreach ($permissionCatalog as $permission => $label): ?>
+                                                    <label style="display:flex; gap:10px; align-items:flex-start;">
+                                                        <input type="checkbox" name="role_permissions[<?= htmlspecialchars($permission, ENT_QUOTES, 'UTF-8') ?>]" value="1"<?= !empty($permissions[$permission]) ? ' checked' : '' ?> style="margin-top:4px;">
+                                                        <span><?= htmlspecialchars($label, ENT_QUOTES, 'UTF-8') ?></span>
+                                                    </label>
+                                                <?php endforeach; ?>
+                                                <div class="verify-actions">
+                                                    <button class="verify-button" type="submit">Save <?= htmlspecialchars(verify_role_label($role), ENT_QUOTES, 'UTF-8') ?> Rights</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                    </div>
+                <?php endif; ?>
             </div>
         <?php endif; ?>
     </div>
+    <script>
+        (function () {
+            document.querySelectorAll('[data-edit-target]').forEach((button) => {
+                button.addEventListener('click', () => {
+                    const targetId = button.getAttribute('data-edit-target');
+                    const row = targetId ? document.getElementById(targetId) : null;
+                    if (!row) {
+                        return;
+                    }
+
+                    const isOpen = row.style.display !== 'none';
+                    document.querySelectorAll('tr[id^="user-rights-"], tr[id^="user-roles-"]').forEach((editRow) => {
+                        editRow.style.display = 'none';
+                    });
+                    row.style.display = isOpen ? 'none' : 'table-row';
+                });
+            });
+        }());
+    </script>
 </body>
 </html>

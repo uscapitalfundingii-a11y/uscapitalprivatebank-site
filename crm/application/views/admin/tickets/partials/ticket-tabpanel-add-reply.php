@@ -196,7 +196,13 @@
                                 data-rephrase-text="<?= _l('ticket_rephrase_reply'); ?>"
                                 data-loading-text="<?= _l('wait_text'); ?>">
                                 <i class="fa-solid fa-robot"></i>
-                                <?= _l('ticket_suggest_reply'); ?>
+                                Revise
+                            </button>
+                            <button id="btn-ai-followup" type="button"
+                                class="btn btn-secondary tw-w-full sm:tw-w-auto tw-mt-2 sm:tw-mt-0"
+                                data-loading-text="<?= _l('wait_text'); ?>">
+                                <i class="fa-solid fa-user-clock"></i>
+                                Follow-up Message
                             </button>
                             <?php } ?>
                             <button type="submit" class="btn btn-primary tw-w-full sm:tw-w-auto tw-mt-2 sm:tw-mt-0"

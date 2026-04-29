@@ -146,13 +146,20 @@
     @endcan
 @endsection
 
-@if($users->total() > 0 && can('admin.users.notification.all.send'))
+@if($users->total() > 0)
 @push('breadcrumb-plugins')
+    <a href="{{ appendQuery('export', 'crm_csv') }}" class="btn btn--primary">
+        <i class="fas fa-file-csv"></i>
+        @lang('Export CRM CSV')
+        @if($request->has('filter')) (@lang('Filtered')) @endif
+    </a>
+    @if(can('admin.users.notification.all.send'))
     <a href="{{appendQuery('notify', 1)}}" class="btn btn--dark">
         <i class="fas fa-bell"></i>
         @lang('Notify') <strong class="mx-1">{{$users->total()}}</strong> {{__(str_replace('All', '' ,$pageTitle))}} @lang('Holders')
         @if($request->has('filter'))(@lang('Filtered'))@endif
     </a>
+    @endif
     @endpush
 @endif
 

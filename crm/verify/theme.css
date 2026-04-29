@@ -166,6 +166,33 @@ body.verify-portal::before {
     padding: 34px;
 }
 
+.verify-qr-copy {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+    width: 100%;
+}
+
+.verify-qr-title-block {
+    width: 100%;
+    text-align: center;
+    padding-top: 6px;
+}
+
+.verify-qr-title {
+    margin: 0;
+    font-size: clamp(21px, 2vw, 28px);
+    line-height: 1.22;
+    letter-spacing: -0.02em;
+    color: var(--verify-text);
+}
+
+.verify-qr-description {
+    width: 100%;
+    max-width: 420px;
+}
+
 .verify-kicker {
     display: inline-flex;
     align-items: center;
@@ -419,7 +446,7 @@ select.verify-select option {
 }
 
 .verify-footer-note {
-    margin-top: 26px;
+    margin-top: 0;
     color: var(--verify-muted);
     font-size: 13px;
     line-height: 1.7;
@@ -440,6 +467,10 @@ select.verify-select option {
     .verify-hero,
     .verify-grid {
         grid-template-columns: 1fr;
+    }
+
+    .verify-qr-description {
+        max-width: none;
     }
 
     .verify-topbar {

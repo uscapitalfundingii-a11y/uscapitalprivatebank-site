@@ -18,6 +18,11 @@ if ($requestedFile === '' || !is_file($filePath) || !is_array($document) || !ver
     exit('Verification file not found.');
 }
 
+if (verify_document_is_restricted($document) && !verify_current_user_can_access_document($document)) {
+    http_response_code(403);
+    exit('This verified document is restricted to specific approved role groups.');
+}
+
 $documentCode = (string) ($document['code'] ?? pathinfo($requestedFile, PATHINFO_FILENAME));
 $verifyUrl = 'https://www.uscapitalprivatebank.com/crm/verify/verifycode.php?code=' . rawurlencode($documentCode);
 $verifyLandingUrl = 'www.uscapitalprivatebank.com/crm/verify';
