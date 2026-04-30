@@ -10,6 +10,7 @@ class Todo_model extends App_Model
     {
         parent::__construct();
         $this->todo_limit = hooks()->apply_filters('todos_limit', 10);
+        $this->load->model('misc_model');
     }
 
     public function setTodosLimit($limit)
@@ -28,8 +29,12 @@ class Todo_model extends App_Model
 
         if (is_numeric($id)) {
             $this->db->where('todoid', $id);
+            $todo = $this->db->get(db_prefix().'todos')->row();
+            if ($todo) {
+                $todo->attachments = $this->get_todo_attachments($id);
+            }
 
-            return $this->db->get(db_prefix().'todos')->row();
+            return $todo;
         }
 
         return $this->db->get(db_prefix().'todos')->result_array();
@@ -64,6 +69,7 @@ class Todo_model extends App_Model
             $todos[$i]['dateadded']    = _dt($todo['dateadded']);
             $todos[$i]['datefinished'] = _dt($todo['datefinished']);
             $todos[$i]['description']  = $todo['description'];
+            $todos[$i]['attachments']  = $this->get_todo_attachments($todo['todoid']);
             $i++;
         }
 
@@ -123,6 +129,11 @@ class Todo_model extends App_Model
      */
     public function delete_todo_item($id)
     {
+        $attachments = $this->get_todo_attachments($id);
+        foreach ($attachments as $attachment) {
+            $this->remove_todo_attachment($attachment['id']);
+        }
+
         $this->db->where('todoid', $id);
         $this->db->where('staffid', get_staff_user_id());
         $this->db->delete(db_prefix().'todos');
@@ -157,5 +168,67 @@ class Todo_model extends App_Model
         return [
             'success' => false,
         ];
+    }
+
+    public function get_todo_attachments($todoid)
+    {
+        $this->db->select(implode(', ', prefixed_table_fields_array(db_prefix() . 'files')));
+        $this->db->join(db_prefix() . 'todos', db_prefix() . 'todos.todoid = ' . db_prefix() . 'files.rel_id');
+        $this->db->where(db_prefix() . 'files.rel_id', $todoid);
+        $this->db->where(db_prefix() . 'files.rel_type', 'todo');
+        $this->db->where(db_prefix() . 'todos.staffid', get_staff_user_id());
+        $this->db->order_by(db_prefix() . 'files.dateadded', 'desc');
+
+        return $this->db->get(db_prefix() . 'files')->result_array();
+    }
+
+    public function add_attachment_to_database($todoid, $attachment, $external = false)
+    {
+        return $this->misc_model->add_attachment_to_database($todoid, 'todo', $attachment, $external);
+    }
+
+    public function remove_todo_attachment($id)
+    {
+        $deleted = false;
+
+        $this->db->select(db_prefix() . 'files.*');
+        $this->db->from(db_prefix() . 'files');
+        $this->db->join(db_prefix() . 'todos', db_prefix() . 'todos.todoid = ' . db_prefix() . 'files.rel_id');
+        $this->db->where(db_prefix() . 'files.id', $id);
+        $this->db->where(db_prefix() . 'files.rel_type', 'todo');
+        $this->db->where(db_prefix() . 'todos.staffid', get_staff_user_id());
+        $attachment = $this->db->get()->row();
+
+        if ($attachment) {
+            if (empty($attachment->external)) {
+                $relPath  = get_upload_path_by_type('todo') . $attachment->rel_id . '/';
+                $fullPath = $relPath . $attachment->file_name;
+                if (file_exists($fullPath)) {
+                    unlink($fullPath);
+                    $fname     = pathinfo($fullPath, PATHINFO_FILENAME);
+                    $fext      = pathinfo($fullPath, PATHINFO_EXTENSION);
+                    $thumbPath = $relPath . $fname . '_thumb.' . $fext;
+                    if (file_exists($thumbPath)) {
+                        unlink($thumbPath);
+                    }
+                }
+            }
+
+            $this->db->where('id', $attachment->id);
+            $this->db->delete(db_prefix() . 'files');
+            if ($this->db->affected_rows() > 0) {
+                $deleted = true;
+                log_activity('Todo Attachment Deleted [TodoID: ' . $attachment->rel_id . ']');
+            }
+
+            if (is_dir(get_upload_path_by_type('todo') . $attachment->rel_id)) {
+                $other_attachments = list_files(get_upload_path_by_type('todo') . $attachment->rel_id);
+                if (count($other_attachments) == 0) {
+                    delete_dir(get_upload_path_by_type('todo') . $attachment->rel_id);
+                }
+            }
+        }
+
+        return ['success' => $deleted];
     }
 }

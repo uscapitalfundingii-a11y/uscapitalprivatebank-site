@@ -9,12 +9,25 @@
                     <span class="add-title hide"><?php echo _l('todo_add_title'); ?></span>
                 </h4>
             </div>
-            <?php echo form_open('admin/todo/todo', ['id' => 'add_new_todo_item']); ?>
+            <?php echo form_open_multipart('admin/todo/todo', ['id' => 'add_new_todo_item']); ?>
             <div class="modal-body">
                 <div class="row">
                 <?php echo form_hidden('todoid', ''); ?>
                     <div class="col-md-12">
                         <?php echo render_textarea('description', 'add_new_todo_description', ''); ?>
+                    </div>
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label for="todo-attachments"><?php echo _l('todo_add_attachments'); ?></label>
+                            <input type="file" id="todo-attachments" name="attachments[]" class="form-control" multiple>
+                            <p class="text-muted mtop5"><?php echo _l('todo_attachments_help'); ?></p>
+                        </div>
+                    </div>
+                    <div class="col-md-12">
+                        <div id="todo-existing-attachments" class="hide">
+                            <h5 class="bold"><?php echo _l('todo_view_attachments'); ?></h5>
+                            <div class="todo-attachment-list"></div>
+                        </div>
                     </div>
                 </div>
             </div>

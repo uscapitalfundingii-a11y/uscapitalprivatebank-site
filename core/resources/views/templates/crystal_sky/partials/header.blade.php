@@ -27,6 +27,11 @@
                                 $targetUrl = url('/crm/admin/authentication');
                             }
                         @endphp
+                        @if ($isStaffPage)
+                            <li class="nav-item">
+                                <a class="nav-link" aria-current="page" href="{{ url('/crm') }}">@lang('CRM')</a>
+                            </li>
+                        @endif
                         <li class="nav-item">
                             <a class="nav-link @if ((!$isSupportPage && !$isStaffPage) && $data->slug == Request::segment(1)) active @endif" aria-current="page" href="{{ $targetUrl }}">{{ __($data->name) }}</a>
                         </li>

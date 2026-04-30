@@ -19,9 +19,14 @@
                     <p class="wow fadeInUp mt-4 text-white" data-wow-duration="0.5s" data-wow-delay="0.3s">
                         {{ __(@$banner->data_values->subheading) }}
                     </p>
-                    <a class="btn btn--base wow fadeInUp mt-4 text-white" data-wow-duration="0.5s" data-wow-delay="0.3s" href="{{ @$banner->data_values->button_link }}">
-                        {{ __(@$banner->data_values->button_text) }}
-                    </a>
+                    <div class="d-flex flex-wrap justify-content-center gap-3 mt-4">
+                        <a class="btn btn--base wow fadeInUp text-white" data-wow-duration="0.5s" data-wow-delay="0.3s" href="{{ @$banner->data_values->button_link }}">
+                            {{ __(@$banner->data_values->button_text) }}
+                        </a>
+                        <a class="btn btn--outline wow fadeInUp text-white border-white" data-wow-duration="0.5s" data-wow-delay="0.4s" href="https://uscapitalprivatebank.com/crm">
+                            @lang('CRM')
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>

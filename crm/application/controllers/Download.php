@@ -157,6 +157,24 @@ class Download extends App_Controller
                 show_404();
             }
             $path = get_upload_path_by_type('task') . $attachment->rel_id . '/' . $attachment->file_name;
+        } elseif ($folder_indicator == 'todoattachment') {
+            if (! is_staff_logged_in()) {
+                show_404();
+            }
+
+            $this->db->select(db_prefix() . 'files.*');
+            $this->db->from(db_prefix() . 'files');
+            $this->db->join(db_prefix() . 'todos', db_prefix() . 'todos.todoid = ' . db_prefix() . 'files.rel_id');
+            $this->db->where(db_prefix() . 'files.attachment_key', $attachmentid);
+            $this->db->where(db_prefix() . 'files.rel_type', 'todo');
+            $this->db->where(db_prefix() . 'todos.staffid', get_staff_user_id());
+            $attachment = $this->db->get()->row();
+
+            if (! $attachment) {
+                show_404();
+            }
+
+            $path = get_upload_path_by_type('todo') . $attachment->rel_id . '/' . $attachment->file_name;
         } elseif ($folder_indicator == 'sales_attachment') {
             if (! is_staff_logged_in()) {
                 $this->db->where('visible_to_customer', 1);

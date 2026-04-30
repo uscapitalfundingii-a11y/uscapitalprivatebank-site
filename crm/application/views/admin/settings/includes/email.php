@@ -297,12 +297,32 @@ echo render_input('settings[smtp_password]', 'settings_email_password', $ps, 'pa
             <?= _l('email_queue_cron_note'); ?>
         </p>
         <?php
-        $queueEmails = $this->email->get_queue_emails();
+        $queueEmails     = [];
+        $queueTableError = '';
+        $queueTable      = db_prefix() . 'mail_queue';
+
+        if ($this->db->table_exists($queueTable)) {
+            try {
+                $queueEmails = $this->db->order_by('id', 'DESC')->get($queueTable)->result();
+            } catch (Throwable $e) {
+                $queueTableError = $e->getMessage();
+            } catch (Exception $e) {
+                $queueTableError = $e->getMessage();
+            }
+        } else {
+            $queueTableError = 'Email queue table is missing.';
+        }
 ?>
         <hr />
         <h4 class="mbot15">
             <?= _l('email_queue'); ?>
         </h4>
+
+        <?php if ($queueTableError !== '') { ?>
+        <div class="alert alert-warning">
+            <?= e($queueTableError); ?>
+        </div>
+        <?php } ?>
 
         <table class="table dt-table">
             <thead>
@@ -315,9 +335,12 @@ echo render_input('settings[smtp_password]', 'settings_email_password', $ps, 'pa
             </thead>
             <tbody>
                 <?php foreach ($queueEmails as $email) {
-                    $headers = unserialize($email->headers); ?>
+                    $headers = @unserialize($email->headers);
+                    if (! is_array($headers)) {
+                        $headers = [];
+                    } ?>
                 <tr>
-                    <td><?= e($headers['subject']); ?>
+                    <td><?= e($headers['subject'] ?? ''); ?>
                     </td>
                     <td><?= e($email->email); ?></td>
                     <td><?= e($email->status); ?></td>

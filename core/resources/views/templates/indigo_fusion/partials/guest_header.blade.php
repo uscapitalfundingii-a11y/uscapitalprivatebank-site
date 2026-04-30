@@ -16,6 +16,13 @@
             $targetUrl = url('/crm/admin/authentication');
         }
     @endphp
+    @if ($isStaffPage)
+        <li>
+            <a href="{{ url('/crm') }}">
+                @lang('CRM')
+            </a>
+        </li>
+    @endif
     <li>
         <a class="@if ((!$isSupportPage && !$isStaffPage) && $data->slug == Request::segment(1)) active @endif" href="{{ $targetUrl }}">
             {{ __($data->name) }}

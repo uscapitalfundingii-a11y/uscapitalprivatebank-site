@@ -19,7 +19,8 @@ return App_table::find('clients')
             'email',
             db_prefix() . 'clients.phonenumber as phonenumber',
             db_prefix() . 'clients.active',
-            '(SELECT GROUP_CONCAT(name SEPARATOR ",") FROM ' . db_prefix() . 'customer_groups JOIN ' . db_prefix() . 'customers_groups ON ' . db_prefix() . 'customer_groups.groupid = ' . db_prefix() . 'customers_groups.id WHERE customer_id = ' . db_prefix() . 'clients.userid ORDER by name ASC) as customerGroups',
+            '(SELECT COUNT(*) FROM ' . db_prefix() . 'tickets WHERE userid = ' . db_prefix() . 'clients.userid) as totalTicketsCount',
+            '(SELECT COUNT(*) FROM ' . db_prefix() . 'tickets WHERE userid = ' . db_prefix() . 'clients.userid AND status != 5) as openTicketsCount',
             db_prefix() . 'clients.datecreated as datecreated',
         ];
 
@@ -134,17 +135,15 @@ return App_table::find('clients')
 
             $row[] = $toggleActive;
 
-            // Customer groups parsing
-            $groupsRow = '';
-            if ($aRow['customerGroups']) {
-                $groups = explode(',', $aRow['customerGroups']);
+            $ticketsColumn = '';
+            $totalTickets  = isset($aRow['totalTicketsCount']) ? (int) $aRow['totalTicketsCount'] : 0;
+            $openTickets   = isset($aRow['openTicketsCount']) ? (int) $aRow['openTicketsCount'] : 0;
 
-                foreach ($groups as $group) {
-                    $groupsRow .= '<span class="label label-default mleft5 customer-group-list pointer">' . e($group) . '</span>';
-                }
+            if ($totalTickets > 0) {
+                $ticketsColumn = (string) $openTickets;
             }
 
-            $row[] = $groupsRow;
+            $row[] = $ticketsColumn;
 
             $row[] = e(_dt($aRow['datecreated']));
 

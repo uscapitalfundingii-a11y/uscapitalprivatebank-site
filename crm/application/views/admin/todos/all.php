@@ -125,19 +125,29 @@ $(function() {
 function render_li_items(finished, obj) {
     var todo_finished_class = '';
     var checked = '';
+    var attachments_html = '';
     if (finished == 1) {
         todo_finished_class = ' line-throught';
         checked = 'checked';
+    }
+    if (obj.attachments && obj.attachments.length) {
+        attachments_html += '<div class="todo-attachments-list tw-mt-2">';
+        $.each(obj.attachments, function(i, attachment) {
+            attachments_html += '<a href="' + site_url + 'download/file/todoattachment/' + attachment.attachment_key +
+                '" target="_blank" class="display-block text-muted tw-text-sm"><i class="fa fa-paperclip"></i> ' +
+                attachment.file_name + '</a>';
+        });
+        attachments_html += '</div>';
     }
     return '<li><div class="media"><div class="media-left no-padding-right"><div class="dragger todo-dragger"></div> <input type="hidden" value="' +
         finished + '" name="finished"><input type="hidden" value="' + obj.item_order +
         '" name="todo_order"><div class="checkbox checkbox-default todo-checkbox"><input type="checkbox" name="todo_id" value="' +
         obj.todoid + '" ' + checked +
         '><label></label></div></div> <div class="media-body"><div class="todo-description' + todo_finished_class +
-        ' no-padding-left">' + obj.description + '<a href="#" onclick="delete_todo_item(this,' + obj.todoid +
+        ' no-padding-left">' + obj.description + '</div>' + attachments_html + '<a href="#" onclick="delete_todo_item(this,' + obj.todoid +
         '); return false;" class="pull-right text-muted"><i class="fa fa-remove fa-lg"></i></a><a href="#" onclick="edit_todo_item(' +
         obj.todoid +
-        '); return false;" class="pull-right text-muted mright5"><i class="fa-regular fa-pen-to-square tw-mr-2"></i></a></div><span class="todo-date tw-text-sm tw-text-neutral-500">' +
+        '); return false;" class="pull-right text-muted mright5"><i class="fa-regular fa-pen-to-square tw-mr-2"></i></a><span class="todo-date tw-text-sm tw-text-neutral-500">' +
         obj.dateadded + '</span></div></div></li>';
 }
 </script>

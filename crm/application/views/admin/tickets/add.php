@@ -190,6 +190,12 @@ echo render_select('priority', $priorities, ['priorityid', 'name'], 'ticket_sett
                                 </div>
                                 <div class="clearfix"></div>
                                 <?= render_textarea('message', '', '', [], [], '', 'tinymce'); ?>
+                                <div class="text-right tw-mt-3">
+                                    <button type="button" class="btn btn-default ticket-dictate-btn" data-target="message">
+                                        <i class="fa-solid fa-microphone"></i>
+                                        Dictate
+                                    </button>
+                                </div>
                                 <div class="attachments_area">
                                     <div class="row attachments">
                                         <div class="attachment">
@@ -264,7 +270,86 @@ echo render_select('priority', $priorities, ['priorityid', 'name'], 'ticket_sett
                 $('body.ticket select[name="contactid"]').change();
             });
             <?php } ?>
+
+            initTicketDictation();
         });
+
+        function initTicketDictation() {
+            var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            $('.ticket-dictate-btn').prop('disabled', !SpeechRecognition);
+
+            if (!SpeechRecognition) {
+                $('.ticket-dictate-btn').attr('title', 'Speech recognition is not supported in this browser.');
+                return;
+            }
+
+            $('.ticket-dictate-btn').off('click.ticket-dictation').on('click.ticket-dictation', function() {
+                var button = $(this);
+                var targetId = button.data('target');
+                var activeRecognition = button.data('ticketRecognition');
+
+                if (activeRecognition) {
+                    activeRecognition.stop();
+                    return;
+                }
+
+                var recognition = new SpeechRecognition();
+                recognition.lang = $('html').attr('lang') || 'en-US';
+                recognition.interimResults = true;
+                recognition.continuous = true;
+
+                recognition.onstart = function() {
+                    button.data('ticketRecognition', recognition);
+                    button.addClass('btn-danger').removeClass('btn-default');
+                    button.html('<i class="fa-solid fa-stop"></i> Stop Dictation');
+                };
+
+                recognition.onresult = function(event) {
+                    var transcript = '';
+
+                    for (var i = event.resultIndex; i < event.results.length; i++) {
+                        if (event.results[i].isFinal) {
+                            transcript += event.results[i][0].transcript;
+                        }
+                    }
+
+                    transcript = $.trim(transcript);
+                    if (!transcript) {
+                        return;
+                    }
+
+                    var editor = typeof tinymce !== 'undefined' ? tinymce.get(targetId) : null;
+                    if (editor) {
+                        var existing = editor.getContent({
+                            format: 'text'
+                        });
+                        editor.focus();
+                        editor.insertContent((existing && existing.trim() ? ' ' : '') + transcript + ' ');
+                        return;
+                    }
+
+                    var textarea = $('#' + targetId);
+                    if (!textarea.length) {
+                        return;
+                    }
+
+                    var current = textarea.val();
+                    textarea.val((current && current.trim() ? current + ' ' : '') + transcript + ' ');
+                };
+
+                recognition.onerror = function() {
+                    recognition.stop();
+                };
+
+                recognition.onend = function() {
+                    button.removeData('ticketRecognition');
+                    button.removeClass('btn-danger').addClass('btn-default');
+                    button.html('<i class="fa-solid fa-microphone"></i> Dictate');
+                };
+
+                recognition.start();
+            });
+        }
     </script>
     </body>
 

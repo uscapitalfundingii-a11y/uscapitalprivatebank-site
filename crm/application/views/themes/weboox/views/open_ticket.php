@@ -131,6 +131,12 @@
                                 <div class="form-group open-ticket-message-group">
                                     <label for=""><?php echo _l('clients_ticket_open_body'); ?></label>
                                     <textarea name="message" id="message" class="form-control" rows="15"><?php echo set_value('message'); ?></textarea>
+                                    <div class="text-right mtop15">
+                                        <button type="button" class="btn btn-default ticket-dictate-btn" data-target="message">
+                                            <i class="fa-solid fa-microphone"></i>
+                                            Dictate
+                                        </button>
+                                    </div>
                                 </div>
 
                                 <div class="panel-footer attachments_area open-ticket-attachments-area">
@@ -161,5 +167,71 @@
                 </div>
             </div>
 </div>
+<script>
+    $(function() {
+        initWebooxOpenTicketDictation();
+    });
+
+    function initWebooxOpenTicketDictation() {
+        var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        $('.ticket-dictate-btn').prop('disabled', !SpeechRecognition);
+
+        if (!SpeechRecognition) {
+            $('.ticket-dictate-btn').attr('title', 'Speech recognition is not supported in this browser.');
+            return;
+        }
+
+        $('.ticket-dictate-btn').off('click.weboox-open-ticket-dictation').on('click.weboox-open-ticket-dictation', function() {
+            var button = $(this);
+            var target = $('#' + button.data('target'));
+            var activeRecognition = button.data('ticketRecognition');
+
+            if (activeRecognition) {
+                activeRecognition.stop();
+                return;
+            }
+
+            var recognition = new SpeechRecognition();
+            recognition.lang = $('html').attr('lang') || 'en-US';
+            recognition.interimResults = true;
+            recognition.continuous = true;
+
+            recognition.onstart = function() {
+                button.data('ticketRecognition', recognition);
+                button.addClass('btn-danger').removeClass('btn-default');
+                button.html('<i class="fa-solid fa-stop"></i> Stop Dictation');
+            };
+
+            recognition.onresult = function(event) {
+                var transcript = '';
+                for (var i = event.resultIndex; i < event.results.length; i++) {
+                    if (event.results[i].isFinal) {
+                        transcript += event.results[i][0].transcript;
+                    }
+                }
+
+                transcript = $.trim(transcript);
+                if (!transcript || !target.length) {
+                    return;
+                }
+
+                var current = target.val();
+                target.val((current && current.trim() ? current + ' ' : '') + transcript + ' ');
+            };
+
+            recognition.onerror = function() {
+                recognition.stop();
+            };
+
+            recognition.onend = function() {
+                button.removeData('ticketRecognition');
+                button.removeClass('btn-danger').addClass('btn-default');
+                button.html('<i class="fa-solid fa-microphone"></i> Dictate');
+            };
+
+            recognition.start();
+        });
+    }
+</script>
 
         <?php echo form_close(); ?>

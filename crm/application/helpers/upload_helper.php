@@ -491,6 +491,75 @@ function handle_task_attachments_array($taskid, $index_name = 'attachments')
 }
 
 /**
+ * Todo attachments upload array
+ * Multiple todo attachments can be uploaded from the todo modal.
+ * @param  mixed $todoid
+ * @param  string $index_name
+ * @return array|false
+ */
+function handle_todo_attachments_array($todoid, $index_name = 'attachments')
+{
+    $hookData = hooks()->apply_filters('before_handle_todo_attachments_array', [
+        'todo_id' => $todoid,
+        'index_name' => $index_name,
+        'uploaded_files' => [],
+        'handled_externally' => false,
+        'files' => $_FILES,
+    ]);
+
+    if ($hookData['handled_externally']) {
+        return count($hookData['uploaded_files']) > 0 ? $hookData['uploaded_files'] : false;
+    }
+
+    $uploaded_files = [];
+    $path           = get_upload_path_by_type('todo') . $todoid . '/';
+
+    if (isset($_FILES[$index_name]['name'])
+        && ($_FILES[$index_name]['name'] != '' || is_array($_FILES[$index_name]['name']) && count($_FILES[$index_name]['name']) > 0)) {
+        if (!is_array($_FILES[$index_name]['name'])) {
+            $_FILES[$index_name]['name']     = [$_FILES[$index_name]['name']];
+            $_FILES[$index_name]['type']     = [$_FILES[$index_name]['type']];
+            $_FILES[$index_name]['tmp_name'] = [$_FILES[$index_name]['tmp_name']];
+            $_FILES[$index_name]['error']    = [$_FILES[$index_name]['error']];
+            $_FILES[$index_name]['size']     = [$_FILES[$index_name]['size']];
+        }
+
+        _file_attachments_index_fix($index_name);
+        for ($i = 0; $i < count($_FILES[$index_name]['name']); $i++) {
+            $tmpFilePath = $_FILES[$index_name]['tmp_name'][$i];
+
+            if (!empty($tmpFilePath) && $tmpFilePath != '') {
+                if (_perfex_upload_error($_FILES[$index_name]['error'][$i])
+                    || !_upload_extension_allowed($_FILES[$index_name]['name'][$i])) {
+                    continue;
+                }
+
+                _maybe_create_upload_path($path);
+                $filename    = unique_filename($path, $_FILES[$index_name]['name'][$i]);
+                $newFilePath = $path . $filename;
+
+                if (move_uploaded_file($tmpFilePath, $newFilePath)) {
+                    $uploaded_files[] = [
+                        'file_name' => $filename,
+                        'filetype'  => $_FILES[$index_name]['type'][$i],
+                    ];
+
+                    if (is_image($newFilePath)) {
+                        create_img_thumb($path, $filename);
+                    }
+                }
+            }
+        }
+    }
+
+    if (count($uploaded_files) > 0) {
+        return $uploaded_files;
+    }
+
+    return false;
+}
+
+/**
  * Invoice attachments
  * @param  mixed $invoiceid invoice ID to add attachments
  * @return void  - Result values
@@ -1318,6 +1387,10 @@ function get_upload_path_by_type($type)
         break;
         case 'task':
             $path = TASKS_ATTACHMENTS_FOLDER;
+
+        break;
+        case 'todo':
+            $path = TODOS_ATTACHMENTS_FOLDER;
 
         break;
         case 'contract':

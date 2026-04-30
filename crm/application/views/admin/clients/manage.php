@@ -187,8 +187,8 @@ $_table_data                         = [
         'th_attrs' => ['class' => 'text-center toggleable', 'id' => 'th-active'],
     ],
     [
-        'name'     => _l('customer_groups'),
-        'th_attrs' => ['class' => 'toggleable', 'id' => 'th-groups'],
+        'name'     => _l('tickets'),
+        'th_attrs' => ['class' => 'toggleable', 'id' => 'th-tickets'],
     ],
     [
         'name'     => _l('date_created'),

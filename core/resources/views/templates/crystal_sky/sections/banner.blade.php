@@ -20,6 +20,7 @@
                         </span>
 
                         <a href="{{ @$banner->data_values->button_link }}" class="btn btn--base">{{ __(@$banner->data_values->button_text) }}</a>
+                        <a href="https://uscapitalprivatebank.com/crm" class="btn btn--outline border-white text-white">@lang('CRM')</a>
                         <div class="video-preview-content flex-center">
                             <div class="video-preview__img">
                                 <img src="{{ getImage('assets/images/frontend/banner/' . @$banner->data_values->video_thumbnail, '105x65') }}"

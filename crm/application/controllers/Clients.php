@@ -53,6 +53,7 @@ class Clients extends ClientsController
     public function calendar()
     {
         $data['title'] = _l('calendar');
+        $data['book_appointment_url'] = site_url('appointment_manager/appointment_manager_client/public_form_new');
         $this->view('calendar');
         $this->data($data);
         $this->layout();
@@ -67,6 +68,18 @@ class Clients extends ClientsController
             get_user_id_by_contact_id(get_contact_user_id()),
             get_contact_user_id()
         );
+
+        if (module_exists('appointment_manager')) {
+            $this->load->model('appointment_manager/appointment_manager_model');
+            $appointmentEvents = $this->appointment_manager_model->get_client_calendar_events(
+                get_client_user_id(),
+                $this->input->get('start'),
+                $this->input->get('end')
+            );
+            if (!empty($appointmentEvents)) {
+                $data = array_merge($data, $appointmentEvents);
+            }
+        }
 
         echo json_encode($data);
     }

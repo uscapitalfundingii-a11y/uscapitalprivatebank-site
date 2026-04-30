@@ -39,12 +39,27 @@ class Todo extends AdminController
                 unset($data['todoid']);
                 $id = $this->todo_model->add($data);
                 if ($id) {
+                    $files = handle_todo_attachments_array($id, 'attachments');
+                    if ($files) {
+                        foreach ($files as $file) {
+                            $this->todo_model->add_attachment_to_database($id, [$file], false);
+                        }
+                    }
+                }
+                if ($id) {
                     set_alert('success', _l('added_successfully', _l('todo')));
                 }
             } else {
                 $id = $data['todoid'];
                 unset($data['todoid']);
                 $success = $this->todo_model->update($id, $data);
+                $files = handle_todo_attachments_array($id, 'attachments');
+                if ($files) {
+                    foreach ($files as $file) {
+                        $this->todo_model->add_attachment_to_database($id, [$file], false);
+                    }
+                    $success = true;
+                }
                 if ($success) {
                     set_alert('success', _l('updated_successfully', _l('todo')));
                 }
@@ -87,6 +102,15 @@ class Todo extends AdminController
                 'success' => $this->todo_model->delete_todo_item($id),
             ]);
         }
+        die();
+    }
+
+    public function remove_todo_attachment($id)
+    {
+        if ($this->input->is_ajax_request()) {
+            echo json_encode($this->todo_model->remove_todo_attachment($id));
+        }
+
         die();
     }
 }

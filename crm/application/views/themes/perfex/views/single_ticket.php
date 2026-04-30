@@ -116,8 +116,14 @@ foreach ($custom_fields as $field) {
         <div class="panel_s single-ticket-reply-area">
             <div class="panel-body">
                 <div class="form-group">
-                    <textarea name="message" class="form-control" rows="8"></textarea>
+                    <textarea name="message" id="ticket-reply-message" class="form-control" rows="8"></textarea>
                     <?= form_error('message'); ?>
+                    <div class="text-right tw-mt-3">
+                        <button type="button" class="btn btn-default ticket-dictate-btn" data-target="ticket-reply-message">
+                            <i class="fa-solid fa-microphone"></i>
+                            Dictate
+                        </button>
+                    </div>
                 </div>
                 <div class="attachments_area">
                     <div class="attachments">
@@ -273,6 +279,72 @@ foreach ($custom_fields as $field) {
     </div>
 
 </div>
+<script>
+    $(function() {
+        initClientReplyDictation();
+    });
+
+    function initClientReplyDictation() {
+        var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        $('.ticket-dictate-btn').prop('disabled', !SpeechRecognition);
+
+        if (!SpeechRecognition) {
+            $('.ticket-dictate-btn').attr('title', 'Speech recognition is not supported in this browser.');
+            return;
+        }
+
+        $('.ticket-dictate-btn').off('click.client-reply-dictation').on('click.client-reply-dictation', function() {
+            var button = $(this);
+            var target = $('#' + button.data('target'));
+            var activeRecognition = button.data('ticketRecognition');
+
+            if (activeRecognition) {
+                activeRecognition.stop();
+                return;
+            }
+
+            var recognition = new SpeechRecognition();
+            recognition.lang = $('html').attr('lang') || 'en-US';
+            recognition.interimResults = true;
+            recognition.continuous = true;
+
+            recognition.onstart = function() {
+                button.data('ticketRecognition', recognition);
+                button.addClass('btn-danger').removeClass('btn-default');
+                button.html('<i class="fa-solid fa-stop"></i> Stop Dictation');
+            };
+
+            recognition.onresult = function(event) {
+                var transcript = '';
+                for (var i = event.resultIndex; i < event.results.length; i++) {
+                    if (event.results[i].isFinal) {
+                        transcript += event.results[i][0].transcript;
+                    }
+                }
+
+                transcript = $.trim(transcript);
+                if (!transcript || !target.length) {
+                    return;
+                }
+
+                var current = target.val();
+                target.val((current && current.trim() ? current + ' ' : '') + transcript + ' ');
+            };
+
+            recognition.onerror = function() {
+                recognition.stop();
+            };
+
+            recognition.onend = function() {
+                button.removeData('ticketRecognition');
+                button.removeClass('btn-danger').addClass('btn-default');
+                button.html('<i class="fa-solid fa-microphone"></i> Dictate');
+            };
+
+            recognition.start();
+        });
+    }
+</script>
 <?php if (count($ticket_replies) > 1) { ?>
 <a href="#top" id="toplink">↑</a>
 <a href="#bot" id="botlink">↓</a>

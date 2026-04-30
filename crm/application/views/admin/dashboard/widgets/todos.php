@@ -50,6 +50,17 @@
                                 data-todo-description="<?php echo e($todo['todoid']); ?>">
                                 <?php echo process_text_content_for_display($todo['description']); ?>
                             </div>
+                            <?php if (!empty($todo['attachments'])) { ?>
+                            <div class="todo-attachments-list tw-mt-2">
+                                <?php foreach ($todo['attachments'] as $attachment) { ?>
+                                <a href="<?php echo site_url('download/file/todoattachment/' . $attachment['attachment_key']); ?>"
+                                    target="_blank" class="display-block text-muted tw-text-sm">
+                                    <i class="fa fa-paperclip"></i>
+                                    <?php echo e($attachment['file_name']); ?>
+                                </a>
+                                <?php } ?>
+                            </div>
+                            <?php } ?>
                             <a href="#" onclick="delete_todo_item(this,<?php echo e($todo['todoid']); ?>); return false;"
                                 class="pull-right text-muted">
                                 <i class="fa fa-remove fa-lg"></i>
@@ -92,6 +103,17 @@
                             <div class="todo-description read-more line-throught no-padding-left">
                                 <?php echo process_text_content_for_display($todo_finished['description']); ?>
                             </div>
+                            <?php if (!empty($todo_finished['attachments'])) { ?>
+                            <div class="todo-attachments-list tw-mt-2">
+                                <?php foreach ($todo_finished['attachments'] as $attachment) { ?>
+                                <a href="<?php echo site_url('download/file/todoattachment/' . $attachment['attachment_key']); ?>"
+                                    target="_blank" class="display-block text-muted tw-text-sm">
+                                    <i class="fa fa-paperclip"></i>
+                                    <?php echo e($attachment['file_name']); ?>
+                                </a>
+                                <?php } ?>
+                            </div>
+                            <?php } ?>
                             <a href="#"
                                 onclick="delete_todo_item(this,<?php echo e($todo_finished['todoid']); ?>); return false;"
                                 class="pull-right text-muted"><i class="fa fa-remove"></i></a>

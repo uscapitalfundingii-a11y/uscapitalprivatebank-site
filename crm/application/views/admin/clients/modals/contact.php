@@ -144,7 +144,8 @@
                         <?php } ?>
                         <?php if (is_email_template_active('contact-set-password')) { ?>
                         <div class="checkbox">
-                            <input type="checkbox" name="send_set_password_email" id="send_set_password_email">
+                            <input type="checkbox" name="send_set_password_email" id="send_set_password_email"
+                                <?= ! isset($contact) ? 'checked' : ''; ?>>
                             <label for="send_set_password_email">
                                 <?= _l('client_send_set_password_email'); ?>
                             </label>
@@ -180,7 +181,7 @@
                                         <input type="checkbox"
                                             id="<?= e($permission['id']); ?>"
                                             class="onoffswitch-checkbox"
-                                            <?= (isset($contact) && has_contact_permission($permission['short_name'], $contact->id) || is_array($default_contact_permissions) && in_array($permission['id'], $default_contact_permissions)) ? 'checked' : ''; ?>
+                                            <?= ((isset($contact) && has_contact_permission($permission['short_name'], $contact->id)) || (!isset($contact)) || (is_array($default_contact_permissions) && in_array($permission['id'], $default_contact_permissions))) ? 'checked' : ''; ?>
                                         value="<?= e($permission['id']); ?>"
                                         name="permissions[]">
                                         <label class="onoffswitch-label"
@@ -215,7 +216,7 @@
                                         <div class="onoffswitch">
                                             <input type="checkbox" id="invoice_emails" data-perm-id="1"
                                                 class="onoffswitch-checkbox"
-                                                <?= (isset($contact) && $contact->invoice_emails == '1') ? 'checked' : ''; ?>
+                                                <?= ((isset($contact) && $contact->invoice_emails == '1') || !isset($contact)) ? 'checked' : ''; ?>
                                             value="invoice_emails" name="invoice_emails">
                                             <label class="onoffswitch-label" for="invoice_emails"></label>
                                         </div>
@@ -231,7 +232,7 @@
                                         <div class="onoffswitch">
                                             <input type="checkbox" id="estimate_emails" data-perm-id="2"
                                                 class="onoffswitch-checkbox"
-                                                <?= (isset($contact) && $contact->estimate_emails == '1') ? 'checked' : ''; ?>
+                                                <?= ((isset($contact) && $contact->estimate_emails == '1') || !isset($contact)) ? 'checked' : ''; ?>
                                             value="estimate_emails"
                                             name="estimate_emails">
                                             <label class="onoffswitch-label" for="estimate_emails"></label>
@@ -248,7 +249,7 @@
                                         <div class="onoffswitch">
                                             <input type="checkbox" id="credit_note_emails" data-perm-id="1"
                                                 class="onoffswitch-checkbox"
-                                                <?= (isset($contact) && $contact->credit_note_emails == '1') ? 'checked' : ''; ?>
+                                                <?= ((isset($contact) && $contact->credit_note_emails == '1') || !isset($contact)) ? 'checked' : ''; ?>
                                             value="credit_note_emails"
                                             name="credit_note_emails">
                                             <label class="onoffswitch-label" for="credit_note_emails"></label>
@@ -266,7 +267,7 @@
                                         <div class="onoffswitch">
                                             <input type="checkbox" id="project_emails" data-perm-id="6"
                                                 class="onoffswitch-checkbox"
-                                                <?= (isset($contact) && $contact->project_emails == '1') ? 'checked' : ''; ?>
+                                                <?= ((isset($contact) && $contact->project_emails == '1') || !isset($contact)) ? 'checked' : ''; ?>
                                             value="project_emails" name="project_emails">
                                             <label class="onoffswitch-label" for="project_emails"></label>
                                         </div>
@@ -282,7 +283,7 @@
                                         <div class="onoffswitch">
                                             <input type="checkbox" id="ticket_emails" data-perm-id="5"
                                                 class="onoffswitch-checkbox"
-                                                <?= (isset($contact) && $contact->ticket_emails == '1') ? 'checked' : ''; ?>
+                                                <?= ((isset($contact) && $contact->ticket_emails == '1') || !isset($contact)) ? 'checked' : ''; ?>
                                             value="ticket_emails" name="ticket_emails">
                                             <label class="onoffswitch-label" for="ticket_emails"></label>
                                         </div>
@@ -296,7 +297,7 @@
                                         <div class="onoffswitch">
                                             <input type="checkbox" id="task_emails" data-perm-id="6"
                                                 class="onoffswitch-checkbox"
-                                                <?= (isset($contact) && $contact->task_emails == '1') ? 'checked' : ''; ?>
+                                                <?= ((isset($contact) && $contact->task_emails == '1') || !isset($contact)) ? 'checked' : ''; ?>
                                             value="task_emails" name="task_emails">
                                             <label class="onoffswitch-label" for="task_emails"></label>
                                         </div>
@@ -313,7 +314,7 @@
                                         <div class="onoffswitch">
                                             <input type="checkbox" id="contract_emails" data-perm-id="3"
                                                 class="onoffswitch-checkbox"
-                                                <?= (isset($contact) && $contact->contract_emails == '1') ? 'checked' : ''; ?>
+                                                <?= ((isset($contact) && $contact->contract_emails == '1') || !isset($contact)) ? 'checked' : ''; ?>
                                             value="contract_emails"
                                             name="contract_emails">
                                             <label class="onoffswitch-label" for="contract_emails"></label>
