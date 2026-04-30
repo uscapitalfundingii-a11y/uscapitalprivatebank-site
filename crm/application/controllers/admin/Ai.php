@@ -76,4 +76,39 @@ class Ai extends AdminController
             ]);
         }
     }
+
+    public function email_reply()
+    {
+        try {
+            $draftHtml = (string) $this->input->post('draft_html', false);
+            $context = trim((string) $this->input->post('context'));
+
+            if (trim(strip_tags($draftHtml)) === '' && $context === '') {
+                throw new Exception('There is not enough email content to generate a reply.');
+            }
+
+            $prompt = "Write a polished, professional private-banking email reply. Return only HTML that is ready to insert into TinyMCE."
+                . "\n\nOriginal email context:\n" . ($context !== '' ? $context : 'No original message was provided.')
+                . "\n\nCurrent draft or notes:\n" . (trim($draftHtml) !== '' ? $draftHtml : 'No draft yet.')
+                . "\n\nInstructions:\n"
+                . "- Keep the tone clear, professional, and helpful.\n"
+                . "- Preserve any useful facts already in the draft.\n"
+                . "- If the draft is only rough notes, turn it into a complete email.\n"
+                . "- Do not wrap the response in markdown fences.\n"
+                . "- Return only the final email body HTML.";
+
+            $reply = $this->provider->chat($prompt);
+
+            echo json_encode([
+                'success' => true,
+                'message' => $reply,
+            ]);
+        } catch (Exception $e) {
+            http_response_code(400);
+            echo json_encode([
+                'success' => false,
+                'error'   => $e->getMessage(),
+            ]);
+        }
+    }
 }

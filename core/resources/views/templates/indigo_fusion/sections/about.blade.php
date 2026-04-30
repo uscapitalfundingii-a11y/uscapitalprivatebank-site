@@ -33,6 +33,18 @@
                                 </div>
                             </div>
                         @endforeach
+                        <div class="col-xxl-8 col-xl-10 wow fadeInRight" data-wow-duration="0.5s" data-wow-delay="0.35s">
+                            <div class="about-card">
+                                <div class="about-card__icon rounded-3 bg--base">
+                                    <i class="las la-balance-scale"></i>
+                                </div>
+                                <div class="about-card__content">
+                                    <h4 class="title">@lang('Corporate Identity')</h4>
+                                    <p>@lang('Review the official legal independence and institutional identity statement for U.S. Capital Private Bank.')</p>
+                                    <a href="{{ route('corporate.identity') }}" class="btn btn--sm btn--base mt-3">@lang('Open Notice')</a>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

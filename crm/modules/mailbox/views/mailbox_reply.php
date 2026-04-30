@@ -53,20 +53,18 @@
     <?php echo render_input('cc', 'CC'); ?>
     <?php echo render_input('subject', 'mailbox_subject', $subject); ?>
 	<?php
-        $CI = &get_instance();
-        $mail_signature = '';
-        $currentuser = $CI->db->select('mail_signature')
-            ->from(db_prefix().'staff')
-            ->where('staffid', get_staff_user_id())
-            ->get()
-            ->row_array();
-        if (!empty($currentuser['mail_signature'])) {
-            $mail_signature = $currentuser['mail_signature'];
-        }
+        $mail_signature = isset($mail_signature) ? $mail_signature : '';
         $body = $mail->body;
         $attachmentlang = _l('mailbox_single_attachment');
+        $mailbox_ai_context = 'Original email subject: ' . $mail->subject . "\n"
+            . 'From: ' . ($mail->from_email ?? '') . "\n"
+            . 'To: ' . ($mail->to ?? '') . "\n"
+            . 'CC: ' . ($mail->cc ?? '') . "\n\n"
+            . 'Original message:' . "\n" . strip_tags((string) $body);
     ?>
     <hr />    
+    <?php $mailbox_editor_id = 'body'; ?>
+    <?php $this->load->view('mailbox/partials/editor_tools'); ?>
     <?php 
     if (!empty($attachment)) {
         if (!empty($mail_signature)) {
@@ -101,7 +99,7 @@
     </div>
 
     <div class="btn-group pull-left">
-      <a href="<?php echo admin_url().'mailbox'; ?>" class="btn btn-warning close-send-template-modal"><?php echo _l('cancel'); ?></a>      
+      <a href="<?php echo admin_url('mailbox/folder/inbox'); ?>" class="btn btn-warning close-send-template-modal"><?php echo _l('cancel'); ?></a>      
     </div>
 
     <div class="pull-right">            

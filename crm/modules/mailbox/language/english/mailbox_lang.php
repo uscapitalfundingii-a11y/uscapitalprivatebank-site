@@ -40,3 +40,7 @@ $lang['mailbox_email_signature']                               	 		= 'Your HTML 
 $lang['mailbox_email_config_successfully']                              = 'Account successfully configured ';
 $lang['mailbox_user_pass_instructions']                                 = 'Enter your IMAP username and password here. Once you save the button, you will need to configure your server details in Settings - Mailbox menu item';
 $lang['mailbox_single_attachment']                                      = 'Selfhosted Attachment';
+$lang['mailbox_insert_signature_preset']                                = 'Insert signature preset';
+$lang['mailbox_sync_center']                                            = 'Sync Center';
+$lang['mailbox_reply_with_ai']                                          = 'Reply with AI';
+$lang['mailbox_ai_reply_failed']                                        = 'AI reply could not be generated.';

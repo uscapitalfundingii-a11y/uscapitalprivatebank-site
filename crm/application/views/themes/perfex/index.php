@@ -21,6 +21,7 @@
             if (is_client_logged_in() && $subMenuEnabled && ! isset($knowledge_base_search)) { ?>
                 <ul class="submenu customer-top-submenu">
                     <?php hooks()->do_action('before_customers_area_sub_menu_start'); ?>
+                    <?php if (!isset($hide_client_files_shortcut) || !$hide_client_files_shortcut) { ?>
                     <li class="customers-top-submenu-files">
                         <a href="<?= site_url('clients/files'); ?>"
                             class="tw-inline-flex tw-items-center">
@@ -34,6 +35,7 @@
                             </span>
                         </a>
                     </li>
+                    <?php } ?>
                     <li class="customers-top-submenu-calendar">
                         <a href="<?= site_url('clients/calendar'); ?>"
                             class="tw-inline-flex tw-items-center">

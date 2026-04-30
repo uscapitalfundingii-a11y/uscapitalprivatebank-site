@@ -35,6 +35,8 @@
 </div>
 <div class="panel_s">
     <div class="panel-body">
+        <?php $client_page_help_context = 'project'; ?>
+        <?php get_template_part('client_directions'); ?>
         <?php get_template_part('projects/project_tabs'); ?>
         <div class="clearfix mtop15"></div>
         <?php get_template_part('projects/' . $group); ?>

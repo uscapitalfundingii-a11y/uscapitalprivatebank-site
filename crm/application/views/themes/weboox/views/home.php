@@ -1,4 +1,96 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
+<style>
+.client-dashboard-hero {
+	position: relative;
+	overflow: hidden;
+	border-radius: 24px;
+	padding: 34px 36px;
+	margin-bottom: 28px;
+	color: #fff;
+	background: linear-gradient(135deg, rgba(8,32,71,.96), rgba(20,92,180,.88)), url('https://uscapitalprivatebank.com/assets/img/hero-bg.jpg') center/cover no-repeat;
+	box-shadow: 0 24px 50px rgba(7, 32, 70, 0.22);
+}
+.client-dashboard-hero:before {
+	content: '';
+	position: absolute;
+	inset: 0;
+	background: radial-gradient(circle at top right, rgba(255,255,255,.2), transparent 35%);
+}
+.client-dashboard-hero > * {
+	position: relative;
+	z-index: 1;
+}
+.client-dashboard-eyebrow {
+	display: inline-block;
+	letter-spacing: .18em;
+	text-transform: uppercase;
+	font-size: 12px;
+	font-weight: 700;
+	color: #bcd7ff;
+	margin-bottom: 14px;
+}
+.client-dashboard-title {
+	margin: 0 0 16px;
+	font-size: 44px;
+	line-height: 1.08;
+	font-weight: 800;
+	color: #fff;
+}
+.client-dashboard-copy {
+	max-width: 780px;
+	font-size: 17px;
+	line-height: 1.75;
+	color: rgba(255,255,255,.88);
+	margin-bottom: 22px;
+}
+.client-dashboard-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 12px;
+}
+.client-dashboard-actions .btn-default {
+	background: rgba(255,255,255,.1);
+	color: #fff;
+	border-color: rgba(255,255,255,.35);
+}
+.client-dashboard-steps {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 14px;
+	margin-top: 24px;
+}
+.client-dashboard-step {
+	padding: 18px 18px 16px;
+	border-radius: 16px;
+	background: rgba(255,255,255,.12);
+	backdrop-filter: blur(8px);
+	border: 1px solid rgba(255,255,255,.14);
+}
+.client-dashboard-step strong {
+	display: block;
+	margin-bottom: 8px;
+	color: #bcd7ff;
+	text-transform: uppercase;
+	letter-spacing: .08em;
+	font-size: 12px;
+}
+.client-dashboard-step span {
+	display: block;
+	color: #fff;
+	line-height: 1.6;
+}
+@media (max-width: 767px) {
+	.client-dashboard-hero {
+		padding: 26px 22px;
+	}
+	.client-dashboard-title {
+		font-size: 34px;
+	}
+	.client-dashboard-steps {
+		grid-template-columns: 1fr;
+	}
+}
+</style>
 
 <div class="kt-grid__item kt-grid__item--fluid kt-grid kt-grid--ver kt-grid--stretch">
 	<div class="kt-container kt-body  kt-grid kt-grid--ver" id="kt_body">
@@ -19,7 +111,7 @@
 						</div>
 					</div>
 					<div class="kt-subheader__toolbar">
-						<div class="kt-subheader__wrapper">
+							<div class="kt-subheader__wrapper">
 							<a href="<?php echo site_url('clients/tickets'); ?>" class="btn kt-subheader__btn-secondary">
 								<?php echo _l('support'); ?>
 							</a>
@@ -46,6 +138,34 @@
 						<div class="" style="width:100%;">
 							<div class="kt-portlet" id="kt_portlet" style="padding-bottom:30px;">
 								<div class="kt-portlet__body"><?php echo validation_errors('<div class="alert alert-danger text-center">', '</div>'); ?>
+								<div class="client-dashboard-hero">
+									<span class="client-dashboard-eyebrow">U.S. Capital Private Bank Client Portal</span>
+									<h1 class="client-dashboard-title">Secure project management for every banking request.</h1>
+									<p class="client-dashboard-copy">Use this portal to open a structured project, upload documents into the correct transaction workspace, and keep your communication with the bank organized, traceable, and professionally routed.</p>
+									<div class="client-dashboard-actions">
+										<a href="<?php echo site_url('clients/new_project'); ?>" class="btn btn-info">Need help? Try the wizard.</a>
+										<a href="<?php echo site_url('clients/projects'); ?>" class="btn btn-default">View Projects</a>
+										<a href="<?php echo site_url('clients/tickets'); ?>" class="btn btn-default">Support Tickets</a>
+									</div>
+									<div class="client-dashboard-steps">
+										<div class="client-dashboard-step">
+											<strong>Step 1</strong>
+											<span>Create a project for the exact transaction or service request you are working on.</span>
+										</div>
+										<div class="client-dashboard-step">
+											<strong>Step 2</strong>
+											<span>Upload files and supporting documents directly inside that project workspace.</span>
+										</div>
+										<div class="client-dashboard-step">
+											<strong>Step 3</strong>
+											<span>Use tickets and updates inside the project so your relationship team has the full context.</span>
+										</div>
+									</div>
+								</div>
+								<div id="client-first-visit-help" style="display:none;">
+									<?php $client_page_help_context = 'home'; ?>
+									<?php get_template_part('client_directions'); ?>
+								</div>
 								<h4  style="color:#84c529;" class="projects-summary-heading no-mtop mbot15"><?php echo _l('projects_summary'); ?></h4>
 								<br>
 								<div class="row">
@@ -177,4 +297,32 @@ if(greet) {
 	document.getElementById('greeting').innerHTML =
 	'<b>' + greet + ' <?php echo $contact->firstname; ?>!</b>';
 }
+
+(function () {
+	var helpKey = 'client-home-help-dismissed-<?php echo (int) $contact->id; ?>';
+	var helpWrap = document.getElementById('client-first-visit-help');
+	if (!helpWrap) {
+		return;
+	}
+
+	if (!window.localStorage.getItem(helpKey)) {
+		helpWrap.style.display = 'block';
+	}
+
+	var alertBox = helpWrap.querySelector('.alert');
+	if (!alertBox) {
+		return;
+	}
+
+	var closeButton = document.createElement('button');
+	closeButton.type = 'button';
+	closeButton.className = 'close';
+	closeButton.setAttribute('aria-label', 'Close');
+	closeButton.innerHTML = '&times;';
+	closeButton.onclick = function () {
+		window.localStorage.setItem(helpKey, '1');
+		helpWrap.style.display = 'none';
+	};
+	alertBox.insertBefore(closeButton, alertBox.firstChild);
+})();
 </script>

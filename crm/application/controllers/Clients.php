@@ -789,6 +789,66 @@ class Clients extends ClientsController
         $this->layout();
     }
 
+    public function new_project()
+    {
+        return $this->support_wizard();
+    }
+
+    public function support_wizard()
+    {
+        if (!has_contact_permission('projects')) {
+            set_alert('warning', _l('access_denied'));
+            redirect(site_url());
+        }
+
+        $data                        = [];
+        $data['category_options']    = $this->get_project_category_options();
+        $data['transaction_options'] = $this->get_support_transaction_options();
+        $data['hide_client_files_shortcut'] = true;
+        $data['title']               = 'New Project';
+
+        if ($this->input->post()) {
+            $this->form_validation->set_rules('project_name', 'Project Name', 'required');
+            $this->form_validation->set_rules('project_category', 'Category', 'required');
+            $this->form_validation->set_rules('support_service_type', 'Support / Service Type', 'required');
+            $this->form_validation->set_rules('project_summary', 'Project Summary', 'required');
+
+            if ($this->form_validation->run() !== false) {
+                $projectName   = trim((string) $this->input->post('project_name'));
+                $category      = trim((string) $this->input->post('project_category'));
+                $serviceType   = trim((string) $this->input->post('support_service_type'));
+                $customService = trim((string) $this->input->post('custom_service_type'));
+                $summary       = trim((string) $this->input->post('project_summary'));
+
+                if ($serviceType === 'other' && $customService !== '') {
+                    $serviceType = $customService;
+                }
+
+                $projectId = $this->create_client_support_project($projectName, $category, $serviceType, $summary);
+
+                if ($projectId) {
+                    $uploadResult = $this->attach_new_project_files($projectId, 'project_files');
+
+                    set_alert('success', 'Your new project has been created successfully.');
+                    if ($uploadResult['uploaded'] > 0) {
+                        set_alert('success', $uploadResult['uploaded'] . ' file(s) were attached to your project.');
+                    }
+                    if (!empty($uploadResult['errors'])) {
+                        set_alert('warning', implode('<br>', $uploadResult['errors']));
+                    }
+                    redirect(site_url('clients/project/' . $projectId));
+                }
+
+                set_alert('warning', 'We could not create the project right now. Please try again.');
+                redirect(site_url('clients/new_project'));
+            }
+        }
+
+        $this->data($data);
+        $this->view('support_wizard');
+        $this->layout();
+    }
+
     public function ticket($id)
     {
         if (!has_contact_permission('support')) {
@@ -832,6 +892,196 @@ class Clients extends ClientsController
         $this->data($data);
         $this->view('single_ticket');
         $this->layout();
+    }
+
+    protected function get_project_category_options()
+    {
+        return [
+            'trade finance'     => 'Trade Finance',
+            'banking services'  => 'Banking Services',
+            'compliance'        => 'Compliance',
+            'account services'  => 'Account Services',
+            'documentation'     => 'Documentation',
+            'funding advisory'  => 'Funding Advisory',
+            'other'             => 'Other',
+        ];
+    }
+
+    protected function get_support_transaction_options()
+    {
+        return [
+            'standby letter of credit' => 'Standby Letter of Credit',
+            'letter of credit'         => 'Letter of Credit',
+            'bank guarantee'           => 'Bank Guarantee',
+            'proof of funds'           => 'Proof of Funds',
+            'blocked funds'            => 'Blocked Funds Confirmation',
+            'ready willing and able'   => 'Ready, Willing, and Able Letter',
+            'wire transfer'            => 'Wire Transfer',
+            'swift transfer'           => 'SWIFT Transfer',
+            'account to account transfer' => 'Account-to-Account Transfer',
+            'payment release'          => 'Payment Release / Disbursement',
+            'diplomatic status'        => 'Diplomatic Status Processing',
+            'trade finance advisory'   => 'Trade Finance Advisory',
+            'trade platform onboarding' => 'Trade Platform Onboarding',
+            'trade platform'           => 'Trade Platform',
+            'bank instrument'          => 'Bank Instrument',
+            'private banking onboarding' => 'Private Banking Onboarding',
+            'account opening'          => 'Account Opening',
+            'compliance review'        => 'Compliance Review',
+            'account activation'       => 'Account Activation',
+            'account update'           => 'Account Update / Maintenance',
+            'online banking access'    => 'Online Banking Access',
+            'kyc submission'           => 'KYC Submission',
+            'enhanced due diligence'   => 'Enhanced Due Diligence',
+            'document review'          => 'Document Review / Legalization',
+            'escrow arrangement'       => 'Escrow Arrangement',
+            'investment onboarding'    => 'Investment / Treasury Onboarding',
+            'relationship management'  => 'Relationship Manager Assistance',
+            'other'                    => 'Other',
+        ];
+    }
+
+    protected function create_client_support_project($projectName, $category = '', $serviceType = '', $summary = '')
+    {
+        $projectStatuses = $this->projects_model->get_project_statuses();
+        $defaultStatusId = 1;
+
+        if (!empty($projectStatuses) && isset($projectStatuses[0]['id'])) {
+            $defaultStatusId = (int) $projectStatuses[0]['id'];
+        }
+
+        $descriptionParts = [];
+        if ($category !== '') {
+            $descriptionParts[] = 'Category: ' . $category;
+        }
+        if ($serviceType !== '') {
+            $descriptionParts[] = 'Support / Service Type: ' . $serviceType;
+        }
+        if ($summary !== '') {
+            $descriptionParts[] = 'Summary: ' . $summary;
+        }
+
+        $description = implode("\n\n", $descriptionParts);
+
+        return $this->projects_model->add([
+            'name'         => $projectName,
+            'description'  => $description,
+            'clientid'     => get_client_user_id(),
+            'billing_type' => 1,
+            'start_date'   => date('Y-m-d'),
+            'status'       => $defaultStatusId,
+            'settings'     => [
+                'available_features' => [
+                    'project_overview',
+                    'project_files',
+                    'project_discussions',
+                    'project_tickets',
+                    'project_activity',
+                ],
+                'upload_files'      => 1,
+                'open_discussions'  => 1,
+                'view_activity_log' => 1,
+            ],
+        ]);
+    }
+
+    protected function attach_new_project_files($projectId, $indexName = 'project_files')
+    {
+        $result = [
+            'uploaded' => 0,
+            'errors'   => [],
+        ];
+
+        if (!isset($_FILES[$indexName]['name'])) {
+            return $result;
+        }
+
+        if (!is_array($_FILES[$indexName]['name'])) {
+            $_FILES[$indexName]['name']     = [$_FILES[$indexName]['name']];
+            $_FILES[$indexName]['type']     = [$_FILES[$indexName]['type']];
+            $_FILES[$indexName]['tmp_name'] = [$_FILES[$indexName]['tmp_name']];
+            $_FILES[$indexName]['error']    = [$_FILES[$indexName]['error']];
+            $_FILES[$indexName]['size']     = [$_FILES[$indexName]['size']];
+        }
+
+        $path     = get_upload_path_by_type('project') . $projectId . '/';
+        $filesIds = [];
+
+        hooks()->do_action('before_upload_project_attachment', $projectId);
+
+        for ($i = 0; $i < count($_FILES[$indexName]['name']); $i++) {
+            $originalName = $_FILES[$indexName]['name'][$i] ?? '';
+
+            if ($originalName === '') {
+                continue;
+            }
+
+            $uploadError = _perfex_upload_error($_FILES[$indexName]['error'][$i]);
+            if ($uploadError) {
+                $result['errors'][] = $originalName . ' - ' . $uploadError;
+                continue;
+            }
+
+            $tmpFilePath = $_FILES[$indexName]['tmp_name'][$i] ?? '';
+            if ($tmpFilePath === '') {
+                continue;
+            }
+
+            _maybe_create_upload_path($path);
+
+            $uniqueOriginalName = unique_filename($path, $originalName);
+            $filename           = app_generate_hash() . '.' . get_file_extension($uniqueOriginalName);
+
+            if (!_upload_extension_allowed($filename)) {
+                $result['errors'][] = $originalName . ' - This file type is not allowed.';
+                continue;
+            }
+
+            $newFilePath = $path . $filename;
+            if (!move_uploaded_file($tmpFilePath, $newFilePath)) {
+                $result['errors'][] = $originalName . ' - The file could not be uploaded.';
+                continue;
+            }
+
+            $data = [
+                'project_id'          => $projectId,
+                'file_name'           => $filename,
+                'original_file_name'  => $uniqueOriginalName,
+                'filetype'            => $_FILES[$indexName]['type'][$i],
+                'dateadded'           => date('Y-m-d H:i:s'),
+                'staffid'             => 0,
+                'contact_id'          => get_contact_user_id(),
+                'subject'             => $uniqueOriginalName,
+                'visible_to_customer' => 1,
+            ];
+
+            $this->db->insert(db_prefix() . 'project_files', $data);
+            $insertId = $this->db->insert_id();
+
+            if (!$insertId) {
+                if (file_exists($newFilePath)) {
+                    unlink($newFilePath);
+                }
+
+                $result['errors'][] = $originalName . ' - The file record could not be saved.';
+                continue;
+            }
+
+            if (is_image($newFilePath)) {
+                create_img_thumb($path, $filename);
+            }
+
+            $result['uploaded']++;
+            $filesIds[] = $insertId;
+        }
+
+        if (!empty($filesIds)) {
+            $this->load->model('projects_model');
+            $lastFileId = end($filesIds);
+            $this->projects_model->new_project_file_notification($lastFileId, $projectId);
+        }
+
+        return $result;
     }
 
     public function contracts()

@@ -4,117 +4,70 @@
     <br>
     <div class="content">
         <div class="row">
-            <div class="col-md-3">
-                <div class="panel_s mbot5">
-                    <div class="">
-                        <a href="<?php echo admin_url().'mailbox/compose'; ?>" class="btn btn-info display-block">
-                            <i class="fa fa-edit"></i>
-                            Compose email
-                        </a>
-                        <a href="<?php echo admin_url('mailbox/fetch_now'); ?>" class="btn btn-default display-block mtop10">
-                            <i class="fa fa-download"></i>
-                            Send/Receive email
-                        </a>
-                    </div>
-                </div>               
-
-                <ul class="nav navbar-pills navbar-pills-flat nav-tabs nav-stacked customer-tabs" role="tablist">
-                    <li class="<?php if ('inbox' == $group) {
-    echo 'active ';
-} ?>mail_tab_<?php echo $group; ?>">
-                        <a data-group="inbox" href="<?php echo admin_url('mailbox?group=inbox'); ?>">
-                            <i class="fa fa-inbox menu-icon" aria-hidden="true"></i>
-                            <?php echo _l('mailbox_inbox'); ?>
-                            <?php
-                                $mailbox_staff_id = function_exists('mailbox_get_selected_staff_id') ? mailbox_get_selected_staff_id() : get_staff_user_id();
-                                $num_unread = total_rows(db_prefix().'mail_inbox', ['read' => '0', 'to_staff_id' => $mailbox_staff_id, 'trash' => '0']);
-                                if ($num_unread > 0) {
-                                    ?>
-                            <span class="badge menu-badge bg-warning"><?php echo $num_unread; ?></span>
-                            <?php
-                                }  ?>
-                        </a>
-                    </li>
-                    <li class="<?php if ('starred' == $group) {
-                                    echo 'active ';
-                                } ?>mail_tab_<?php echo $group; ?>">
-                        <a data-group="starred" href="<?php echo admin_url('mailbox?group=starred'); ?>">
-                            <i class="fa fa-star menu-icon orange" aria-hidden="true"></i>
-                            <?php echo _l('mailbox_starred'); ?>
-                        </a>
-                    </li>
-                    <li class="<?php if ('sent' == $group) {
-                                    echo 'active ';
-                                } ?>mail_tab_<?php echo $group; ?>">
-                        <a data-group="sent" href="<?php echo admin_url('mailbox?group=sent'); ?>">
-                            <i class="fa fa-envelope menu-icon" aria-hidden="true"></i>
-                            <?php echo _l('mailbox_sent'); ?>
-                        </a>
-                    </li>
-                    <li class="<?php if ('important' == $group) {
-                                    echo 'active ';
-                                } ?>mail_tab_<?php echo $group; ?>">
-                        <a data-group="important" href="<?php echo admin_url('mailbox?group=important'); ?>">
-                            <i class="fa fa-bookmark menu-icon red" aria-hidden="true"></i>
-                            <?php echo _l('mailbox_important'); ?>
-                        </a>
-                    </li>
-                    <li class="<?php if ('draft' == $group) {
-                                    echo 'active ';
-                                } ?>mail_tab_<?php echo $group; ?>">
-                        <a data-group="draft" href="<?php echo admin_url('mailbox?group=draft'); ?>">
-                            <i class="fa fa-file menu-icon" aria-hidden="true"></i>
-                            <?php echo _l('mailbox_draft'); ?>
-                        </a>
-                    </li>
-                    <li class="<?php if ('trash' == $group) {
-                                    echo 'active ';
-                                } ?>mail_tab_<?php echo $group; ?>">
-                        <a data-group="trash" href="<?php echo admin_url('mailbox?group=trash'); ?>">
-                            <i class="fa fa-trash menu-icon" aria-hidden="true"></i>
-                            <?php echo _l('mailbox_trash'); ?>
-                        </a>
-                    </li>
-                    <li class="<?php if ('config' == $group) {
-                                    echo 'active ';
-                                } ?>mail_tab_<?php echo $group; ?>">
-                        <a data-group="trash" href="<?php echo admin_url('mailbox?group=config'); ?>">
-                            <i class="fa fa-cogs menu-icon" aria-hidden="true"></i>
-                            <?php echo _l('mailbox_config'); ?>
-                        </a>
-                    </li>
-                  
-                </ul>
-            </div>
-            <div class="col-md-9">
+            <div class="col-md-12">
                 <div class="panel_s">
                     <div class="panel-body">
                         <div class="tab-content">
                             <div class="mailbox-heading-bar">
-                                <h4 class="customer-profile-group-heading mailbox-heading-title">
-                                    <?php if ('detail' == $group) {
-                                        echo $title;
-                                    } else {
-                                        echo _l('mailbox_'.$group);
-                                    }
-                                    ?>
-                                </h4>
+                                <div class="mailbox-heading-main">
+                                    <h4 class="customer-profile-group-heading mailbox-heading-title">
+                                        <?php if ('detail' == $group) {
+                                            echo $title;
+                                        } else {
+                                            echo _l('mailbox_'.$group);
+                                        }
+                                        ?>
+                                    </h4>
+                                    <div class="mailbox-action-strip">
+                                        <a href="<?php echo admin_url().'mailbox/compose'; ?>" class="btn btn-info">
+                                            <i class="fa fa-edit"></i>
+                                            Compose email
+                                        </a>
+                                        <a href="<?php echo admin_url('mailbox/folder/sync'); ?>" class="btn btn-default">
+                                            <i class="fa fa-download"></i>
+                                            Send/Receive email
+                                        </a>
+                                        <a href="<?php echo admin_url('mailbox/folder/config'); ?>" class="btn btn-default">
+                                            <i class="fa fa-cogs"></i>
+                                            Mail Settings
+                                        </a>
+                                    </div>
+                                </div>
                                 <?php if (!empty($can_switch_staff_mailbox) && !empty($mailbox_staffs)) { ?>
-                                <form method="get" action="<?php echo admin_url('mailbox'); ?>" class="mailbox-staff-switch-form">
-                                    <input type="hidden" name="group" value="<?php echo html_escape($group === 'detail' ? 'inbox' : $group); ?>">
-                                    <label for="mailbox_staff_id" class="control-label mright10">Mailbox owner</label>
-                                    <select name="staff_id" id="mailbox_staff_id" class="form-control mailbox-staff-select">
-                                        <?php foreach ($mailbox_staffs as $staffMember) { ?>
-                                        <option value="<?php echo (int) $staffMember['staffid']; ?>" <?php echo isset($selected_staff_id) && (int) $selected_staff_id === (int) $staffMember['staffid'] ? 'selected' : ''; ?>>
-                                            <?php echo html_escape(trim($staffMember['firstname'].' '.$staffMember['lastname']).' - '.$staffMember['email']); ?>
-                                        </option>
-                                        <?php } ?>
-                                    </select>
-                                    <button type="submit" class="btn btn-default">View mailbox</button>
-                                </form>
+                                    <form method="get" action="<?php echo admin_url('mailbox/folder/'.html_escape($group === 'detail' ? 'inbox' : $group)); ?>" class="mailbox-staff-switch-form">
+                                        <label for="mailbox_staff_id" class="control-label mright10">Mailbox owner</label>
+                                        <select name="staff_id" id="mailbox_staff_id" class="form-control mailbox-staff-select">
+                                            <?php foreach ($mailbox_staffs as $staffMember) { ?>
+                                            <option value="<?php echo (int) $staffMember['staffid']; ?>" <?php echo isset($selected_staff_id) && (int) $selected_staff_id === (int) $staffMember['staffid'] ? 'selected' : ''; ?>>
+                                                <?php echo html_escape(trim($staffMember['firstname'].' '.$staffMember['lastname']).' - '.$staffMember['email']); ?>
+                                            </option>
+                                            <?php } ?>
+                                        </select>
+                                        <button type="submit" class="btn btn-default">View mailbox</button>
+                                    </form>
                                 <?php } ?>
                             </div>
-                            <?php if ('compose' != $group && 'config' != $group) {?>
+                            <?php if (isset($mailbox_status) && is_array($mailbox_status) && $group !== 'compose' && $group !== 'detail') { ?>
+                            <div class="mailbox-status-card mailbox-status-<?php echo count($mailbox_status['issues']) > 0 ? 'warning' : 'info'; ?> mtop15">
+                                <div class="mailbox-status-row">
+                                    <div class="mailbox-status-pill"><strong>Mailbox</strong> <?php echo !empty($mailbox_status['staff']['email']) ? html_escape($mailbox_status['staff']['email']) : 'Not configured'; ?></div>
+                                    <div class="mailbox-status-pill"><strong>Server</strong> <?php echo !empty($mailbox_status['resolved_imap_server']) ? html_escape($mailbox_status['resolved_imap_server']) : 'Not configured'; ?></div>
+                                    <div class="mailbox-status-pill"><strong>Folder</strong> <?php echo $mailbox_status['folder_scan'] !== '' ? html_escape($mailbox_status['folder_scan']) : 'Not configured'; ?></div>
+                                    <div class="mailbox-status-pill"><strong>Port</strong> <?php echo !empty($mailbox_status['imap_port']) ? html_escape($mailbox_status['imap_port']) : 'Not configured'; ?></div>
+                                    <div class="mailbox-status-pill"><strong>Encryption</strong> <?php echo $mailbox_status['encryption'] !== '' ? strtoupper(html_escape($mailbox_status['encryption'])) : 'None'; ?></div>
+                                    <div class="mailbox-status-pill"><strong>Password</strong> <?php echo !empty($mailbox_status['has_password']) ? 'Saved' : 'Missing'; ?></div>
+                                    <div class="mailbox-status-pill"><strong>Last sync</strong> <?php echo !empty($mailbox_status['last_email_check_at']) ? _dt(date('Y-m-d H:i:s', (int) $mailbox_status['last_email_check_at'])) : 'Never'; ?></div>
+                                </div>
+                                <?php if (count($mailbox_status['issues']) > 0) { ?>
+                                <ul class="mtop10 mbot0">
+                                    <?php foreach ($mailbox_status['issues'] as $issue) { ?>
+                                    <li><?php echo html_escape($issue); ?></li>
+                                    <?php } ?>
+                                </ul>
+                                <?php } ?>
+                            </div>
+                            <?php } ?>
+                            <?php if ('compose' != $group && 'config' != $group && 'sync' != $group) {?>
                             <div class="horizontal-scrollable-tabs preview-tabs-top">
                                 <div class="scroller arrow-left"><i class="fa fa-angle-left"></i></div>
                                 <div class="scroller arrow-right"><i class="fa fa-angle-right"></i></div>
@@ -153,11 +106,7 @@
                                         </li>
                                         <?php } ?>
                                         <li role="presentation" data-toggle="tooltip" title="" class="tab-separator" data-original-title="<?php echo _l('mailbox_delete'); ?>">
-                                            <a href="Javascript:void(0)" aria-controls="tab_emails_tracking" role="tab" data-toggle="tab" onclick="update_mass('<?php echo $group; ?>','trash',1,'<?php if ('draft' == $group) {
-                                    echo 'outbox';
-                                } else {
-                                    echo 'inbox';
-                                } ?>');window.location.reload(); return false;">
+                                            <a href="Javascript:void(0)" aria-controls="tab_emails_tracking" role="tab" data-toggle="tab" onclick="update_mass('<?php echo $group; ?>','trash',1,'inbox');window.location.reload(); return false;">
                                                 <i class="fa fa-trash red" aria-hidden="true"></i>
                                             </a>
                                         </li>
@@ -191,44 +140,12 @@
                                     $this->load->view('mailbox/mailbox_detail');
                                 } elseif ('detail' == $group && 'outbox' == $type) {
                                     $this->load->view('mailbox/mailbox_detail_outbox');
+                                } elseif ('sync' == $group) {
+                                    $this->load->view('mailbox/mailbox_sync');
                                 } elseif ('config' == $group) {
                                     $this->load->view('mailbox/mailbox_config');
                                 } else {?>
-                                    <?php
-                                     $table_data = [];
-                                     $obj        = [
-                                         'name'    => _l('mailbox_from'),
-                                         'th_attrs'=> ['class'=>'toggleable', 'id'=>'th-mailbox-from'],
-                                        ];
-                                     if ('sent' == $group) {
-                                         $obj = [
-                                         'name'    => _l('mailbox_to'),
-                                         'th_attrs'=> ['class'=>'toggleable', 'id'=>'th-mailbox-to'],
-                                        ];
-                                     }
-                                     $_table_data = [
-                                      '<span class="hide"> - </span><div class="checkbox mass_select_all_wrap"><input type="checkbox" id="mass_select_all" data-to-table="mailbox"><label></label></div>',
-                                         $obj,
-                                         [
-                                         'name'    => _l('mailbox_subject'),
-                                         'th_attrs'=> ['class'=>'toggleable', 'id'=>'th-mailbox-subject'],
-                                        ],
-                                         [
-                                         'name'    => _l('mailbox_date'),
-                                         'th_attrs'=> ['class'=>'toggleable', 'id'=>'th-mailbox-date'],
-                                        ],
-                                      ];
-                                     foreach ($_table_data as $_t) {
-                                         array_push($table_data, $_t);
-                                     }
-
-                                     $table_data = hooks()->apply_filters('mailbox_table_columns', $table_data);
-
-                                     render_datatable($table_data, 'mailbox', [], [
-                                           'data-last-order-identifier' => 'mailbox',
-                                           'data-default-order'         => get_table_last_order('mailbox'),
-                                     ]);
-                                     ?>
+                                    <?php $this->load->view('mailbox/partials/direct_list'); ?>
                                 <?php } ?>
                                 
                             </div>
@@ -247,12 +164,6 @@
     $(function(){
         init_btn_with_tooltips();   
         init_tabs_scrollable();   
-        var webmailTableNotSortable = [0];
-        initDataTable('.table-mailbox', admin_url + 'mailbox/table/<?php echo $group; ?>', 'undefined', webmailTableNotSortable, 'undefined', [3, 'desc']);
-        appValidateForm($('#mailbox_config_form'), {
-           email: 'required',
-           mail_password: 'required',
-        });
     });
 </script>
 </body>

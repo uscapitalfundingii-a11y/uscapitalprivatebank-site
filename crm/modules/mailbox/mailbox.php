@@ -56,11 +56,90 @@ function mailbox_module_init_menu_items()
 {
     $CI = &get_instance();
     if ('1' == get_option('mailbox_enabled')) {
+        $mailboxStaffId = mailbox_get_selected_staff_id();
+        $unreadCount = total_rows(db_prefix().'mail_inbox', [
+            'read'        => '0',
+            'to_staff_id' => $mailboxStaffId,
+            'trash'       => '0',
+            'folder'      => 'inbox',
+        ]);
+
         $CI->app_menu->add_sidebar_menu_item('mailbox', [
+            'collapse' => true,
             'name'     => _l('mailbox'),
-            'href'     => admin_url('mailbox'),
             'icon'     => 'fa fa-envelope-square',
             'position' => 6,
+            'badge'    => $unreadCount > 0 ? [
+                'value' => $unreadCount,
+                'color' => '#f0ad4e',
+            ] : [],
+        ]);
+
+        $CI->app_menu->add_sidebar_children_item('mailbox', [
+            'slug'     => 'mailbox-inbox',
+            'name'     => _l('mailbox_inbox'),
+            'href'     => admin_url('mailbox/folder/inbox'),
+            'position' => 5,
+            'badge'    => $unreadCount > 0 ? [
+                'value' => $unreadCount,
+                'color' => '#f0ad4e',
+            ] : [],
+        ]);
+
+        $CI->app_menu->add_sidebar_children_item('mailbox', [
+            'slug'     => 'mailbox-starred',
+            'name'     => _l('mailbox_starred'),
+            'href'     => admin_url('mailbox/folder/starred'),
+            'position' => 10,
+            'badge'    => [],
+        ]);
+
+        $CI->app_menu->add_sidebar_children_item('mailbox', [
+            'slug'     => 'mailbox-sent',
+            'name'     => _l('mailbox_sent'),
+            'href'     => admin_url('mailbox/folder/sent'),
+            'position' => 15,
+            'badge'    => [],
+        ]);
+
+        $CI->app_menu->add_sidebar_children_item('mailbox', [
+            'slug'     => 'mailbox-important',
+            'name'     => _l('mailbox_important'),
+            'href'     => admin_url('mailbox/folder/important'),
+            'position' => 20,
+            'badge'    => [],
+        ]);
+
+        $CI->app_menu->add_sidebar_children_item('mailbox', [
+            'slug'     => 'mailbox-draft',
+            'name'     => _l('mailbox_draft'),
+            'href'     => admin_url('mailbox/folder/draft'),
+            'position' => 25,
+            'badge'    => [],
+        ]);
+
+        $CI->app_menu->add_sidebar_children_item('mailbox', [
+            'slug'     => 'mailbox-trash',
+            'name'     => _l('mailbox_trash'),
+            'href'     => admin_url('mailbox/folder/trash'),
+            'position' => 30,
+            'badge'    => [],
+        ]);
+
+        $CI->app_menu->add_sidebar_children_item('mailbox', [
+            'slug'     => 'mailbox-sync',
+            'name'     => 'Sync Center',
+            'href'     => admin_url('mailbox/folder/sync'),
+            'position' => 35,
+            'badge'    => [],
+        ]);
+
+        $CI->app_menu->add_sidebar_children_item('mailbox', [
+            'slug'     => 'mailbox-settings',
+            'name'     => 'Mail Settings',
+            'href'     => admin_url('mailbox/folder/config'),
+            'position' => 40,
+            'badge'    => [],
         ]);
     }
 }
@@ -148,6 +227,604 @@ function mailbox_imap_datetime($dateString)
 }
 
 /**
+ * Normalize IMAP folder names for safe comparisons.
+ *
+ * @param string $folderName
+ *
+ * @return string
+ */
+function mailbox_normalize_folder_name($folderName)
+{
+    $folderName = trim((string) $folderName);
+    $folderName = str_replace('\\', '/', $folderName);
+
+    return strtolower($folderName);
+}
+
+/**
+ * Resolve IMAP host for a mailbox address.
+ *
+ * @param string $email
+ * @param string $configuredHost
+ *
+ * @return string
+ */
+function mailbox_resolve_imap_host($email, $configuredHost = '')
+{
+    $configuredHost = trim((string) $configuredHost);
+    $useDomainMailHost = (string) get_option('mailbox_imap_use_domain_mail_host') !== '0';
+    $domain = '';
+
+    if (strpos((string) $email, '@') !== false) {
+        $domain = trim(substr(strrchr((string) $email, '@'), 1));
+    }
+
+    if ($configuredHost !== '') {
+        return $configuredHost;
+    }
+
+    if ($useDomainMailHost && $domain !== '') {
+        return 'mail.' . $domain;
+    }
+
+    if ($domain !== '') {
+        return 'mail.' . $domain;
+    }
+
+    return $configuredHost;
+}
+
+/**
+ * Resolve the configured folder against real server folder names.
+ *
+ * @param Imap   $imap
+ * @param string $preferredFolder
+ *
+ * @return string
+ */
+function mailbox_resolve_folder_to_scan($imap, $preferredFolder)
+{
+    $preferredFolder = trim((string) $preferredFolder);
+    if ($preferredFolder === '') {
+        $preferredFolder = 'INBOX';
+    }
+
+    $folders = $imap->getFolders();
+    if (!is_array($folders) || count($folders) === 0) {
+        return $preferredFolder;
+    }
+
+    $normalizedPreferred = mailbox_normalize_folder_name($preferredFolder);
+
+    foreach ($folders as $folder) {
+        if (mailbox_normalize_folder_name($folder) === $normalizedPreferred) {
+            return $folder;
+        }
+    }
+
+    $commonInboxNames = ['INBOX', 'Inbox', 'inbox'];
+    foreach ($commonInboxNames as $candidate) {
+        foreach ($folders as $folder) {
+            if (mailbox_normalize_folder_name($folder) === mailbox_normalize_folder_name($candidate)) {
+                return $folder;
+            }
+        }
+    }
+
+    return $preferredFolder;
+}
+
+/**
+ * Ensure mailbox sync tracking columns exist.
+ *
+ * @return void
+ */
+function mailbox_ensure_imap_sync_columns()
+{
+    $CI = &get_instance();
+
+    if (!$CI->db->field_exists('imap_uid', 'mail_inbox')) {
+        $CI->db->query('ALTER TABLE `'.db_prefix().'mail_inbox` ADD COLUMN `imap_uid` VARCHAR(120) NULL DEFAULT NULL');
+    }
+
+    if (!$CI->db->field_exists('imap_folder', 'mail_inbox')) {
+        $CI->db->query('ALTER TABLE `'.db_prefix().'mail_inbox` ADD COLUMN `imap_folder` VARCHAR(191) NULL DEFAULT NULL');
+    }
+
+    if (!$CI->db->field_exists('mail_source', 'mail_inbox')) {
+        $CI->db->query('ALTER TABLE `'.db_prefix().'mail_inbox` ADD COLUMN `mail_source` VARCHAR(30) NULL DEFAULT NULL');
+    }
+}
+
+/**
+ * Get the option name used to store signature presets for a mailbox owner.
+ *
+ * @param int $staffId
+ *
+ * @return string
+ */
+function mailbox_signature_presets_option_name($staffId)
+{
+    return 'mailbox_signature_presets_staff_' . (int) $staffId;
+}
+
+/**
+ * Get raw signature presets text for a mailbox owner.
+ *
+ * @param int $staffId
+ *
+ * @return string
+ */
+function mailbox_get_signature_presets_raw($staffId)
+{
+    return (string) get_option(mailbox_signature_presets_option_name($staffId));
+}
+
+/**
+ * Save raw signature presets text for a mailbox owner.
+ *
+ * @param int    $staffId
+ * @param string $rawText
+ *
+ * @return void
+ */
+function mailbox_save_signature_presets_raw($staffId, $rawText)
+{
+    $optionName = mailbox_signature_presets_option_name($staffId);
+    $rawText = trim((string) $rawText);
+
+    if (get_option($optionName) === false) {
+        add_option($optionName, $rawText);
+    } else {
+        update_option($optionName, $rawText);
+    }
+}
+
+/**
+ * Parse signature preset blocks for quick insertion in compose/reply.
+ * Each block is separated by a line with five dashes: -----
+ * First line is used as the preset label.
+ *
+ * @param int $staffId
+ *
+ * @return array<int,array<string,string>>
+ */
+function mailbox_get_signature_presets($staffId)
+{
+    $raw = mailbox_get_signature_presets_raw($staffId);
+    if ($raw === '') {
+        return [];
+    }
+
+    $blocks = preg_split('/\R\s*-----\s*\R/', $raw);
+    if (!is_array($blocks)) {
+        return [];
+    }
+
+    $presets = [];
+    foreach ($blocks as $block) {
+        $block = trim((string) $block);
+        if ($block === '') {
+            continue;
+        }
+
+        $lines = preg_split('/\R/', $block);
+        $label = trim((string) ($lines[0] ?? 'Signature'));
+        $content = trim($block);
+        if ($content === '') {
+            continue;
+        }
+
+        $presets[] = [
+            'label'   => $label,
+            'content' => nl2br($content),
+        ];
+    }
+
+    return $presets;
+}
+
+/**
+ * Resolve a logical mailbox bucket to the real server folder.
+ *
+ * @param Imap   $imap
+ * @param string $logicalFolder
+ * @param string $preferredInboxFolder
+ *
+ * @return string
+ */
+function mailbox_resolve_server_folder($imap, $logicalFolder, $preferredInboxFolder = 'Inbox')
+{
+    $logicalFolder = mailbox_normalize_folder_name($logicalFolder);
+
+    if ($logicalFolder === 'inbox') {
+        return mailbox_resolve_folder_to_scan($imap, $preferredInboxFolder);
+    }
+
+    $candidates = [];
+    if ($logicalFolder === 'sent') {
+        $candidates = ['Sent', 'Sent Items', 'INBOX.Sent', 'INBOX.Sent Items', 'Sent Messages'];
+    } elseif ($logicalFolder === 'draft' || $logicalFolder === 'drafts') {
+        $candidates = ['Drafts', 'Draft', 'INBOX.Drafts', 'INBOX.Draft'];
+    } elseif ($logicalFolder === 'trash' || $logicalFolder === 'deleted' || $logicalFolder === 'deleted items') {
+        $candidates = ['Trash', 'Deleted Items', 'INBOX.Trash', 'INBOX.Deleted Items', 'Bin'];
+    }
+
+    $folders = $imap->getFolders();
+    if (!is_array($folders) || count($folders) === 0) {
+        return '';
+    }
+
+    foreach ($candidates as $candidate) {
+        foreach ($folders as $folder) {
+            if (mailbox_normalize_folder_name($folder) === mailbox_normalize_folder_name($candidate)) {
+                return $folder;
+            }
+        }
+    }
+
+    return '';
+}
+
+/**
+ * Open an IMAP connection for one mailbox owner.
+ *
+ * @param array $staff
+ *
+ * @return Imap|null
+ */
+function mailbox_open_staff_imap($staff)
+{
+    $enabled = get_option('mailbox_enabled');
+    $configuredImapServer = trim((string) get_option('mailbox_imap_server'));
+    $imapPort = (int) get_option('mailbox_imap_port');
+    $encryption = get_option('mailbox_encryption');
+    $sharedPassword = (string) get_option('mailbox_shared_password');
+    $emailPassword = !empty($staff['mail_password']) ? (string) $staff['mail_password'] : $sharedPassword;
+    $staffEmail = $staff['email'];
+    $imapServer = mailbox_resolve_imap_host($staffEmail, $configuredImapServer);
+
+    if (1 != $enabled || strlen($imapServer) === 0 || $emailPassword === '') {
+        return null;
+    }
+
+    if ($imapPort <= 0) {
+        $imapPort = 993;
+    }
+
+    if (strpos($imapServer, ':') === false) {
+        $imapServer .= ':' . $imapPort;
+    }
+
+    $imapLibraryPath = APPPATH.'third_party/php-imap/Imap.php';
+    if (!file_exists($imapLibraryPath)) {
+        $imapLibraryPath = module_dir_path(MAILBOX_MODULE_NAME, 'third_party/php-imap/Imap.php');
+    }
+    require_once $imapLibraryPath;
+    include_once APPPATH.'third_party/simple_html_dom.php';
+
+    $imap = new Imap($imapServer, $staffEmail, $emailPassword, $encryption);
+    if (false === $imap->isConnected()) {
+        log_activity('Failed to connect to IMAP from email: '.$staffEmail.' Error: '.$imap->getError(), null);
+
+        return null;
+    }
+
+    return $imap;
+}
+
+/**
+ * Remove a local mail row and its attachments.
+ *
+ * @param int $messageId
+ *
+ * @return void
+ */
+function mailbox_delete_local_mail($messageId)
+{
+    $CI = &get_instance();
+    $messageId = (int) $messageId;
+
+    $attachments = $CI->db
+        ->where('mail_id', $messageId)
+        ->where('type', 'inbox')
+        ->get(db_prefix().'mail_attachment')
+        ->result_array();
+
+    foreach ($attachments as $attachment) {
+        $attachmentPath = MAILBOX_MODULE_UPLOAD_FOLDER.'/inbox/'.$messageId.'/'.$attachment['file_name'];
+        if (file_exists($attachmentPath)) {
+            @unlink($attachmentPath);
+        }
+    }
+
+    $attachmentFolder = MAILBOX_MODULE_UPLOAD_FOLDER.'/inbox/'.$messageId;
+    if (is_dir($attachmentFolder)) {
+        $folderFiles = @scandir($attachmentFolder);
+        if (is_array($folderFiles)) {
+            foreach ($folderFiles as $folderFile) {
+                if ($folderFile === '.' || $folderFile === '..') {
+                    continue;
+                }
+
+                $fullPath = $attachmentFolder.'/'.$folderFile;
+                if (is_file($fullPath)) {
+                    @unlink($fullPath);
+                }
+            }
+        }
+        @rmdir($attachmentFolder);
+    }
+
+    $CI->db->where('mail_id', $messageId)->where('type', 'inbox')->delete(db_prefix().'mail_attachment');
+    $CI->db->where('id', $messageId)->delete(db_prefix().'mail_inbox');
+}
+
+/**
+ * Remove local IMAP-imported emails that no longer exist on the server.
+ *
+ * @param int    $staffId
+ * @param string $folder
+ * @param array  $serverUids
+ *
+ * @return void
+ */
+function mailbox_reconcile_deleted_server_messages($staffId, $folder, array $serverUids)
+{
+    $CI = &get_instance();
+
+    $CI->db->select('id');
+    $CI->db->from(db_prefix().'mail_inbox');
+    $CI->db->where('to_staff_id', (int) $staffId);
+    $CI->db->where('mail_source', 'imap');
+    $CI->db->where('imap_folder', $folder);
+
+    if (count($serverUids) > 0) {
+        $CI->db->where_not_in('imap_uid', $serverUids);
+    }
+
+    $staleMessages = $CI->db->get()->result_array();
+
+    foreach ($staleMessages as $message) {
+        mailbox_delete_local_mail((int) $message['id']);
+    }
+}
+
+/**
+ * Import one server folder into local mail records.
+ *
+ * @param Imap   $imap
+ * @param array  $staff
+ * @param string $logicalFolder
+ * @param string $serverFolder
+ * @param string $fetchMode
+ * @param bool   $onlyUnseenDefault
+ *
+ * @return int
+ */
+function mailbox_import_imap_folder($imap, $staff, $logicalFolder, $serverFolder, $fetchMode = 'unread', $onlyUnseenDefault = true)
+{
+    $CI = &get_instance();
+    $staffId = (int) $staff['staffid'];
+    $imported = 0;
+
+    if ($serverFolder === '' || !$imap->selectFolder($serverFolder)) {
+        return 0;
+    }
+
+    if ('all' === $fetchMode) {
+        $emails = $imap->getMessages();
+    } elseif ('recent' === $fetchMode) {
+        $emails = array_slice($imap->getMessages(), 0, 15);
+    } elseif ($onlyUnseenDefault) {
+        $emails = $imap->getUnreadMessages();
+    } else {
+        $emails = $imap->getMessages();
+    }
+
+    $serverUids = [];
+
+    foreach ($emails as $email) {
+        $serverUids[] = (string) $email['uid'];
+        $plainTextBody = $imap->getPlainTextBody($email['uid']);
+        $plainTextBody = trim($plainTextBody);
+        if (!empty($plainTextBody)) {
+            $email['body'] = $plainTextBody;
+        }
+        $email['body'] = handle_google_drive_links_in_text($email['body']);
+        $email['body'] = prepare_imap_email_body_html($email['body']);
+
+        $attachments = [];
+        if (isset($email['attachments'])) {
+            foreach ($email['attachments'] as $key => $at) {
+                $_atName = $email['attachments'][$key]['name'];
+                unset($email['attachments'][$key]['name']);
+                $email['attachments'][$key]['filename'] = $_atName;
+                $_attachment = $imap->getAttachment($email['uid'], $key);
+                $email['attachments'][$key]['data'] = $_attachment['content'];
+            }
+            $attachments = $email['attachments'];
+        }
+
+        if ('true' == hooks()->apply_filters('imap_fetch_from_email_by_reply_to_header', 'true')) {
+            $replyTo = $imap->getReplyToAddresses($email['uid']);
+
+            if (1 === count($replyTo)) {
+                $email['from'] = $replyTo[0];
+            }
+        }
+
+        $toList = [];
+        if (isset($email['to'])) {
+            foreach ($email['to'] as $to) {
+                $toList[] = trim(preg_replace('/(.*)<(.*)>/', '\\2', $to));
+            }
+        }
+
+        $ccList = [];
+        if (isset($email['cc'])) {
+            foreach ($email['cc'] as $cc) {
+                $ccList[] = trim(preg_replace('/(.*)<(.*)>/', '\\2', $cc));
+            }
+        }
+
+        $fromEmail = trim(preg_replace('/(.*)<(.*)>/', '\\2', $email['from']));
+        $senderName = preg_replace('/(.*)<(.*)>/', '\\1', $email['from']);
+        $senderName = trim(str_replace('"', '', $senderName));
+        if ($senderName === '' && $fromEmail !== '') {
+            $senderName = $fromEmail;
+        }
+        $dateReceived = mailbox_imap_datetime(isset($email['date']) ? $email['date'] : '');
+        $folderTrash = $logicalFolder === 'trash' ? 1 : 0;
+
+        $CI->db->where('to_staff_id', $staffId);
+        $CI->db->group_start();
+        $CI->db->group_start();
+        $CI->db->where('imap_uid', (string) $email['uid']);
+        $CI->db->where('imap_folder', $serverFolder);
+        $CI->db->group_end();
+        $CI->db->or_group_start();
+        $CI->db->where('from_email', $fromEmail);
+        $CI->db->where('subject', isset($email['subject']) ? $email['subject'] : '');
+        $CI->db->where('date_received', $dateReceived);
+        $CI->db->where('folder', $logicalFolder);
+        $CI->db->group_end();
+        $CI->db->group_end();
+        $existingMessage = $CI->db->get(db_prefix().'mail_inbox')->row();
+
+        if ($existingMessage) {
+            $CI->db->where('id', $existingMessage->id)->update(db_prefix().'mail_inbox', [
+                'imap_uid'    => (string) $email['uid'],
+                'imap_folder' => $serverFolder,
+                'mail_source' => 'imap',
+                'read'        => !empty($email['unread']) ? 0 : 1,
+                'trash'       => $folderTrash,
+                'folder'      => $logicalFolder,
+            ]);
+            continue;
+        }
+
+        $fromStaffId = get_staff_id_by_email($fromEmail);
+        $inbox = [
+            'from_email'    => $fromEmail,
+            'from_staff_id' => $fromStaffId ? $fromStaffId : 0,
+            'to'            => implode(',', $toList),
+            'cc'            => implode(',', $ccList),
+            'sender_name'   => $senderName,
+            'subject'       => isset($email['subject']) ? $email['subject'] : '',
+            'body'          => isset($email['body']) ? $email['body'] : '',
+            'to_staff_id'   => $staffId,
+            'date_received' => $dateReceived,
+            'folder'        => $logicalFolder,
+            'trash'         => $folderTrash,
+            'read'          => !empty($email['unread']) ? 0 : 1,
+            'imap_uid'      => (string) $email['uid'],
+            'imap_folder'   => $serverFolder,
+            'mail_source'   => 'imap',
+        ];
+
+        $CI->db->insert(db_prefix().'mail_inbox', $inbox);
+        $inboxId = $CI->db->insert_id();
+        if (!$inboxId) {
+            continue;
+        }
+
+        if (count($attachments) > 0) {
+            $path = MAILBOX_MODULE_UPLOAD_FOLDER.'/inbox/'.$inboxId.'/';
+            if (!file_exists($path)) {
+                mkdir($path, 0755, true);
+                $fp = fopen($path.'index.html', 'w');
+                fclose($fp);
+            }
+
+            foreach ($attachments as $attachment) {
+                $attachmentName = $attachment['filename'];
+                $filenameparts = explode('.', $attachmentName);
+                $extension = strtolower(end($filenameparts));
+                $filename = trim(preg_replace('/[^a-zA-Z0-9-_ ]/', '', implode('', array_slice($filenameparts, 0, -1))));
+                if (!$filename) {
+                    $filename = 'attachment';
+                }
+
+                $attachmentName = unique_filename($path, $filename.'.'.$extension);
+                $fp = fopen($path.$attachmentName, 'w');
+                fwrite($fp, $attachment['data']);
+                fclose($fp);
+
+                $CI->db->insert(db_prefix().'mail_attachment', [
+                    'mail_id'   => $inboxId,
+                    'type'      => 'inbox',
+                    'file_name' => $attachmentName,
+                    'file_type' => get_mime_by_extension($attachmentName),
+                ]);
+            }
+
+            $CI->db->where('id', $inboxId);
+            $CI->db->update(db_prefix().'mail_inbox', [
+                'has_attachment' => 1,
+            ]);
+        }
+
+        $imported++;
+    }
+
+    if ('all' === $fetchMode) {
+        mailbox_reconcile_deleted_server_messages($staffId, $serverFolder, array_values(array_unique($serverUids)));
+    }
+
+    return $imported;
+}
+
+/**
+ * Apply a local mailbox action to the server copy.
+ *
+ * @param array  $staff
+ * @param array  $message
+ * @param string $group
+ * @param string $action
+ * @param int    $value
+ *
+ * @return bool
+ */
+function mailbox_apply_server_message_action($staff, $message, $group, $action, $value)
+{
+    if (empty($message['mail_source']) || $message['mail_source'] !== 'imap' || empty($message['imap_uid']) || empty($message['imap_folder'])) {
+        return true;
+    }
+
+    $imap = mailbox_open_staff_imap($staff);
+    if (!$imap) {
+        return false;
+    }
+
+    $selected = $imap->selectFolder($message['imap_folder']);
+    if (!$selected) {
+        $imap->close();
+
+        return false;
+    }
+
+    $ok = true;
+    if ($action === 'read') {
+        $ok = $imap->setUnseenMessage($message['imap_uid'], (int) $value === 1);
+    } elseif ($action === 'trash') {
+        if ($group === 'trash' || (int) $message['trash'] === 1 || mailbox_normalize_folder_name($message['folder']) === 'trash') {
+            if (method_exists($imap, 'permanentlyDeleteMessage')) {
+                $ok = $imap->permanentlyDeleteMessage($message['imap_uid']);
+            } else {
+                $ok = $imap->deleteMessage($message['imap_uid']);
+            }
+        } else {
+            $ok = $imap->deleteMessage($message['imap_uid']);
+        }
+    }
+
+    $imap->close();
+
+    return $ok !== false;
+}
+
+/**
  * Init mailbox module setting menu items in setup in admin_init hook.
  *
  * @return null
@@ -189,177 +866,53 @@ function mailbox_migration_tables_to_replace_old_links($tables)
  */
 function mailbox_scan_staff_email($staff, $fetchMode = 'unread')
 {
-    $enabled      = get_option('mailbox_enabled');
-    $imap_server  = get_option('mailbox_imap_server');
-    $encryption   = get_option('mailbox_encryption');
-    $folder_scan  = get_option('mailbox_folder_scan');
-    $unseen_email = get_option('mailbox_only_loop_on_unseen_emails');
-    if (1 != $enabled || strlen($imap_server) === 0 || empty($staff['mail_password'])) {
+    $enabled = get_option('mailbox_enabled');
+    $unseenEmail = get_option('mailbox_only_loop_on_unseen_emails');
+
+    if (1 != $enabled) {
         return 0;
     }
 
     $CI = &get_instance();
-    $imapLibraryPath = APPPATH.'third_party/php-imap/Imap.php';
-    if (!file_exists($imapLibraryPath)) {
-        $imapLibraryPath = module_dir_path(MAILBOX_MODULE_NAME, 'third_party/php-imap/Imap.php');
-    }
-    require_once $imapLibraryPath;
-    include_once APPPATH.'third_party/simple_html_dom.php';
+    mailbox_ensure_imap_sync_columns();
 
-    $staff_email = $staff['email'];
-    $staff_id    = $staff['staffid'];
-    $email_pass  = $staff['mail_password'];
-    $imported    = 0;
+    $staffId = (int) $staff['staffid'];
+    $folderScan = trim((string) get_option('mailbox_folder_scan'));
+    $imported = 0;
 
-    $imap = new Imap($imap_server, $staff_email, $email_pass, $encryption);
-    if (false === $imap->isConnected()) {
-        log_activity('Failed to connect to IMAP from email: '.$staff_email.' Error: '.$imap->getError(), null);
-
+    $imap = mailbox_open_staff_imap($staff);
+    if (!$imap) {
         return 0;
     }
 
-    if ('' == $folder_scan) {
-        $folder_scan = 'Inbox';
-    }
-
-    $CI->db->where('staffid', $staff_id);
+    $CI->db->where('staffid', $staffId);
     $CI->db->update(db_prefix().'staff', [
         'last_email_check' => time(),
     ]);
 
-    $imap->selectFolder($folder_scan);
-    if ('all' === $fetchMode) {
-        $emails = $imap->getMessages();
-    } elseif ('recent' === $fetchMode) {
-        $emails = $imap->getMessages();
-        $emails = array_slice($emails, 0, 25);
-    } elseif (1 == $unseen_email) {
-        $emails = $imap->getUnreadMessages();
-    } else {
-        $emails = $imap->getMessages();
+    $resolvedInbox = mailbox_resolve_server_folder($imap, 'inbox', $folderScan !== '' ? $folderScan : 'Inbox');
+    if ($resolvedInbox !== '') {
+        $imported += mailbox_import_imap_folder($imap, $staff, 'inbox', $resolvedInbox, $fetchMode, (int) $unseenEmail === 1);
     }
 
-    foreach ($emails as $email) {
-        $plainTextBody = $imap->getPlainTextBody($email['uid']);
-        $plainTextBody = trim($plainTextBody);
-        if (!empty($plainTextBody)) {
-            $email['body'] = $plainTextBody;
-        }
-        $email['body']       = handle_google_drive_links_in_text($email['body']);
-        $email['body']       = prepare_imap_email_body_html($email['body']);
-        $data['attachments'] = [];
-        $data                = [];
-        $data['attachments'] = [];
-        if (isset($email['attachments'])) {
-            foreach ($email['attachments'] as $key => $at) {
-                $_at_name = $email['attachments'][$key]['name'];
-                unset($email['attachments'][$key]['name']);
-                $email['attachments'][$key]['filename'] = $_at_name;
-                $_attachment                            = $imap->getAttachment($email['uid'], $key);
-                $email['attachments'][$key]['data']     = $_attachment['content'];
-            }
-            $data['attachments'] = $email['attachments'];
-        } else {
-            $data['attachments'] = [];
+    if ($fetchMode === 'all' || $fetchMode === 'recent') {
+        $resolvedSent = mailbox_resolve_server_folder($imap, 'sent', $folderScan);
+        if ($resolvedSent !== '') {
+            $imported += mailbox_import_imap_folder($imap, $staff, 'sent', $resolvedSent, 'all', false);
         }
 
-        if ('true' == hooks()->apply_filters('imap_fetch_from_email_by_reply_to_header', 'true')) {
-            $replyTo = $imap->getReplyToAddresses($email['uid']);
-
-            if (1 === count($replyTo)) {
-                $email['from'] = $replyTo[0];
-            }
+        $resolvedDraft = mailbox_resolve_server_folder($imap, 'draft', $folderScan);
+        if ($resolvedDraft !== '') {
+            $imported += mailbox_import_imap_folder($imap, $staff, 'draft', $resolvedDraft, 'all', false);
         }
 
-        $data['to'] = [];
-        if (isset($email['to'])) {
-            foreach ($email['to'] as $to) {
-                $data['to'][] = trim(preg_replace('/(.*)<(.*)>/', '\\2', $to));
-            }
+        $resolvedTrash = mailbox_resolve_server_folder($imap, 'trash', $folderScan);
+        if ($resolvedTrash !== '') {
+            $imported += mailbox_import_imap_folder($imap, $staff, 'trash', $resolvedTrash, 'all', false);
         }
-
-        $data['cc'] = [];
-        if (isset($email['cc'])) {
-            foreach ($email['cc'] as $cc) {
-                $data['cc'][] = trim(preg_replace('/(.*)<(.*)>/', '\\2', $cc));
-            }
-        }
-
-        $from_email = preg_replace('/(.*)<(.*)>/', '\\2', $email['from']);
-        $sender_name = preg_replace('/(.*)<(.*)>/', '\\1', $email['from']);
-        $sender_name = trim(str_replace('"', '', $sender_name));
-        $date_received = mailbox_imap_datetime(isset($email['date']) ? $email['date'] : '');
-
-        $CI->db->where('to_staff_id', $staff_id);
-        $CI->db->where('from_email', $email['from']);
-        $CI->db->where('subject', isset($email['subject']) ? $email['subject'] : '');
-        $CI->db->where('date_received', $date_received);
-        $existingMessage = $CI->db->get(db_prefix().'mail_inbox')->row();
-        if ($existingMessage) {
-            continue;
-        }
-
-        $inbox = [];
-        $inbox['from_email'] = $email['from'];
-        $from_staff_id = get_staff_id_by_email(trim($from_email));
-        if ($from_staff_id) {
-            $inbox['from_staff_id'] = $from_staff_id;
-        }
-        $inbox['to'] = implode(',', $data['to']);
-        $inbox['cc'] = implode(',', $data['cc']);
-        $inbox['sender_name'] = $sender_name;
-        $inbox['subject'] = isset($email['subject']) ? $email['subject'] : '';
-        $inbox['body'] = isset($email['body']) ? $email['body'] : '';
-        $inbox['to_staff_id'] = $staff_id;
-        $inbox['date_received'] = $date_received;
-        $inbox['folder'] = 'inbox';
-        $inbox['trash'] = 0;
-        $inbox['read'] = !empty($email['unread']) ? 0 : 1;
-
-        $CI->db->insert(db_prefix().'mail_inbox', $inbox);
-        $inbox_id = $CI->db->insert_id();
-        if (!$inbox_id) {
-            continue;
-        }
-
-        if (count($data['attachments']) > 0) {
-            $path = MAILBOX_MODULE_UPLOAD_FOLDER.'/inbox/'.$inbox_id.'/';
-            if (!file_exists($path)) {
-                mkdir($path, 0755, true);
-                $fp = fopen($path.'index.html', 'w');
-                fclose($fp);
-            }
-
-            foreach ($data['attachments'] as $attachment) {
-                $attachment_name = $attachment['filename'];
-                $filenameparts = explode('.', $attachment_name);
-                $extension = strtolower(end($filenameparts));
-                $filename = trim(preg_replace('/[^a-zA-Z0-9-_ ]/', '', implode('', array_slice($filenameparts, 0, -1))));
-                if (!$filename) {
-                    $filename = 'attachment';
-                }
-
-                $attachment_name = unique_filename($path, $filename.'.'.$extension);
-                $fp = fopen($path.$attachment_name, 'w');
-                fwrite($fp, $attachment['data']);
-                fclose($fp);
-
-                $CI->db->insert(db_prefix().'mail_attachment', [
-                    'mail_id'   => $inbox_id,
-                    'type'      => 'inbox',
-                    'file_name' => $attachment_name,
-                    'file_type' => get_mime_by_extension($attachment_name),
-                ]);
-            }
-
-            $CI->db->where('id', $inbox_id);
-            $CI->db->update(db_prefix().'mail_inbox', [
-                'has_attachment' => 1,
-            ]);
-        }
-
-        $imported++;
     }
+
+    $imap->close();
 
     return $imported;
 }
@@ -382,9 +935,13 @@ function mailbox_scan_email_server($staffId = null, $fetchMode = 'unread')
     }
 
     $CI = &get_instance();
+    $sharedPassword = trim((string) get_option('mailbox_shared_password'));
     $CI->db->select()
-        ->from(db_prefix().'staff')
-        ->where(db_prefix().'staff.mail_password !=', '');
+        ->from(db_prefix().'staff');
+
+    if ($sharedPassword === '') {
+        $CI->db->where(db_prefix().'staff.mail_password !=', '');
+    }
 
     if (!empty($staffId)) {
         $CI->db->where(db_prefix().'staff.staffid', (int) $staffId);

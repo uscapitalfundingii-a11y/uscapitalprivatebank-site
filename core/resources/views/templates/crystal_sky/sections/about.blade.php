@@ -53,6 +53,9 @@
                                 </div>
                             @endforeach
                         </div>
+                        <div class="mt-4">
+                            <a href="{{ route('corporate.identity') }}" class="btn btn--base">@lang('View Legal / Corporate Identity')</a>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -54,6 +54,8 @@
         <div class="col-lg-12">
             <div class="kt-portlet" id="kt_portlet">
                 <div class="kt-portlet__body"><?php echo validation_errors('<div class="alert alert-danger text-center">', '</div>'); ?>
+                    <?php $client_page_help_context = 'project'; ?>
+                    <?php get_template_part('client_directions'); ?>
                     <div class="row">
                         <div class="col-md-12">
 

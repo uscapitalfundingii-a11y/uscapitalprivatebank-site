@@ -7,6 +7,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title> {{ gs()->siteName(__($pageTitle)) }}</title>
     @include('partials.seo')
+    <script type="application/ld+json">
+        {!! json_encode([
+            '@context' => 'https://schema.org',
+            '@type' => 'Organization',
+            'name' => 'U.S. Capital Private Bank',
+            'url' => 'https://uscapitalprivatebank.com',
+            'description' => 'Independent private banking institution',
+            'sameAs' => [
+                'https://uscapitalprivatebank.com',
+                'https://uscapitalprivatebank.com/crm',
+            ],
+        ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) !!}
+    </script>
 
     <link href="{{ asset('assets/global/css/bootstrap.min.css') }}" rel="stylesheet">
     <link href="{{ asset('assets/global/css/all.min.css') }}" rel="stylesheet">

@@ -310,11 +310,23 @@ class Tickets extends AdminController
         redirect(admin_url('tickets/ticket/' . $ticket_id));
     }
 
-    public function change_status_ajax($id, $status)
+    public function change_status_ajax($id = null, $status = null)
     {
-        if ($this->input->is_ajax_request()) {
-            echo json_encode($this->tickets_model->change_ticket_status($id, $status));
+        if ($this->input->post()) {
+            $id     = $this->input->post('ticket_id');
+            $status = $this->input->post('status_id');
         }
+
+        echo json_encode($this->tickets_model->change_ticket_status($id, $status));
+        exit();
+    }
+
+    public function change_status($id, $status)
+    {
+        $response = $this->tickets_model->change_ticket_status($id, $status);
+        set_alert($response['alert'], $response['message']);
+
+        redirect(previous_url() ?: admin_url('tickets'));
     }
 
     public function update_single_ticket_settings()

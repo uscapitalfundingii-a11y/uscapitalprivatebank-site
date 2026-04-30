@@ -486,19 +486,13 @@ class Tickets_model extends App_Model
         $insert_id = $this->db->insert_id();
 
         if ($insert_id) {
-            /**
-             * When a ticket is in status "In progress" and the customer reply to the ticket
-             * it changes the status to "Open" which is not normal.
-             *
-             * The ticket should keep the status "In progress"
-             */
             $this->db->select('status');
             $this->db->where('ticketid', $id);
             $old_ticket_status = $this->db->get(db_prefix() . 'tickets')->row()->status;
 
             $newStatus = hooks()->apply_filters(
                 'ticket_reply_status',
-                ($old_ticket_status == 2 && $admin == null ? $old_ticket_status : $status),
+                ($admin == null ? 1 : $status),
                 ['ticket_id' => $id, 'reply_id' => $insert_id, 'admin' => $admin, 'old_status' => $old_ticket_status]
             );
 

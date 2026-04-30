@@ -7,11 +7,14 @@ defined('BASEPATH') or exit('No direct script access allowed');
  */
 
 add_option('mailbox_enabled', 1);
-add_option('mailbox_imap_server', '');
+	add_option('mailbox_imap_server', 'imap.dreamhost.com');
+add_option('mailbox_imap_port', '993');
+	add_option('mailbox_imap_use_domain_mail_host', '0');
 add_option('mailbox_encryption', '');
-add_option('mailbox_folder_scan', 'Inbox');
+	add_option('mailbox_folder_scan', 'INBOX');
 add_option('mailbox_check_every', 3);
 add_option('mailbox_only_loop_on_unseen_emails', 1);
+add_option('mailbox_shared_password', '');
 
 if (!$CI->db->table_exists(db_prefix().'mail_inbox')) {
     $CI->db->query('CREATE TABLE `'.db_prefix()."mail_inbox` (

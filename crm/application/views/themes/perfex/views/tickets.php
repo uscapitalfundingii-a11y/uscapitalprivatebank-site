@@ -34,6 +34,9 @@
     </a>
 </div>
 
+<?php $client_page_help_context = 'tickets'; ?>
+<?php get_template_part('client_directions'); ?>
+
 <div class="panel_s">
     <div class="panel-body">
         <?php get_template_part('tickets_table'); ?>

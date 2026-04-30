@@ -236,6 +236,14 @@ function app_init_admin_sidebar_menu_items()
             'position' => 8,
             'badge'    => [],
         ]);
+
+        $CI->app_menu->add_sidebar_children_item('utilities', [
+            'slug'     => 'email-marketing',
+            'name'     => _l('email_marketing'),
+            'href'     => admin_url('email_marketing'),
+            'position' => 9,
+            'badge'    => [],
+        ]);
     }
 
     if (staff_can('view',  'bulk_pdf_exporter')) {

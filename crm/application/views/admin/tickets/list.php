@@ -164,6 +164,15 @@
     var chart;
     var chart_data = <?= $weekly_tickets_opening_statistics; ?> ;
 
+    function set_open_tickets_oldest_first_order() {
+        var table = $('.table-tickets');
+        if (!$.fn.DataTable.isDataTable(table)) {
+            return;
+        }
+
+        table.DataTable().order([[10, 'asc']]).draw();
+    }
+
     function init_tickets_weekly_chart() {
         if (typeof(chart) !== 'undefined') {
             chart.destroy();
@@ -188,6 +197,16 @@
             }
         });
     }
+
+    $(function() {
+        $('body').on('click', '[data-ticket-status-id="1"]', function() {
+            setTimeout(set_open_tickets_oldest_first_order, 150);
+        });
+
+        <?php if ((int) $chosen_ticket_status === 1) { ?>
+        setTimeout(set_open_tickets_oldest_first_order, 300);
+        <?php } ?>
+    });
 </script>
 </body>
 

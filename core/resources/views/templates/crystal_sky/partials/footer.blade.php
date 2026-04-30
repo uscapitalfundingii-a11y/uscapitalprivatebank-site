@@ -42,8 +42,11 @@
                 <div class="col-xl-1 d-xl-block d-none"></div>
                 <div class="col-xl-2 col-sm-6">
                     <div class="footer-item">
-                        <h5 class="footer-item__title">@lang('Pages')</h5>
+                        <h5 class="footer-item__title">@lang('Regulatory')</h5>
                         <ul class="footer-menu">
+                            <li class="footer-menu__item">
+                                <a href="{{ route('corporate.identity') }}" class="footer-menu__link">@lang('Legal / Corporate Identity')</a>
+                            </li>
                             @auth
                                 <li class="footer-menu__item">
                                     <a href="{{ route('user.home') }}" class="footer-menu__link">@lang('Dashboard')</a>

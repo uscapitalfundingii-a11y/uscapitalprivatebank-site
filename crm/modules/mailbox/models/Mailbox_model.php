@@ -182,9 +182,49 @@ class Mailbox_model extends App_Model
         if ('starred' == $action) {
             $action = 'stared';
         }
+        if (!function_exists('mailbox_apply_server_message_action') && defined('FCPATH') && file_exists(FCPATH.'modules/mailbox/mailbox.php')) {
+            require_once FCPATH.'modules/mailbox/mailbox.php';
+        }
         $arr_id = explode(',', $mail_id);
         foreach ($arr_id as $id) {
             if (strlen(trim($id)) > 0) {
+                $id = (int) $id;
+                if ($type === 'inbox') {
+                    $message = $this->db->where('id', $id)->get(db_prefix().'mail_inbox')->row_array();
+                    if (!$message) {
+                        continue;
+                    }
+
+                    $staff = $this->db
+                        ->select('staffid, email, mail_password')
+                        ->where('staffid', (int) $message['to_staff_id'])
+                        ->get(db_prefix().'staff')
+                        ->row_array();
+
+                    if ($staff && function_exists('mailbox_apply_server_message_action')) {
+                        mailbox_apply_server_message_action($staff, $message, $group, $action, $value);
+                    }
+
+                    if ('trash' == $action) {
+                        if ($group === 'trash' || (int) $message['trash'] === 1) {
+                            mailbox_delete_local_mail($id);
+                        } else {
+                            $this->db->where('id', $id);
+                            $this->db->update(db_prefix().'mail_inbox', [
+                                'trash'  => 1,
+                                'folder' => 'trash',
+                            ]);
+                        }
+                    } else {
+                        $this->db->where('id', $id);
+                        $this->db->update(db_prefix().'mail_inbox', [
+                            $action => $value,
+                        ]);
+                    }
+
+                    continue;
+                }
+
                 if (('trash' == $group || 'sent' == $group) && 'trash' == $action) {
                     if ('sent' == $group) {
                         $type = 'outbox';
@@ -195,7 +235,7 @@ class Mailbox_model extends App_Model
                     $this->db->where('mail_id', $id);
                     $file = $this->db->get(db_prefix().'mail_attachment')->result_array();
                     foreach ($file as $f) {
-                        $path           = MAILBOX_MODULE_UPLOAD_FOLDER.'/'.$type.'/'.$id.'/'.$f['file_name'];
+                        $path = MAILBOX_MODULE_UPLOAD_FOLDER.'/'.$type.'/'.$id.'/'.$f['file_name'];
                         if (file_exists($path)) {
                             unlink($path);
                         }
@@ -242,6 +282,12 @@ class Mailbox_model extends App_Model
     public function update_config($data, $staff_id)
     {
         unset($data['email']);
+        unset($data['settings']);
+
+        if (array_key_exists('mail_password', $data) && trim((string) $data['mail_password']) === '') {
+            unset($data['mail_password']);
+        }
+
         $this->db->where('staffid', $staff_id);
         $this->db->update(db_prefix().'staff', $data);
 

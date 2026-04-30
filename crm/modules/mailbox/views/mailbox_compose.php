@@ -21,20 +21,11 @@
     <?php echo render_input('to', 'mailbox_to', $to); ?>
     <?php echo render_input('cc', 'CC', $cc); ?>
     <?php echo render_input('subject', 'mailbox_subject', $subject); ?>
-	<?php
-        $CI = &get_instance();
-        $mail_signature = '';
-        $currentuser = $CI->db->select('mail_signature')
-            ->from(db_prefix().'staff')
-            ->where('staffid', get_staff_user_id())
-            ->get()
-            ->row_array();
-
-        if (!empty($currentuser['mail_signature'])) {
-            $mail_signature = $currentuser['mail_signature'];
-        }
-    ?>
+	<?php $mail_signature = isset($mail_signature) ? $mail_signature : ''; ?>
     <hr />
+    <?php $mailbox_editor_id = 'body'; ?>
+    <?php $mailbox_ai_context = ''; ?>
+    <?php $this->load->view('mailbox/partials/editor_tools'); ?>
     <?php 
         if ($mail_signature !== '') {
             $composed_body = trim($body) !== '' ? $body . '<br><br>' . $mail_signature : $mail_signature;
@@ -61,7 +52,7 @@
     </div>
 
     <div class="btn-group pull-left">
-      <a href="<?php echo admin_url().'mailbox'; ?>" class="btn btn-warning close-send-template-modal"><?php echo _l('cancel'); ?></a>       
+      <a href="<?php echo admin_url('mailbox/folder/inbox'); ?>" class="btn btn-warning close-send-template-modal"><?php echo _l('cancel'); ?></a>       
     </div>
 
     <div class="pull-right">   

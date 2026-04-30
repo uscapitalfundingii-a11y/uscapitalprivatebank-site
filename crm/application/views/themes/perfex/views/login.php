@@ -5,6 +5,7 @@ $siteLinks = [
     ['label' => 'Home', 'href' => 'https://uscapitalprivatebank.com/'],
     ['label' => 'Contact', 'href' => 'https://uscapitalprivatebank.com/contact'],
     ['label' => 'Branches', 'href' => 'https://uscapitalprivatebank.com/branches'],
+    ['label' => 'Legal Identity', 'href' => 'https://uscapitalprivatebank.com/corporate-identity-legal-independence'],
     ['label' => 'Support', 'href' => site_url('authentication/login')],
 ];
 ?>
@@ -343,6 +344,20 @@ $siteLinks = [
         text-decoration: none;
     }
 
+    .crm-support-identity-link {
+        color: #60788e;
+        font-size: 13px;
+        line-height: 1.7;
+        margin-top: 16px;
+        text-align: center;
+    }
+
+    .crm-support-identity-link a {
+        color: var(--crm-navy);
+        font-weight: 700;
+        text-decoration: none;
+    }
+
     .crm-support-grid {
         display: grid;
         gap: 18px;
@@ -545,6 +560,9 @@ $siteLinks = [
                         <?php if (get_option('allow_registration') == 1) { ?>
                             <a href="<?= site_url('authentication/register'); ?>"><?= _l('clients_register_string'); ?></a>
                         <?php } ?>
+                    </div>
+                    <div class="crm-support-identity-link">
+                        Need corporate verification? <a href="https://uscapitalprivatebank.com/corporate-identity-legal-independence" target="_blank" rel="noopener">View Legal / Corporate Identity</a>
                     </div>
 
                     <?php hooks()->do_action('clients_login_form_end'); ?>

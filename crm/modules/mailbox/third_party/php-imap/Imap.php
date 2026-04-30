@@ -409,14 +409,11 @@ class Imap
 
         // get email data
         $subject = '';
-        $charset = '';
         if (isset($header->subject) && strlen($header->subject) > 0) {
             foreach (imap_mime_header_decode($header->subject) as $obj) {
-                $charset .= $obj->charset;
-                $subject .= $obj->text;
+                $subject .= $this->convertToUtf8($obj->text, $obj->charset);
             }
         }
-        $subject = $this->convertToUtf8($subject, $charset);
         $email   = [
         'to'       => isset($header->to) ? $this->arrayToAddress($header->to) : '',
         'from'     => $this->toAddress($header->from[0]),
@@ -447,7 +444,11 @@ class Imap
                 foreach ($val as $k => $t) {
                     if ($k == 'name') {
                         $decodedName = imap_mime_header_decode($t);
-                        $t           = $this->convertToUtf8($decodedName[0]->text, $decodedName[0]->charset);
+                        $decodedText = '';
+                        foreach ($decodedName as $decodedPart) {
+                            $decodedText .= $this->convertToUtf8($decodedPart->text, $decodedPart->charset);
+                        }
+                        $t = $decodedText;
                     }
                     $arr[$k] = $t;
                 }
@@ -479,6 +480,34 @@ class Imap
     {
         if (imap_mail_move($this->imap, implode(',', $ids), $this->getTrash(), CP_UID) == false) {
             return false;
+        }
+
+        return imap_expunge($this->imap);
+    }
+
+    /**
+     * permanently delete given message
+     *
+     * @return bool success or not
+     * @param $id of the message
+     */
+    public function permanentlyDeleteMessage($id)
+    {
+        return $this->permanentlyDeleteMessages([$id]);
+    }
+
+    /**
+     * permanently delete messages by UID
+     *
+     * @return bool success or not
+     * @param $ids array of message ids
+     */
+    public function permanentlyDeleteMessages($ids)
+    {
+        foreach ($ids as $uid) {
+            if (imap_delete($this->imap, (string) $uid, FT_UID) === false) {
+                return false;
+            }
         }
 
         return imap_expunge($this->imap);
@@ -808,19 +837,17 @@ class Imap
     {
         $email   = '';
         $name    = '';
-        $charset = '';
         if (isset($headerinfos->mailbox) && isset($headerinfos->host)) {
             $email = $headerinfos->mailbox . '@' . $headerinfos->host;
         }
         if (!empty($headerinfos->personal)) {
-            $name    = imap_mime_header_decode($headerinfos->personal);
-            $charset = $name[0]->charset;
-            $name    = $name[0]->text;
+            $decodedName = imap_mime_header_decode($headerinfos->personal);
+            foreach ($decodedName as $decodedPart) {
+                $name .= $this->convertToUtf8($decodedPart->text, $decodedPart->charset);
+            }
         } else {
             $name = $email;
         }
-
-        $name = $this->convertToUtf8($name, $charset);
 
         return $name . ' <' . $email . '>';
     }
@@ -883,6 +910,11 @@ class Imap
      */
     public function convertToUtf8($text, $fromCharset)
     {
+        $fromCharset = trim((string) $fromCharset);
+        if ($fromCharset === '') {
+            $fromCharset = 'UTF-8';
+        }
+
         $utf8Aliases = [
             'utf8'       => true,
             'utf-8'      => true,
@@ -894,6 +926,22 @@ class Imap
 
         if (isset($utf8Aliases[$fromCharset])) {
             return $text;
+        }
+
+        $normalizedCharset = strtolower(str_replace([' ', '_'], '', $fromCharset));
+        if (in_array($normalizedCharset, ['utf8utf8', 'utf-8utf-8'], true)) {
+            return $text;
+        }
+
+        if (preg_match('/[,;\/]/', $fromCharset)) {
+            $charsetParts = preg_split('/[,;\/]+/', $fromCharset);
+            foreach ($charsetParts as $charsetPart) {
+                $charsetPart = trim($charsetPart);
+                if ($charsetPart !== '') {
+                    $fromCharset = $charsetPart;
+                    break;
+                }
+            }
         }
 
         $originalFromCharset  = $fromCharset;

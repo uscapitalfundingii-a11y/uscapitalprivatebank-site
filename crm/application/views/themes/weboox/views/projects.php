@@ -55,8 +55,10 @@
     <div class="kt-container  kt-grid__item kt-grid__item--fluid" style="margin-bottom: 60px;">
         <div class="row">
             <div class="col-lg-12">
-                <div class="kt-portlet" id="kt_portlet">
-                    <div class="kt-portlet__body"><?php echo validation_errors('<div class="alert alert-danger text-center">', '</div>'); ?>
+                        <div class="kt-portlet" id="kt_portlet">
+                            <div class="kt-portlet__body"><?php echo validation_errors('<div class="alert alert-danger text-center">', '</div>'); ?>
+                                <?php $client_page_help_context = 'projects'; ?>
+                                <?php get_template_part('client_directions'); ?>
                         <div class="row">
 
 

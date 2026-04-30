@@ -274,6 +274,22 @@
             color: #0f1f45;
         }
 
+        .verification-identity-note {
+            margin-top: 22px;
+            padding: 18px 20px;
+            border-radius: 18px;
+            background: rgba(15, 31, 69, 0.04);
+            border: 1px solid rgba(15, 31, 69, 0.08);
+            color: #42516d;
+            line-height: 1.75;
+        }
+
+        .verification-identity-note a {
+            color: #0f1f45;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
         .verification-qr-frame {
             margin-top: 20px;
             padding: 16px;
@@ -393,6 +409,10 @@
                         <div class="verification-cta-row">
                             <a href="{{ $uploadPortal }}" class="btn btn--base">@lang('Open Upload Portal')</a>
                             <a href="{{ $registerPortal }}" class="verification-register-link">@lang('Register')</a>
+                        </div>
+                        <div class="verification-identity-note">
+                            @lang('Need institutional identity confirmation?')
+                            <a href="{{ route('corporate.identity') }}">@lang('View the official Corporate Identity & Legal Independence notice.')</a>
                         </div>
                     </div>
                 </div>

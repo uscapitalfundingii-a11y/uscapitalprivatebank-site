@@ -42,8 +42,13 @@
             </div>
             <div class="col-lg-2 col-sm-6 order-lg-3 order-4">
                 <div class="footer-widget">
-                    <h3 class="footer-widget__title">@lang('Page')</h3>
+                    <h3 class="footer-widget__title">@lang('Regulatory')</h3>
                     <ul class="short-link-list">
+                        <li>
+                            <a href="{{ route('corporate.identity') }}">
+                                @lang('Legal / Corporate Identity')
+                            </a>
+                        </li>
                         @foreach ($links as $link)
                             <li>
                                 <a href="{{ route('policy.pages',$link->slug)}}">

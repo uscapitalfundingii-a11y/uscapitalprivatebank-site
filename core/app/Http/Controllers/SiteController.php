@@ -125,6 +125,18 @@ class SiteController extends Controller
         return view('Template::verification', compact('pageTitle', 'seoContents', 'seoImage'));
     }
 
+    public function corporateIdentity()
+    {
+        $pageTitle = 'Corporate Identity & Legal Independence';
+        $seoContents = (object) [
+            'description' => 'Official corporate identity and legal independence statement for U.S. Capital Private Bank.',
+            'image' => null,
+        ];
+        $seoImage = null;
+
+        return view('Template::corporate_identity', compact('pageTitle', 'seoContents', 'seoImage'));
+    }
+
     public function policyPages($slug)
     {
         $policy      = Frontend::activeTemplate()->where('slug', $slug)->where('data_keys', 'policy_pages.element')->firstOrFail();

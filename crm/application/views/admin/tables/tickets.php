@@ -56,7 +56,7 @@ $rules[] = App_table_filter::new('assigned', 'SelectRule')->label(_l('ticket_ass
     });
 
 return App_table::find('tickets')
-    ->outputUsing(function ($params) {
+    ->outputUsing(function ($params) use ($statuses) {
         extract($params);
 
         $aColumns = [
@@ -218,7 +218,20 @@ return App_table::find('tickets')
                         $_data = e($aRow['ticket_opened_by_name']);
                     }
                 } elseif ($aColumns[$i] == 'status') {
-                    $_data = '<span class="label ticket-status-' . $aRow['status'] . '" style="border:1px solid ' . adjust_hex_brightness($aRow['statuscolor'], 0.4) . '; color:' . $aRow['statuscolor'] . ';background: ' . adjust_hex_brightness($aRow['statuscolor'], 0.04) . ';">' . e(ticket_status_translate($aRow['status'])) . '</span>';
+                    $_data = '<div class="dropdown inline-block">';
+                    $_data .= '<a href="#" class="dropdown-toggle label ticket-status-' . $aRow['status'] . ' tw-flex tw-items-center tw-gap-1 tw-flex-nowrap hover:tw-opacity-80 tw-align-middle" style="border:1px solid ' . adjust_hex_brightness($aRow['statuscolor'], 0.4) . '; color:' . $aRow['statuscolor'] . ';background: ' . adjust_hex_brightness($aRow['statuscolor'], 0.04) . ';" id="tableTicketStatus-' . $aRow['ticketid'] . '" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">';
+                    $_data .= e(ticket_status_translate($aRow['status']));
+                    $_data .= '<i class="chevron tw-shrink-0"></i>';
+                    $_data .= '</a>';
+                    $_data .= '<ul class="dropdown-menu dropdown-menu-right" aria-labelledby="tableTicketStatus-' . $aRow['ticketid'] . '">';
+                    foreach ($statuses as $ticketChangeStatus) {
+                        if ((int) $aRow['status'] === (int) $ticketChangeStatus['ticketstatusid']) {
+                            continue;
+                        }
+                        $_data .= '<li><a href="' . admin_url('tickets/change_status/' . $aRow['ticketid'] . '/' . $ticketChangeStatus['ticketstatusid']) . '">' . e(ticket_status_translate($ticketChangeStatus['ticketstatusid'])) . '</a></li>';
+                    }
+                    $_data .= '</ul>';
+                    $_data .= '</div>';
                 } elseif ($aColumns[$i] == db_prefix() . 'tickets.date') {
                     $_data = e(_dt($_data));
                 } elseif (strpos($aColumns[$i], 'service_name') !== false) {

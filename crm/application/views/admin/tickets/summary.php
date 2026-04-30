@@ -54,6 +54,7 @@ foreach ($statuses as $status) {
     $_where = $_where . ' AND merged_ticket_id IS NULL'; ?>
         <a href="#"
             data-cview="ticket_status_<?= e($status['ticketstatusid']); ?>"
+            data-ticket-status-id="<?= e($status['ticketstatusid']); ?>"
             class="tw-bg-transparent tw-border tw-border-solid tw-border-neutral-300 tw-shadow-sm tw-py-1 tw-px-2 tw-rounded-lg tw-text-sm hover:tw-bg-neutral-200/60 tw-text-neutral-600 hover:tw-text-neutral-600 focus:tw-text-neutral-600"
             <?= ($hrefAttrs ?? null instanceof Closure) ? $hrefAttrs($status) : ''; ?>>
             <span class="tw-font-semibold tw-mr-1 rtl:tw-ml-1">

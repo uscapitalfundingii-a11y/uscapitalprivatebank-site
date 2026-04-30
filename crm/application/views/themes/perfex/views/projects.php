@@ -12,6 +12,9 @@
     <?= _l('clients_my_projects'); ?>
 </h4>
 
+<?php $client_page_help_context = 'projects'; ?>
+<?php get_template_part('client_directions'); ?>
+
 <div class="panel_s">
     <div class="panel-body">
         <table class="table dt-table table-projects" data-order-col="2" data-order-type="desc">

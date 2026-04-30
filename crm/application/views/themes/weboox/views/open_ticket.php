@@ -60,6 +60,8 @@
                         <div class="kt-portlet" id="kt_portlet">
 
                             <div class="kt-portlet__body"><?php echo validation_errors('<div class="alert alert-danger text-center">', '</div>'); ?>
+                                <?php $client_page_help_context = 'open_ticket'; ?>
+                                <?php get_template_part('client_directions'); ?>
 
                                 <div class="form-group open-ticket-subject-group">
                                     <label for="subject"><?php echo _l('customer_ticket_subject'); ?></label>

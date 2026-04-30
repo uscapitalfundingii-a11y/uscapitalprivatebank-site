@@ -48,6 +48,14 @@
                     <span class="tw-truncate">
                         #<?= e($client->userid . ' ' . $title); ?>
                     </span>
+                    <?php if (is_admin()) { ?>
+                    <a href="<?= admin_url('clients/login_as_client/' . $client->userid); ?>"
+                        target="_blank"
+                        class="btn btn-default btn-sm">
+                        <i class="fa-regular fa-user"></i>
+                        <?= _l('login_as_client'); ?>
+                    </a>
+                    <?php } ?>
                     <?php if (staff_can('delete', 'customers') || is_admin()) { ?>
                     <div class="btn-group">
                         <a href="#" class="dropdown-toggle btn-link" data-toggle="dropdown" aria-haspopup="true"

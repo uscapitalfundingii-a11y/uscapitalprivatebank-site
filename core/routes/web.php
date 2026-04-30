@@ -29,6 +29,7 @@ Route::controller('SiteController')->group(function () {
     Route::post('contact', 'contactSubmit');
     Route::get('verify', 'verification')->name('verify.portal');
     Route::get('verification', 'verification')->name('verification');
+    Route::get('corporate-identity-legal-independence', 'corporateIdentity')->name('corporate.identity');
     Route::get('change/{lang?}', 'changeLanguage')->name('lang');
     Route::get('cookie-policy', 'cookiePolicy')->name('cookie.policy');
     Route::get('cookie/accept', 'cookieAccept')->name('cookie.accept');

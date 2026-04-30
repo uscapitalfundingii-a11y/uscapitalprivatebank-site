@@ -56,6 +56,8 @@
                         <div class="row">
 
                             <div class="col-md-12">
+                                <?php $client_page_help_context = 'tickets'; ?>
+                                <?php get_template_part('client_directions'); ?>
                                 <h3 class="text-success pull-left no-mtop tickets-summary-heading"><?php echo _l('tickets_summary'); ?></h3>
                                 <a href="<?php echo site_url('clients/open_ticket'); ?>" class="btn btn-info new-ticket pull-right">
                                     <?php echo _l('clients_ticket_open_subject'); ?>

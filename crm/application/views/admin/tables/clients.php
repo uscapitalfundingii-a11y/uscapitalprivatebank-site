@@ -102,6 +102,10 @@ return App_table::find('clients')
                 $company .= ' | <a href="' . admin_url('clients/client/' . $aRow['userid'] . '?group=contacts') . '">' . _l('customer_contacts') . '</a>';
             }
 
+            if (is_admin()) {
+                $company .= ' | <a href="' . admin_url('clients/login_as_client/' . $aRow['userid']) . '" target="_blank">' . _l('login_as_client') . '</a>';
+            }
+
             if ($hasPermissionDelete) {
                 $company .= ' | <a href="' . admin_url('clients/delete/' . $aRow['userid']) . '" class="_delete">' . _l('delete') . '</a>';
             }

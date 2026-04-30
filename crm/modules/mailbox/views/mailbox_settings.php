@@ -55,6 +55,18 @@ $unseen_email = get_option('mailbox_only_loop_on_unseen_emails');
         </div>
         <?php echo render_input('settings[mailbox_folder_scan]', 'leads_email_integration_folder', $folder_scan); ?>
         <?php echo render_input('settings[mailbox_check_every]', 'leads_email_integration_check_every', $check_every, 'number', ['min'=>hooks()->apply_filters('leads_email_integration_check_every', 3), 'data-ays-ignore'=>true]); ?>
+        <div class="form-group">
+           <label for="mailbox_only_loop_on_unseen_emails" class="control-label clearfix">Import only unread emails during automatic background checks</label>
+           <div class="radio radio-primary radio-inline">
+              <input type="radio" id="mailbox_only_loop_on_unseen_emails_yes" name="settings[mailbox_only_loop_on_unseen_emails]" value="1" <?php if ('1' == (string) $unseen_email) { echo 'checked'; } ?>>
+              <label for="mailbox_only_loop_on_unseen_emails_yes"><?php echo _l('settings_yes'); ?></label>
+           </div>
+           <div class="radio radio-primary radio-inline">
+              <input type="radio" id="mailbox_only_loop_on_unseen_emails_no" name="settings[mailbox_only_loop_on_unseen_emails]" value="0" <?php if ('1' != (string) $unseen_email) { echo 'checked'; } ?>>
+              <label for="mailbox_only_loop_on_unseen_emails_no"><?php echo _l('settings_no'); ?></label>
+           </div>
+           <p class="text-muted mtop5">Set this to No if you want the background sync to be allowed to read older server messages too. The manual Send/Receive button already pulls the full selected mailbox.</p>
+        </div>
     </div>
 </div>
 

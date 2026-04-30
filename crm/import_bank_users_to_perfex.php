@@ -17,27 +17,76 @@ require_once __DIR__ . '/application/config/app-config.php';
 
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
-$options = getopt('', ['dry-run', 'merge']);
+$options = getopt('', ['dry-run', 'merge', 'csv:', 'csv-only']);
 $dryRun = array_key_exists('dry-run', $options);
 $mergeExisting = array_key_exists('merge', $options) || !array_key_exists('dry-run', $options);
+$csvPaths = normalizeCsvPaths($options['csv'] ?? null);
+$csvOnly = array_key_exists('csv-only', $options);
 
-$db = new mysqli(APP_DB_HOSTNAME, APP_DB_USERNAME, APP_DB_PASSWORD, APP_DB_NAME);
-$db->set_charset(APP_DB_CHARSET);
+$perfexDb = new mysqli(APP_DB_HOSTNAME, APP_DB_USERNAME, APP_DB_PASSWORD, APP_DB_NAME);
+$perfexDb->set_charset(APP_DB_CHARSET);
 
-$prefix = detectPerfexPrefix($db);
+$sourceUsers = [];
+$sourceReport = [
+    'database' => [
+        'enabled' => !$csvOnly,
+        'label' => '',
+        'rows_loaded' => 0,
+    ],
+    'csv_files' => [],
+];
+
+if (!$csvOnly) {
+    $sourceConfig = resolveSourceDatabaseConfig();
+    $sourceDb = new mysqli(
+        $sourceConfig['host'],
+        $sourceConfig['username'],
+        $sourceConfig['password'],
+        $sourceConfig['database'],
+        (int) $sourceConfig['port']
+    );
+    $sourceDb->set_charset(APP_DB_CHARSET);
+    $userColumns = getTableColumns($sourceDb, 'users');
+    $dbUsers = loadSourceUsers($sourceDb, $userColumns);
+    foreach ($dbUsers as &$user) {
+        $user['_source'] = 'database:' . $sourceConfig['database'];
+    }
+    unset($user);
+
+    $sourceUsers = array_merge($sourceUsers, $dbUsers);
+    $sourceReport['database']['label'] = $sourceConfig['database'];
+    $sourceReport['database']['rows_loaded'] = count($dbUsers);
+}
+
+foreach ($csvPaths as $csvPath) {
+    $csvUsers = loadSourceUsersFromCsv($csvPath);
+    foreach ($csvUsers as &$user) {
+        $user['_source'] = 'csv:' . $csvPath;
+    }
+    unset($user);
+
+    $sourceUsers = array_merge($sourceUsers, $csvUsers);
+    $sourceReport['csv_files'][] = [
+        'path' => $csvPath,
+        'rows_loaded' => count($csvUsers),
+    ];
+}
+
+$sourceUsers = dedupeSourceUsers($sourceUsers);
+
+$prefix = detectPerfexPrefix($perfexDb);
 $clientsTable = $prefix . 'clients';
 $contactsTable = $prefix . 'contacts';
 $countriesTable = $prefix . 'countries';
 
-$clientColumns = getTableColumns($db, $clientsTable);
-$contactColumns = getTableColumns($db, $contactsTable);
-$userColumns = getTableColumns($db, 'users');
-$countryMap = buildCountryMap($db, $countriesTable);
+$clientColumns = getTableColumns($perfexDb, $clientsTable);
+$contactColumns = getTableColumns($perfexDb, $contactsTable);
+$countryMap = buildCountryMap($perfexDb, $countriesTable);
 
-$sourceUsers = loadSourceUsers($db, $userColumns);
-$existingContactsByEmail = loadExistingContactsByEmail($db, $contactsTable);
+$existingContactsByEmail = loadExistingContactsByEmail($perfexDb, $contactsTable);
 
 $stats = [
+    'source_rows_loaded' => calculateSourceRowCount($sourceReport),
     'eligible_users' => count($sourceUsers),
     'created_clients' => 0,
     'created_contacts' => 0,
@@ -45,6 +94,7 @@ $stats = [
     'updated_contacts' => 0,
     'skipped_existing' => 0,
     'failed' => 0,
+    'source_duplicates_collapsed' => calculateSourceRowCount($sourceReport) - count($sourceUsers),
 ];
 
 $failures = [];
@@ -64,7 +114,7 @@ foreach ($sourceUsers as $user) {
             if ($mergeExisting) {
                 $existing = $existingContactsByEmail[$email];
                 if (!$dryRun) {
-                    mergeExistingClient($db, $clientsTable, $contactsTable, $existing, $payload);
+                    mergeExistingClient($perfexDb, $clientsTable, $contactsTable, $existing, $payload);
                 }
                 $stats['updated_clients']++;
                 $stats['updated_contacts']++;
@@ -77,24 +127,34 @@ foreach ($sourceUsers as $user) {
         if ($dryRun) {
             $stats['created_clients']++;
             $stats['created_contacts']++;
+            $existingContactsByEmail[$email] = [
+                'contact_id' => 0,
+                'client_id' => 0,
+                'email' => $email,
+            ];
             continue;
         }
 
-        $db->begin_transaction();
+        $perfexDb->begin_transaction();
 
-        $clientId = insertRow($db, $clientsTable, $payload['client']);
+        $clientId = insertRow($perfexDb, $clientsTable, $payload['client']);
         $contact = $payload['contact'];
         $contact['userid'] = $clientId;
 
-        insertRow($db, $contactsTable, $contact);
-        $db->commit();
+        insertRow($perfexDb, $contactsTable, $contact);
+        $perfexDb->commit();
 
         $stats['created_clients']++;
         $stats['created_contacts']++;
+        $existingContactsByEmail[$email] = [
+            'contact_id' => (int) $perfexDb->insert_id,
+            'client_id' => $clientId,
+            'email' => $email,
+        ];
     } catch (Throwable $error) {
-        if ($db->errno) {
+        if ($perfexDb->errno) {
             try {
-                $db->rollback();
+                $perfexDb->rollback();
             } catch (Throwable $rollbackError) {
                 // Ignore rollback errors to preserve the original failure context.
             }
@@ -115,9 +175,84 @@ echo json_encode([
         'clients' => $clientsTable,
         'contacts' => $contactsTable,
     ],
+    'source' => $sourceReport,
     'stats' => $stats,
     'sample_failures' => array_slice($failures, 0, 20),
 ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . PHP_EOL;
+
+function normalizeCsvPaths($value): array
+{
+    if ($value === null || $value === '') {
+        return [];
+    }
+
+    $rawValues = is_array($value) ? $value : [$value];
+    $paths = [];
+
+    foreach ($rawValues as $rawValue) {
+        foreach (explode(',', (string) $rawValue) as $candidate) {
+            $path = trim($candidate);
+            if ($path !== '') {
+                $paths[] = $path;
+            }
+        }
+    }
+
+    return array_values(array_unique($paths));
+}
+
+function calculateSourceRowCount(array $sourceReport): int
+{
+    $count = (int) ($sourceReport['database']['rows_loaded'] ?? 0);
+    foreach ($sourceReport['csv_files'] ?? [] as $csvFile) {
+        $count += (int) ($csvFile['rows_loaded'] ?? 0);
+    }
+
+    return $count;
+}
+
+function resolveSourceDatabaseConfig(): array
+{
+    $defaults = [
+        'host' => APP_DB_HOSTNAME,
+        'port' => 3306,
+        'database' => APP_DB_NAME,
+        'username' => APP_DB_USERNAME,
+        'password' => APP_DB_PASSWORD,
+    ];
+
+    $envPath = dirname(__DIR__) . '/core/.env';
+    if (!is_file($envPath)) {
+        return $defaults;
+    }
+
+    $env = parseEnvFile($envPath);
+    return [
+        'host' => $env['DB_HOST'] ?? $defaults['host'],
+        'port' => $env['DB_PORT'] ?? $defaults['port'],
+        'database' => $env['DB_DATABASE'] ?? $defaults['database'],
+        'username' => $env['DB_USERNAME'] ?? $defaults['username'],
+        'password' => $env['DB_PASSWORD'] ?? $defaults['password'],
+    ];
+}
+
+function parseEnvFile(string $path): array
+{
+    $values = [];
+    $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) ?: [];
+
+    foreach ($lines as $line) {
+        $trimmed = trim($line);
+        if ($trimmed === '' || str_starts_with($trimmed, '#') || !str_contains($trimmed, '=')) {
+            continue;
+        }
+
+        [$key, $value] = explode('=', $trimmed, 2);
+        $values[trim($key)] = trim($value, " \t\n\r\0\x0B\"'");
+    }
+
+    return $values;
+}
 
 function detectPerfexPrefix(mysqli $db): string
 {
@@ -217,6 +352,85 @@ function loadSourceUsers(mysqli $db, array $userColumns): array
     return $result->fetch_all(MYSQLI_ASSOC);
 }
 
+function dedupeSourceUsers(array $users): array
+{
+    $deduped = [];
+
+    foreach ($users as $user) {
+        $email = normalizeEmail($user['email'] ?? '');
+        if ($email === '') {
+            $deduped[] = $user;
+            continue;
+        }
+
+        if (!isset($deduped[$email])) {
+            $deduped[$email] = $user;
+            continue;
+        }
+
+        $deduped[$email] = mergeSourceUsers($deduped[$email], $user);
+    }
+
+    $ordered = [];
+    foreach ($deduped as $key => $user) {
+        if (is_int($key)) {
+            $ordered[] = $user;
+            continue;
+        }
+
+        $ordered[] = $user;
+    }
+
+    return $ordered;
+}
+
+function mergeSourceUsers(array $base, array $incoming): array
+{
+    foreach ($incoming as $field => $value) {
+        if ($field === '_source') {
+            $base['_source'] = mergeSourceLabels($base['_source'] ?? '', (string) $value);
+            continue;
+        }
+
+        if (isPreferredIncomingValue($base[$field] ?? null, $value)) {
+            $base[$field] = $value;
+        }
+    }
+
+    return $base;
+}
+
+function mergeSourceLabels(string $base, string $incoming): string
+{
+    $labels = [];
+
+    foreach ([$base, $incoming] as $value) {
+        foreach (explode('|', $value) as $label) {
+            $trimmed = trim($label);
+            if ($trimmed !== '') {
+                $labels[$trimmed] = true;
+            }
+        }
+    }
+
+    return implode('|', array_keys($labels));
+}
+
+function isPreferredIncomingValue($current, $incoming): bool
+{
+    $incomingText = trim((string) $incoming);
+    if ($incomingText === '') {
+        return false;
+    }
+
+    $currentText = trim((string) $current);
+    if ($currentText === '') {
+        return true;
+    }
+
+    return strlen($incomingText) > strlen($currentText);
+}
+
 function loadExistingContactsByEmail(mysqli $db, string $contactsTable): array
 {
     $result = $db->query(
@@ -237,6 +451,53 @@ function loadExistingContactsByEmail(mysqli $db, string $contactsTable): array
     }
 
     return $map;
+}
+
+function loadSourceUsersFromCsv(string $path): array
+{
+    if (!is_file($path)) {
+        throw new RuntimeException("CSV source file not found: {$path}");
+    }
+
+    $handle = fopen($path, 'rb');
+    if ($handle === false) {
+        throw new RuntimeException("Unable to open CSV source file: {$path}");
+    }
+
+    $headers = fgetcsv($handle);
+    if (!is_array($headers) || !$headers) {
+        fclose($handle);
+        throw new RuntimeException("CSV source file has no header row: {$path}");
+    }
+
+    $normalizedHeaders = array_map(
+        static fn ($header) => trim((string) $header, " \t\n\r\0\x0B\""),
+        $headers
+    );
+
+    $rows = [];
+    while (($values = fgetcsv($handle)) !== false) {
+        if ($values === [null] || $values === false) {
+            continue;
+        }
+
+        $row = [];
+        foreach ($normalizedHeaders as $index => $header) {
+            $row[$header] = $values[$index] ?? '';
+        }
+
+        $row['email'] = $row['email'] ?? ($row['user_email'] ?? '');
+        $row['firstname'] = $row['firstname'] ?? ($row['first_name'] ?? '');
+        $row['lastname'] = $row['lastname'] ?? ($row['last_name'] ?? '');
+        $row['country_name'] = $row['country_name'] ?? ($row['country'] ?? '');
+        $row['postal_code'] = $row['postal_code'] ?? ($row['zip_code'] ?? ($row['zip'] ?? ''));
+        $row['created_at'] = $row['created_at'] ?? ($row['created_date'] ?? '');
+
+        $rows[] = $row;
+    }
+
+    fclose($handle);
+    return $rows;
 }
 
 function buildPerfexPayload(array $user, array $clientColumns, array $contactColumns, array $countryMap): array

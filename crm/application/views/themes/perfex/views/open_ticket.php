@@ -6,6 +6,8 @@
 <div class="row">
     <div class="col-md-12">
         <?php hooks()->do_action('before_client_open_ticket_form_start'); ?>
+        <?php $client_page_help_context = 'open_ticket'; ?>
+        <?php get_template_part('client_directions'); ?>
         <div class="panel_s">
             <div class="panel-body">
                 <div class="row">
