@@ -3234,6 +3234,10 @@ $lang['auto']                                              = 'Auto';
 $lang['email_queue']                                       = 'Email Queue';
 $lang['email_queue_enabled']                               = 'Enable Email Queue';
 $lang['email_queue_skip_attachments']                      = 'Do not add emails with attachments in the queue?';
+$lang['email_queue_batch_size']                            = 'Emails Per Batch';
+$lang['email_queue_interval_seconds']                      = 'Seconds Between Batches';
+$lang['email_queue_rate_hint']                             = 'Estimated release pace: about %s email(s) per minute with the current queue settings.';
+$lang['email_queue_cron_note']                             = 'For the smoothest pacing, your cron job should run at least as often as the interval above. This helps prevent large bursts that can trigger spam controls.';
 $lang['disable']                                           = 'Disable';
 $lang['enable']                                            = 'Enable';
 $lang['auto_dismiss_desktop_notifications_after']          = 'Auto Dismiss Desktop Notifications After X Seconds (0 to disable)';
@@ -4042,6 +4046,10 @@ $lang['ideal_gateway_keys_not_configured'] = 'iDEAL Payment Gateway API not conf
 $lang['ideal_gateway_cannot_be_activated_keys_not_configured'] = 'iDEAL Payment Gateway cannot be activated as the Stripe Publishable/API key is not configured.';
 $lang['company_logo_light'] = 'Company Logo Light';
 $lang['welcome_back_sign_in'] = 'Welcome, please sign in to your dashboard';
+$lang['contact_select_all_permissions'] = 'Select All Permissions';
+$lang['contact_clear_all_permissions'] = 'Clear Permissions';
+$lang['contact_select_all_notifications'] = 'Select All Notifications';
+$lang['contact_clear_all_notifications'] = 'Clear Notifications';
 
 # Version 3.3.0
 $lang['settings_ai'] = 'AI';

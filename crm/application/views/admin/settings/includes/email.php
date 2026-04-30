@@ -261,6 +261,41 @@ echo render_input('settings[smtp_password]', 'settings_email_password', $ps, 'pa
         <?php render_yes_no_option('email_queue_enabled', 'email_queue_enabled', 'To speed up the emailing process, the system will add the emails in queue and will send them via cron job, make sure that the cron job is properly configured in order to use this feature.'); ?>
         <hr />
         <?php render_yes_no_option('email_queue_skip_with_attachments', 'email_queue_skip_attachments', 'Most likely you will encounter problems with the email queue if the system needs to add big files to the queue. If you plan to use this option consult with your server administrator/hosting provider to increase the max_allowed_packet and wait_timeout options in your server config, otherwise when this option is set to yes the system won\'t add emails with attachments in the queue and will be sent immediately.'); ?>
+        <hr />
+        <div class="row">
+            <div class="col-md-6">
+                <?= render_input(
+                    'settings[email_queue_batch_size]',
+                    'email_queue_batch_size',
+                    get_option('email_queue_batch_size') ?: 25,
+                    'number',
+                    ['min' => 1, 'step' => 1]
+                ); ?>
+            </div>
+            <div class="col-md-6">
+                <?= render_input(
+                    'settings[email_queue_interval_seconds]',
+                    'email_queue_interval_seconds',
+                    get_option('email_queue_interval_seconds') ?: 60,
+                    'number',
+                    ['min' => 0, 'step' => 1]
+                ); ?>
+            </div>
+        </div>
+        <?php
+        $queueBatchSize       = (int) (get_option('email_queue_batch_size') ?: 25);
+        $queueIntervalSeconds = (int) (get_option('email_queue_interval_seconds') ?: 60);
+        $queueIntervalSeconds = max(0, $queueIntervalSeconds);
+        $queuePerMinute       = $queueIntervalSeconds > 0
+            ? round(($queueBatchSize * 60) / $queueIntervalSeconds, 2)
+            : $queueBatchSize;
+        ?>
+        <p class="text-muted">
+            <?= sprintf(_l('email_queue_rate_hint'), $queuePerMinute); ?>
+        </p>
+        <p class="text-muted">
+            <?= _l('email_queue_cron_note'); ?>
+        </p>
         <?php
         $queueEmails = $this->email->get_queue_emails();
 ?>

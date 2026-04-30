@@ -149,10 +149,36 @@ class App_Email extends App_mailer
 
         $this->clean_up_old_queue();
 
-        $this->set_status('pending');
-        $emails = $this->get_queue_emails();
+        $batchSize       = (int) get_option('email_queue_batch_size');
+        $intervalSeconds = (int) get_option('email_queue_interval_seconds');
+        $lastQueueRun    = (int) get_option('last_email_queue_send');
 
-        $this->CI->db->where('status', 'pending');
+        if ($batchSize <= 0) {
+            $batchSize = 25;
+        }
+
+        if ($intervalSeconds < 0) {
+            $intervalSeconds = 0;
+        }
+
+        if ($intervalSeconds > 0 && $lastQueueRun > 0 && time() < ($lastQueueRun + $intervalSeconds)) {
+            log_message('debug', 'Email queue waiting for the next throttle window.');
+
+            return;
+        }
+
+        $this->set_status('pending');
+        $emails = $this->get_queue_emails($batchSize);
+
+        if (count($emails) === 0) {
+            return;
+        }
+
+        $queueIds = array_map(function ($email) {
+            return (int) $email->id;
+        }, $emails);
+
+        $this->CI->db->where_in('id', $queueIds);
         $this->CI->db->set('status', 'sending');
         $this->CI->db->set('date', date('Y-m-d H:i:s'));
 
@@ -223,6 +249,8 @@ class App_Email extends App_mailer
             $this->CI->db->set('date', date('Y-m-d H:i:s'));
             $this->CI->db->update($this->email_queue_table);
         }
+
+        update_option('last_email_queue_send', time());
     }
 
     /**

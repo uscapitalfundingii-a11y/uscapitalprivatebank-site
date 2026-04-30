@@ -157,6 +157,14 @@
                         <p class="text-danger">
                             <?= _l('contact_permissions_info'); ?>
                         </p>
+                        <div class="tw-flex tw-flex-wrap tw-gap-2 tw-mb-4">
+                            <button type="button" class="btn btn-default btn-sm contact-select-all-permissions">
+                                <?= _l('contact_select_all_permissions'); ?>
+                            </button>
+                            <button type="button" class="btn btn-default btn-sm contact-clear-all-permissions">
+                                <?= _l('contact_clear_all_permissions'); ?>
+                            </button>
+                        </div>
                         <?php $default_contact_permissions = []; ?>
                         <?php if (! isset($contact)) {
                             $default_contact_permissions = @unserialize(get_option('default_contact_permissions'));
@@ -189,6 +197,14 @@
                                 echo '/SMS';
                             } ?>
                         </p>
+                        <div class="tw-flex tw-flex-wrap tw-gap-2 tw-mb-4">
+                            <button type="button" class="btn btn-default btn-sm contact-select-all-notifications">
+                                <?= _l('contact_select_all_notifications'); ?>
+                            </button>
+                            <button type="button" class="btn btn-default btn-sm contact-clear-all-notifications">
+                                <?= _l('contact_clear_all_notifications'); ?>
+                            </button>
+                        </div>
                         <div id="contact_email_notifications">
                             <div class="col-md-6 row">
                                 <div class="row">

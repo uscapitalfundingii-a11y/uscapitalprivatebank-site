@@ -1,6 +1,38 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <?php
 $selectedLanguage = (get_contact_language() != '') ? get_contact_language() : get_option('active_language');
+$crmPortalLanguages = [
+    'en'    => 'English',
+    'zh-CN' => 'Chinese (Simplified)',
+    'es'    => 'Spanish',
+    'hi'    => 'Hindi',
+    'ar'    => 'Arabic',
+    'fr'    => 'French',
+    'bn'    => 'Bengali',
+    'pt'    => 'Portuguese',
+    'ru'    => 'Russian',
+    'ur'    => 'Urdu',
+    'id'    => 'Indonesian',
+    'de'    => 'German',
+    'ja'    => 'Japanese',
+    'sw'    => 'Swahili',
+    'te'    => 'Telugu',
+    'mr'    => 'Marathi',
+    'tr'    => 'Turkish',
+    'ta'    => 'Tamil',
+    'ko'    => 'Korean',
+    'vi'    => 'Vietnamese',
+    'it'    => 'Italian',
+    'fa'    => 'Persian',
+    'th'    => 'Thai',
+    'gu'    => 'Gujarati',
+    'pl'    => 'Polish',
+    'uk'    => 'Ukrainian',
+    'ml'    => 'Malayalam',
+    'pa'    => 'Punjabi',
+    'nl'    => 'Dutch',
+    'ha'    => 'Hausa',
+];
 $siteLinks = [
     ['label' => 'Home', 'href' => 'https://uscapitalprivatebank.com/'],
     ['label' => 'Contact', 'href' => 'https://uscapitalprivatebank.com/contact'],
@@ -67,11 +99,14 @@ $siteLinks = [
     }
 
     .crm-support-brand img {
+        background: rgba(15, 39, 66, 0.05);
+        border-radius: 20px;
         display: block;
-        height: 48px;
-        max-width: 220px;
+        height: 78px;
+        max-width: none;
         object-fit: contain;
-        width: auto;
+        padding: 8px;
+        width: 78px;
     }
 
     .crm-support-brand__meta {
@@ -290,6 +325,33 @@ $siteLinks = [
         box-shadow: 0 0 0 4px rgba(200, 162, 77, 0.12);
     }
 
+    .crm-support-translate-note {
+        color: #63798b;
+        display: block;
+        font-size: 12px;
+        line-height: 1.65;
+        margin-top: 8px;
+    }
+
+    .skiptranslate,
+    .goog-te-banner-frame,
+    .goog-te-balloon-frame,
+    .goog-logo-link,
+    .goog-te-gadget span {
+        display: none !important;
+    }
+
+    body {
+        top: 0 !important;
+    }
+
+    #crm-google-translate-element {
+        height: 0;
+        overflow: hidden;
+        position: absolute;
+        width: 0;
+    }
+
     .crm-support-actions {
         align-items: center;
         display: flex;
@@ -479,21 +541,22 @@ $siteLinks = [
     <div class="crm-support-hero">
         <div class="crm-support-copy">
             <span class="crm-support-copy__badge">Private Banking Service Desk</span>
-            <h1>Support access built to match your banking experience.</h1>
-            <p>Use the CRM portal to review service updates, documents, support conversations, and account coordination in a layout styled to feel like the main US Capital Private Bank website. The page keeps the same calm palette, premium spacing, and top navigation structure for a seamless handoff.</p>
+            <h1>Secure access for faster, cleaner transaction support.</h1>
+            <p>Use the CRM portal to review service updates, documents, support conversations, appointments, and account coordination in one secure environment styled to feel like the main U.S. Capital Private Bank website.</p>
+            <p>Clients who use the portal consistently typically experience smoother routing, fewer delays caused by missing details, and better communication with the bank throughout the life of a transaction.</p>
 
             <div class="crm-support-highlights">
                 <div class="crm-support-highlight">
                     <strong>Secure sign-in</strong>
-                    <span>Access client support activity, service requests, and CRM account history from one branded portal.</span>
+                    <span>Access client support activity, service requests, and transaction communication from one branded portal.</span>
                 </div>
                 <div class="crm-support-highlight">
-                    <strong>Support-first layout</strong>
-                    <span>Quick paths for client care, branch help, and follow-up actions without the default CRM look.</span>
+                    <strong>Faster processing</strong>
+                    <span>Complete portal use helps the bank process requests with fewer follow-up questions and less manual cleanup.</span>
                 </div>
                 <div class="crm-support-highlight">
-                    <strong>Site-matched design</strong>
-                    <span>Shared navy, gold, cream, and elevated card styling to align with the public site experience.</span>
+                    <strong>Better coordination</strong>
+                    <span>Projects, tickets, files, and updates stay tied to the right transaction instead of being scattered across channels.</span>
                 </div>
             </div>
         </div>
@@ -501,7 +564,7 @@ $siteLinks = [
         <div class="crm-support-card">
             <div class="crm-support-card__inner">
                 <div class="crm-support-card__intro">
-                    <span class="crm-support-card__eyebrow">Support Portal Login</span>
+                    <span class="crm-support-card__eyebrow">Client Portal Access</span>
                     <h2><?= _l(get_option('allow_registration') == 1 ? 'clients_login_heading_register' : 'clients_login_heading_no_register'); ?></h2>
                 </div>
 
@@ -510,18 +573,17 @@ $siteLinks = [
                     <?= form_open($this->uri->uri_string(), ['class' => 'login-form']); ?>
                     <?php hooks()->do_action('clients_login_form_start'); ?>
 
-                    <?php if (!is_language_disabled()) { ?>
-                        <div class="form-group">
-                            <label for="language"><?= _l('language'); ?></label>
-                            <select name="language" id="language" class="form-control selectpicker" onchange="change_contact_language(this)" data-none-selected-text="<?= _l('dropdown_non_selected_tex'); ?>" data-live-search="true">
-                                <?php foreach ($this->app->get_available_languages() as $availableLanguage) { ?>
-                                    <option value="<?= e($availableLanguage); ?>"<?= $availableLanguage == $selectedLanguage ? ' selected' : ''; ?>>
-                                        <?= e(ucfirst($availableLanguage)); ?>
-                                    </option>
-                                <?php } ?>
-                            </select>
-                        </div>
-                    <?php } ?>
+                    <div class="form-group">
+                        <label for="crm-portal-language-login">Client Portal Language</label>
+                        <select id="crm-portal-language-login" class="form-control" data-crm-translate-select>
+                            <?php foreach ($crmPortalLanguages as $languageCode => $languageLabel) { ?>
+                                <option value="<?= e($languageCode); ?>"<?= $languageCode === 'en' ? ' selected' : ''; ?>>
+                                    <?= e($languageLabel); ?>
+                                </option>
+                            <?php } ?>
+                        </select>
+                        <span class="crm-support-translate-note">Choose the language the client should see on-screen. The bank can continue working internally in English while the portal view is translated for the client.</span>
+                    </div>
 
                     <div class="form-group">
                         <label for="email"><?= _l('clients_login_email'); ?></label>
@@ -559,6 +621,7 @@ $siteLinks = [
                         <a href="<?= site_url('authentication/forgot_password'); ?>"><?= _l('customer_forgot_password'); ?></a>
                         <?php if (get_option('allow_registration') == 1) { ?>
                             <a href="<?= site_url('authentication/register'); ?>"><?= _l('clients_register_string'); ?></a>
+                            <a href="<?= site_url('authentication/register'); ?>#wizard">Use guided registration</a>
                         <?php } ?>
                     </div>
                     <div class="crm-support-identity-link">
@@ -575,18 +638,87 @@ $siteLinks = [
     <div class="crm-support-grid">
         <div class="crm-support-info">
             <h3>Client Care</h3>
-            <p>Coordinate support requests, follow document updates, and stay aligned with client service operations through a cleaner front door into the CRM.</p>
+            <p>Coordinate support requests, follow document updates, and keep transaction communication inside one secure workspace instead of fragmented email chains.</p>
             <a href="https://uscapitalprivatebank.com/contact">Contact Support</a>
         </div>
         <div class="crm-support-info">
-            <h3>Account Assistance</h3>
-            <p>Need help before signing in? Reach the main banking platform, verify your account path, or connect with your relationship team first.</p>
-            <a href="https://uscapitalprivatebank.com/user/login">Online Banking Access</a>
+            <h3>Guided Onboarding</h3>
+            <p>New client? Register with the full form or choose the guided wizard so you can complete your profile step by step and reduce onboarding delays.</p>
+            <a href="<?= site_url('authentication/register'); ?>#wizard">Start Guided Registration</a>
         </div>
         <div class="crm-support-info">
-            <h3>Branch Network</h3>
-            <p>Use the same visual navigation as the site to move between branch information, contact options, and CRM support entry points.</p>
-            <a href="https://uscapitalprivatebank.com/branches">View Branches</a>
+            <h3>Profile Readiness</h3>
+            <p>Thorough and accurate client details help support legal, regulatory, and internal review requirements while improving response quality from the bank.</p>
+            <a href="https://uscapitalprivatebank.com/user/login">Online Banking Access</a>
         </div>
     </div>
 </div>
+<div id="crm-google-translate-element" aria-hidden="true"></div>
+<script>
+(function () {
+    var storageKey = 'crm_portal_preferred_language';
+    var cookiePrefix = 'googtrans=/en/';
+    var selector = '[data-crm-translate-select]';
+    var languageMap = <?= json_encode($crmPortalLanguages); ?>;
+    var initialized = false;
+
+    function setCookie(name, value) {
+        var expires = new Date();
+        expires.setFullYear(expires.getFullYear() + 1);
+        var cookie = name + '=' + value + '; expires=' + expires.toUTCString() + '; path=/';
+        if (location.protocol === 'https:') {
+            cookie += '; secure';
+        }
+        document.cookie = cookie;
+    }
+
+    function syncSelectors(languageCode) {
+        document.querySelectorAll(selector).forEach(function (select) {
+            if (select.value !== languageCode && languageMap[languageCode]) {
+                select.value = languageCode;
+            }
+        });
+    }
+
+    function applyLanguage(languageCode, forceReload) {
+        var nextLanguage = languageMap[languageCode] ? languageCode : 'en';
+        localStorage.setItem(storageKey, nextLanguage);
+        setCookie('googtrans', cookiePrefix + nextLanguage);
+        syncSelectors(nextLanguage);
+
+        if (forceReload) {
+            window.location.reload();
+        }
+    }
+
+    window.crmInitGoogleTranslate = function () {
+        if (!window.google || !window.google.translate || !window.google.translate.TranslateElement || initialized) {
+            return;
+        }
+
+        initialized = true;
+        new window.google.translate.TranslateElement({
+            pageLanguage: 'en',
+            autoDisplay: false,
+            includedLanguages: Object.keys(languageMap).join(',')
+        }, 'crm-google-translate-element');
+    };
+
+    document.addEventListener('DOMContentLoaded', function () {
+        var storedLanguage = localStorage.getItem(storageKey) || 'en';
+        syncSelectors(storedLanguage);
+        applyLanguage(storedLanguage, false);
+
+        document.querySelectorAll(selector).forEach(function (select) {
+            select.addEventListener('change', function () {
+                applyLanguage(select.value, true);
+            });
+        });
+    });
+
+    var script = document.createElement('script');
+    script.src = 'https://translate.google.com/translate_a/element.js?cb=crmInitGoogleTranslate';
+    script.async = true;
+    document.head.appendChild(script);
+})();
+</script>

@@ -1,6 +1,83 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
+<?php
+$crmPortalLanguages = [
+    'en'    => 'English',
+    'zh-CN' => 'Chinese (Simplified)',
+    'es'    => 'Spanish',
+    'hi'    => 'Hindi',
+    'ar'    => 'Arabic',
+    'fr'    => 'French',
+    'bn'    => 'Bengali',
+    'pt'    => 'Portuguese',
+    'ru'    => 'Russian',
+    'ur'    => 'Urdu',
+    'id'    => 'Indonesian',
+    'de'    => 'German',
+    'ja'    => 'Japanese',
+    'sw'    => 'Swahili',
+    'te'    => 'Telugu',
+    'mr'    => 'Marathi',
+    'tr'    => 'Turkish',
+    'ta'    => 'Tamil',
+    'ko'    => 'Korean',
+    'vi'    => 'Vietnamese',
+    'it'    => 'Italian',
+    'fa'    => 'Persian',
+    'th'    => 'Thai',
+    'gu'    => 'Gujarati',
+    'pl'    => 'Polish',
+    'uk'    => 'Ukrainian',
+    'ml'    => 'Malayalam',
+    'pa'    => 'Punjabi',
+    'nl'    => 'Dutch',
+    'ha'    => 'Hausa',
+];
+?>
 <?= theme_head_view(); ?>
 <?php get_template_part($navigationEnabled ? 'navigation' : ''); ?>
+<style>
+    .customers-top-submenu-language {
+        margin-left: auto;
+        min-width: 220px;
+    }
+
+    .customers-top-submenu-language select {
+        background: #fff;
+        border: 1px solid rgba(15, 39, 66, 0.12);
+        border-radius: 999px;
+        color: #183b56;
+        font-size: 13px;
+        font-weight: 600;
+        height: 40px;
+        padding: 0 16px;
+        width: 100%;
+    }
+
+    .customers-top-submenu-language select:focus {
+        border-color: rgba(200, 162, 77, 0.9);
+        box-shadow: 0 0 0 3px rgba(200, 162, 77, 0.12);
+        outline: 0;
+    }
+
+    .skiptranslate,
+    .goog-te-banner-frame,
+    .goog-te-balloon-frame,
+    .goog-logo-link,
+    .goog-te-gadget span {
+        display: none !important;
+    }
+
+    body {
+        top: 0 !important;
+    }
+
+    #crm-google-translate-element {
+        height: 0;
+        overflow: hidden;
+        position: absolute;
+        width: 0;
+    }
+</style>
 <div id="wrapper">
     <div id="content">
         <div class="container">
@@ -21,21 +98,17 @@
             if (is_client_logged_in() && $subMenuEnabled && ! isset($knowledge_base_search)) { ?>
                 <ul class="submenu customer-top-submenu">
                     <?php hooks()->do_action('before_customers_area_sub_menu_start'); ?>
-                    <?php if (!isset($hide_client_files_shortcut) || !$hide_client_files_shortcut) { ?>
-                    <li class="customers-top-submenu-files">
-                        <a href="<?= site_url('clients/files'); ?>"
+                    <li class="customers-top-submenu-appointment">
+                        <a href="https://www.uscapitalprivatebank.com/crm/appointment_manager/appointment_manager_client/public_form"
                             class="tw-inline-flex tw-items-center">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                                 stroke="currentColor" class="tw-w-5 tw-h-5 tw-mr-1">
                                 <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13" />
+                                    d="M6.75 3v2.25M17.25 3v2.25M3.75 8.25h16.5M4.5 6h15A1.5 1.5 0 0121 7.5v12A1.5 1.5 0 0119.5 21h-15A1.5 1.5 0 013 19.5v-12A1.5 1.5 0 014.5 6zm4.5 7.5h6" />
                             </svg>
-                            <span>
-                                <?= _l('customer_profile_files'); ?>
-                            </span>
+                            <span>Book Appointment</span>
                         </a>
                     </li>
-                    <?php } ?>
                     <li class="customers-top-submenu-calendar">
                         <a href="<?= site_url('clients/calendar'); ?>"
                             class="tw-inline-flex tw-items-center">
@@ -49,6 +122,15 @@
                             </span>
                         </a>
                     </li>
+                    <li class="customers-top-submenu-language">
+                        <select aria-label="Client portal language" data-crm-translate-select>
+                            <?php foreach ($crmPortalLanguages as $languageCode => $languageLabel) { ?>
+                                <option value="<?= e($languageCode); ?>"<?= $languageCode === 'en' ? ' selected' : ''; ?>>
+                                    <?= e($languageLabel); ?>
+                                </option>
+                            <?php } ?>
+                        </select>
+                    </li>
                     <?php hooks()->do_action('after_customers_area_sub_menu_end'); ?>
                 </ul>
                 <div class="clearfix"></div>
@@ -59,6 +141,7 @@
     </div>
 </div>
 </div>
+<div id="crm-google-translate-element" aria-hidden="true"></div>
 <?= theme_footer_view();
 
 // Always have app_customers_footer() just before the closing </body>
@@ -68,6 +151,74 @@ app_customers_footer();
  */
 app_js_alerts();
 ?>
+<script>
+(function () {
+    var storageKey = 'crm_portal_preferred_language';
+    var cookiePrefix = 'googtrans=/en/';
+    var selector = '[data-crm-translate-select]';
+    var languageMap = <?= json_encode($crmPortalLanguages); ?>;
+    var initialized = false;
+
+    function setCookie(name, value) {
+        var expires = new Date();
+        expires.setFullYear(expires.getFullYear() + 1);
+        var cookie = name + '=' + value + '; expires=' + expires.toUTCString() + '; path=/';
+        if (location.protocol === 'https:') {
+            cookie += '; secure';
+        }
+        document.cookie = cookie;
+    }
+
+    function syncSelectors(languageCode) {
+        document.querySelectorAll(selector).forEach(function (select) {
+            if (select.value !== languageCode && languageMap[languageCode]) {
+                select.value = languageCode;
+            }
+        });
+    }
+
+    function applyLanguage(languageCode, forceReload) {
+        var nextLanguage = languageMap[languageCode] ? languageCode : 'en';
+        localStorage.setItem(storageKey, nextLanguage);
+        setCookie('googtrans', cookiePrefix + nextLanguage);
+        syncSelectors(nextLanguage);
+
+        if (forceReload) {
+            window.location.reload();
+        }
+    }
+
+    window.crmInitGoogleTranslate = function () {
+        if (!window.google || !window.google.translate || !window.google.translate.TranslateElement || initialized) {
+            return;
+        }
+
+        initialized = true;
+        new window.google.translate.TranslateElement({
+            pageLanguage: 'en',
+            autoDisplay: false,
+            includedLanguages: Object.keys(languageMap).join(',')
+        }, 'crm-google-translate-element');
+    };
+
+    document.addEventListener('DOMContentLoaded', function () {
+        var storedLanguage = localStorage.getItem(storageKey) || 'en';
+        syncSelectors(storedLanguage);
+        applyLanguage(storedLanguage, false);
+
+        document.querySelectorAll(selector).forEach(function (select) {
+            select.addEventListener('change', function () {
+                applyLanguage(select.value, true);
+            });
+        });
+    });
+
+    var script = document.createElement('script');
+    script.src = 'https://translate.google.com/translate_a/element.js?cb=crmInitGoogleTranslate';
+    script.async = true;
+    document.head.appendChild(script);
+})();
+</script>
 </body>
 
 </html>

@@ -4,6 +4,17 @@
 .kt-notification .kt-notification__item:after {
     display:none !important;
 }
+
+.kt-header-mobile__logo img,
+.kt-header__brand-logo img.kt-header__brand-logo-default,
+.kt-header__brand-logo img.kt-header__brand-logo-sticky {
+    width: 68px;
+    height: 68px;
+    object-fit: contain;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.12);
+    padding: 6px;
+}
 </style>
 <?php if(is_client_logged_in()) { ?>
     <!-- begin:: Header Mobile -->
@@ -75,11 +86,6 @@
                                             <a href="<?php echo site_url('clients/proposals'); ?>" class="<?php if($this->uri->segment(2)=="proposals"){echo "kt-menu__item--open ";}?><?php if($this->uri->segment(2)=="proposals"){echo "kt-menu__item--open";}?> kt-menu__link "><span class="kt-menu__link-text"><?php echo _l('proposals'); ?></span><i class="kt-menu__ver-arrow la la-angle-right"></i></a>
                                         </li>
                                     <?php } ?>
-                                    <li class="kt-menu__item  kt-menu__item--submenu kt-menu__item--rel <?php if($this->uri->segment(2)=="files"){echo "kt-menu__item--open ";}?><?php if($this->uri->segment(2)=="files"){echo "kt-menu__item--open ";}?> " data-ktmenu-submenu-toggle="click" aria-haspopup="true">
-                                        <a href="<?php echo site_url('clients/files'); ?>" class="<?php if($this->uri->segment(2)=="files"){echo "kt-menu__item--open ";}?><?php if($this->uri->segment(2)=="files"){echo "kt-menu__item--open";}?> kt-menu__link "><span class="kt-menu__link-text"><?php echo _l('customer_profile_files'); ?></span><i class="kt-menu__ver-arrow la la-angle-right"></i></a>
-                                    </li>
-
-
                                 </ul>
                             </div>
                         </div>

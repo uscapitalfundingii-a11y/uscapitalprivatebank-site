@@ -1,3 +1,8 @@
+# See D:\GithubRepos\AGENTS.md before changing repository maintenance or backup rules.
+#
+# Local DreamHost/server backup files are intentionally ignored here so they can
+# stay on this hard drive without being published through GitHub.
+
 # Huge folders (CRITICAL)
 assets/
 law/

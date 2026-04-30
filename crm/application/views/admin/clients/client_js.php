@@ -242,6 +242,22 @@ $(function() {
         $('#contact_data').empty();
     });
 
+    $('body').on('click', '.contact-select-all-permissions', function() {
+        $('#contact input[name="permissions[]"]').prop('checked', true).trigger('change');
+    });
+
+    $('body').on('click', '.contact-clear-all-permissions', function() {
+        $('#contact input[name="permissions[]"]').prop('checked', false).trigger('change');
+    });
+
+    $('body').on('click', '.contact-select-all-notifications', function() {
+        $('#contact #contact_email_notifications input[type="checkbox"]').prop('checked', true);
+    });
+
+    $('body').on('click', '.contact-clear-all-notifications', function() {
+        $('#contact #contact_email_notifications input[type="checkbox"]').prop('checked', false);
+    });
+
     $('.client-form').on('submit', function() {
         $('select[name="default_currency"]').prop('disabled', false);
     });
