@@ -78,6 +78,7 @@ class Ai extends AdminController
     }
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 
     public function email_reply()
     {
@@ -113,6 +114,8 @@ class Ai extends AdminController
             ]);
         }
     }
+=======
+>>>>>>> 6c7538c44b997f58d721b624e14108250b394162
 =======
 >>>>>>> 6c7538c44b997f58d721b624e14108250b394162
 =======
