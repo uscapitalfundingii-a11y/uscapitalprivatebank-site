@@ -226,6 +226,7 @@
     </div>
 </div>
 <<<<<<< HEAD
+<<<<<<< HEAD
 <script>
     $(function() {
         initTicketReplyDictation();
@@ -306,5 +307,7 @@
         });
     }
 </script>
+=======
+>>>>>>> 6c7538c44b997f58d721b624e14108250b394162
 =======
 >>>>>>> 6c7538c44b997f58d721b624e14108250b394162

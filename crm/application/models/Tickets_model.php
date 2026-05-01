@@ -798,7 +798,9 @@ class Tickets_model extends App_Model
 
         $data['date']      = date('Y-m-d H:i:s');
         $data['ticketkey'] = app_generate_hash();
-        $data['status']    = 1;
+        if (! isset($data['status']) || $data['status'] === '' || $data['status'] === null) {
+            $data['status'] = 1;
+        }
         $data['message']   = trim($data['message']);
         $data['subject']   = trim($data['subject']);
         // if ($this->piping == true) {
