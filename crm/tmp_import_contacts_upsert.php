@@ -67,6 +67,63 @@ function clean_text($value)
     return trim((string) $value);
 }
 
+function normalize_row_keys(array $row)
+{
+    $aliases = [
+        'first name' => 'First Name',
+        'firstname' => 'First Name',
+        'given name' => 'First Name',
+        'last name' => 'Last Name',
+        'lastname' => 'Last Name',
+        'surname' => 'Last Name',
+        'company' => 'Company',
+        'business name' => 'Company',
+        'title' => 'Position',
+        'position' => 'Position',
+        'job title' => 'Position',
+        'email' => 'Email',
+        'email address' => 'Email',
+        'e-mail address' => 'Email',
+        'alternate email' => 'Alternate Email',
+        'alternate email address' => 'Alternate Email',
+        'secondary email' => 'Alternate Email',
+        'email 2' => 'Alternate Email',
+        'email2' => 'Alternate Email',
+        'e-mail 2 address' => 'Alternate Email',
+        'phone' => 'Phone',
+        'business phone' => 'Phone',
+        'mobile phone' => 'Phone',
+        'contact phonenumber' => 'Phone',
+        'contact_phonenumber' => 'Phone',
+        'phonenumber' => 'Phone',
+        'address' => 'Address',
+        'street' => 'Address',
+        'business street' => 'Address',
+        'city' => 'City',
+        'state' => 'State',
+        'province' => 'State',
+        'zip' => 'Zip Code',
+        'zip code' => 'Zip Code',
+        'postal code' => 'Zip Code',
+        'country' => 'Country',
+        'website' => 'Website',
+        'web page' => 'Website',
+        'notes' => 'Notes',
+        'comment' => 'Notes',
+    ];
+
+    $normalized = [];
+    foreach ($row as $key => $value) {
+        $lookup = strtolower(trim(str_replace('_', ' ', (string) $key)));
+        $normalizedKey = $aliases[$lookup] ?? trim((string) $key);
+        if (! isset($normalized[$normalizedKey]) || clean_text($normalized[$normalizedKey]) === '') {
+            $normalized[$normalizedKey] = $value;
+        }
+    }
+
+    return $normalized;
+}
+
 function is_blankish($value)
 {
     return trim((string) $value) === '';
@@ -120,6 +177,9 @@ function derive_name_parts(array $row)
     }
 
     $email = normalize_email($row['Email'] ?? '');
+    if (! $email) {
+        $email = normalize_email($row['Alternate Email'] ?? '');
+    }
     if ($email && ($first === '' || $last === '')) {
         $local = preg_replace('/[^a-z0-9]+/i', ' ', strstr($email, '@', true));
         $parts = preg_split('/\s+/', trim((string) $local));
@@ -323,6 +383,8 @@ $countryMap = fetch_country_map($mysqli, $countriesTable);
 $defaultCountryId = resolve_default_country_id($mysqli, $countriesTable, $countryMap);
 
 $permissionIds = [1, 2, 3, 4, 5, 6];
+$createdEmailsPath = $crmRoot . '/tmp_import_created_emails.json';
+$createdEmailsAllPath = $crmRoot . '/tmp_import_created_emails_all.json';
 
 $existingEmails = [];
 $result = $mysqli->query("SELECT id, userid, email FROM `{$contactsTable}` WHERE email IS NOT NULL AND email != ''");
@@ -366,6 +428,7 @@ $stats = [
 ];
 
 $errors = [];
+$createdEmails = [];
 
 while (($data = fgetcsv($handle)) !== false) {
     $stats['rows_scanned']++;
@@ -373,8 +436,12 @@ while (($data = fgetcsv($handle)) !== false) {
     foreach ($headers as $index => $header) {
         $row[$header] = $data[$index] ?? '';
     }
+    $row = normalize_row_keys($row);
 
     $email = normalize_email($row['Email'] ?? '');
+    if (! $email) {
+        $email = normalize_email($row['Alternate Email'] ?? '');
+    }
     if (! $email) {
         $stats['skipped_invalid_email']++;
         continue;
@@ -482,6 +549,7 @@ while (($data = fgetcsv($handle)) !== false) {
             ];
             $stats['created_customers']++;
             $stats['created_contacts']++;
+            $createdEmails[] = $email;
         } else {
             $stats['matched_existing_email']++;
             $contactId = (int) $existingEmails[$email]['contact_id'];
@@ -584,7 +652,47 @@ while (($data = fgetcsv($handle)) !== false) {
 
 fclose($handle);
 
+file_put_contents($createdEmailsPath, json_encode([
+    'generated_at' => date('c'),
+    'created_count' => count($createdEmails),
+    'emails' => $createdEmails,
+], JSON_PRETTY_PRINT));
+
+$existingAllEmails = [];
+if (file_exists($createdEmailsAllPath)) {
+    $existingAllJson = json_decode((string) file_get_contents($createdEmailsAllPath), true);
+    $existingAllList = $existingAllJson['emails'] ?? $existingAllJson;
+    if (is_array($existingAllList)) {
+        foreach ($existingAllList as $existingEmail) {
+            $normalizedExisting = normalize_email($existingEmail);
+            if ($normalizedExisting) {
+                $existingAllEmails[$normalizedExisting] = true;
+            }
+        }
+    }
+}
+
+foreach ($createdEmails as $createdEmail) {
+    $normalizedCreated = normalize_email($createdEmail);
+    if ($normalizedCreated) {
+        $existingAllEmails[$normalizedCreated] = true;
+    }
+}
+
+$allCreatedEmails = array_keys($existingAllEmails);
+sort($allCreatedEmails);
+
+file_put_contents($createdEmailsAllPath, json_encode([
+    'generated_at' => date('c'),
+    'created_count' => count($allCreatedEmails),
+    'emails' => $allCreatedEmails,
+], JSON_PRETTY_PRINT));
+
 echo json_encode([
     'stats' => $stats,
+    'created_emails_file' => basename($createdEmailsPath),
+    'created_email_count' => count($createdEmails),
+    'created_emails_all_file' => basename($createdEmailsAllPath),
+    'created_emails_all_count' => count($allCreatedEmails),
     'errors' => array_slice($errors, 0, 20),
 ], JSON_PRETTY_PRINT), PHP_EOL;

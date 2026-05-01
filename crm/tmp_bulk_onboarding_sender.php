@@ -21,6 +21,7 @@ $subject = 'Onboarding Invitation - US Capital Private Bank, ETO';
 $departmentName = 'Customer Service';
 $statusName = 'Staff Initiated';
 $predefinedReplyId = 94;
+$emailListPath = $argv[1] ?? '';
 
 function fail(string $message): void
 {
@@ -141,6 +142,37 @@ function insertRow(mysqli $db, string $table, array $row): int
     return $insertId;
 }
 
+function loadEmailAllowList(string $path): array
+{
+    if ($path === '') {
+        return [];
+    }
+
+    if (! is_file($path)) {
+        fail('Email allow-list file not found: ' . $path);
+    }
+
+    $json = json_decode((string) file_get_contents($path), true);
+    if (! is_array($json)) {
+        fail('Email allow-list file is not valid JSON: ' . $path);
+    }
+
+    $emails = $json['emails'] ?? $json;
+    if (! is_array($emails)) {
+        fail('Email allow-list JSON is missing an emails array: ' . $path);
+    }
+
+    $allow = [];
+    foreach ($emails as $email) {
+        $email = strtolower(trim((string) $email));
+        if ($email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $allow[$email] = true;
+        }
+    }
+
+    return $allow;
+}
+
 $db = @new mysqli(APP_DB_HOSTNAME, APP_DB_USERNAME, APP_DB_PASSWORD, APP_DB_NAME);
 if ($db->connect_errno) {
     $db = @new mysqli('127.0.0.1', APP_DB_USERNAME, APP_DB_PASSWORD, APP_DB_NAME);
@@ -223,6 +255,7 @@ if (! $openedByRow) {
 $openedBy = (int) $openedByRow['staffid'];
 $now = date('Y-m-d H:i:s');
 $message = (string) $predefined['message'];
+$allowList = loadEmailAllowList($emailListPath);
 $altMessage = trim(strip_tags(str_replace(['<br>', '<br/>', '<br />'], "\n", $message)));
 $attachments = base64_encode(serialize([]));
 $headers = serialize([
@@ -284,12 +317,17 @@ $processRecipient = function (array $recipient) use (
     &$createdTickets,
     &$queuedEmails,
     &$skippedDuplicates,
+    $allowList,
     $dbPrefix,
     $makeTicketRow,
     $makeQueueRow
 ): void {
     $email = strtolower(trim((string) $recipient['email']));
     if ($email === '' || ! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        return;
+    }
+
+    if ($allowList !== [] && ! isset($allowList[$email])) {
         return;
     }
 
@@ -338,6 +376,7 @@ foreach ($staff as $member) {
 echo "Bulk onboarding invitation complete.\n";
 echo 'Status used: ' . $status['name'] . ' (#' . $status['ticketstatusid'] . ')' . "\n";
 echo 'Department used: ' . $departmentName . ' (#' . $department['departmentid'] . ')' . "\n";
+echo 'Allow-list mode: ' . ($allowList === [] ? 'all unique contacts/staff' : count($allowList) . ' email(s)') . "\n";
 echo 'Created tickets: ' . $createdTickets . "\n";
 echo 'Queued emails: ' . $queuedEmails . "\n";
 echo 'Skipped duplicate emails: ' . $skippedDuplicates . "\n";
