@@ -328,6 +328,7 @@ Route::middleware('admin', 'adminPermission')->group(function () {
 
     // Report
     Route::controller('ReportController')->prefix('report')->name('report.')->group(function () {
+        Route::get('funded-transaction-audit', 'fundedTransactionAudit')->name('funded.transaction.audit');
         Route::get('transaction/{user_name?}', 'transaction')->name('transaction');
         Route::get('vcard-transaction/{user_name?}', 'vcardTransaction')->name('vcard.transaction');
         Route::get('login/history', 'loginHistory')->name('login.history');

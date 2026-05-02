@@ -28,7 +28,7 @@ class Api extends App_Controller
         }
 
         $this->json([
-            'modules' => ['customers', 'contacts', 'leads', 'tasks', 'tickets', 'notes', 'native_chat'],
+            'modules' => ['customers', 'contacts', 'leads', 'tasks', 'todos', 'tickets', 'notes', 'native_chat'],
             'custom_fields_recommended' => [
                 'onboarding_stage',
                 'welcome_package_status',
@@ -57,6 +57,9 @@ class Api extends App_Controller
                 'PUT /uscap_mcp_bridge/api/leads/{id}',
                 'GET /uscap_mcp_bridge/api/tasks',
                 'POST /uscap_mcp_bridge/api/tasks',
+                'GET /uscap_mcp_bridge/api/todos?staff_email=...',
+                'GET /uscap_mcp_bridge/api/todos/{id}',
+                'PUT /uscap_mcp_bridge/api/todos/{id}',
                 'POST /uscap_mcp_bridge/api/notes',
                 'GET /uscap_mcp_bridge/api/tickets',
                 'GET /uscap_mcp_bridge/api/chat_unread',
@@ -281,6 +284,50 @@ class Api extends App_Controller
         }
 
         $this->jsonError('not_found', 'Unsupported tasks route', 404);
+    }
+
+    public function todos($id = ''): void
+    {
+        if (! $this->authorize()) {
+            return;
+        }
+
+        $method = $this->method();
+        if ($method === 'GET') {
+            $this->json($id === '' ? $this->listTodos() : $this->getTodo((int) $id));
+            return;
+        }
+
+        if (($method === 'PUT' || $method === 'PATCH') && is_numeric($id)) {
+            $data = $this->payload();
+            if (($data['confirm'] ?? false) !== true) {
+                $this->jsonError('confirmation_required', 'Todo completion is a live CRM write and requires confirm: true.', 409);
+                return;
+            }
+
+            $allowed = [];
+            if (array_key_exists('finished', $data)) {
+                $allowed['finished'] = (int) (bool) $data['finished'];
+            } elseif (isset($data['status'])) {
+                $allowed['finished'] = (int) ((string) $data['status'] === 'complete' || (string) $data['status'] === '1');
+            }
+
+            if ($allowed === []) {
+                $this->jsonError('missing_required_field', 'Supply finished=true or status=complete.', 422);
+                return;
+            }
+
+            $allowed['datefinished'] = $allowed['finished'] === 1 ? date('Y-m-d H:i:s') : null;
+            $this->db->where('todoid', (int) $id)->update(db_prefix() . 'todos', $allowed);
+            $this->json([
+                'updated' => $this->db->affected_rows() > 0,
+                'todoid' => (int) $id,
+                'finished' => $allowed['finished'],
+            ]);
+            return;
+        }
+
+        $this->jsonError('not_found', 'Unsupported todos route', 404);
     }
 
     public function notes(): void
@@ -592,6 +639,58 @@ class Api extends App_Controller
             }
             return $row;
         }, $rows);
+    }
+
+    private function listTodos(): array
+    {
+        $limit = max(1, min(100, (int) ($this->input->get('limit', true) ?: 50)));
+        $staffEmail = trim((string) $this->input->get('staff_email', true));
+        $finished = $this->input->get('finished', true);
+
+        $this->db
+            ->select('todos.todoid, todos.description, todos.staffid, todos.dateadded, todos.finished, todos.datefinished, todos.item_order, staff.email as staff_email, staff.firstname, staff.lastname')
+            ->from(db_prefix() . 'todos as todos')
+            ->join(db_prefix() . 'staff as staff', 'staff.staffid = todos.staffid', 'left');
+
+        if ($staffEmail !== '') {
+            $this->db->where('staff.email', $staffEmail);
+        }
+
+        if ($finished !== null && $finished !== '') {
+            $this->db->where('todos.finished', (int) (bool) $finished);
+        }
+
+        $rows = $this->db
+            ->order_by('todos.finished', 'ASC')
+            ->order_by('todos.item_order', 'ASC')
+            ->order_by('todos.todoid', 'DESC')
+            ->limit($limit)
+            ->get()
+            ->result_array();
+
+        return array_map([$this, 'sanitizeTodoRow'], $rows);
+    }
+
+    private function getTodo(int $id): array
+    {
+        $this->db
+            ->select('todos.todoid, todos.description, todos.staffid, todos.dateadded, todos.finished, todos.datefinished, todos.item_order, staff.email as staff_email, staff.firstname, staff.lastname')
+            ->from(db_prefix() . 'todos as todos')
+            ->join(db_prefix() . 'staff as staff', 'staff.staffid = todos.staffid', 'left')
+            ->where('todos.todoid', $id);
+
+        $row = $this->db->get()->row_array();
+        if (! $row) {
+            return ['isError' => true, 'error_type' => 'not_found', 'message' => 'Todo not found.'];
+        }
+
+        return $this->sanitizeTodoRow($row);
+    }
+
+    private function sanitizeTodoRow(array $row): array
+    {
+        $row['plain_description'] = trim(strip_tags(str_replace(['<br>', '<br/>', '<br />'], "\n", (string) ($row['description'] ?? ''))));
+        return $row;
     }
 
     private function tableExists(string $table): bool

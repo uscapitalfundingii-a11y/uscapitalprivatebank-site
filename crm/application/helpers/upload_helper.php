@@ -1162,6 +1162,15 @@ function handle_contact_profile_image_upload($contact_id = '')
         return $hookData['handled_externally_successfully'];
     }
 
+    if (isset($_FILES['profile_image']['error']) && $_FILES['profile_image']['error'] != UPLOAD_ERR_NO_FILE) {
+        $uploadError = _perfex_upload_error($_FILES['profile_image']['error']);
+        if ($uploadError) {
+            set_alert('warning', $uploadError);
+
+            return false;
+        }
+    }
+
     if (isset($_FILES['profile_image']['name']) && $_FILES['profile_image']['name'] != '') {
         hooks()->do_action('before_upload_contact_profile_image');
         if ($contact_id == '') {
@@ -1189,39 +1198,76 @@ function handle_contact_profile_image_upload($contact_id = '')
                 return false;
             }
             _maybe_create_upload_path($path);
-            $filename    = unique_filename($path, $_FILES['profile_image']['name']);
+            $filename    = unique_filename($path, time() . '_' . $_FILES['profile_image']['name']);
             $newFilePath = $path . $filename;
             // Upload the file into the company uploads dir
             if (move_uploaded_file($tmpFilePath, $newFilePath)) {
                 $CI                       = & get_instance();
+                $existingContact          = $CI->db->select('profile_image')
+                    ->where('id', $contact_id)
+                    ->get(db_prefix() . 'contacts')
+                    ->row();
+                $existingProfileImage     = $existingContact ? $existingContact->profile_image : null;
+                $thumbFilePath            = $path . 'thumb_' . $filename;
+                $smallFilePath            = $path . 'small_' . $filename;
                 $config                   = [];
                 $config['image_library']  = 'gd2';
                 $config['source_image']   = $newFilePath;
-                $config['new_image']      = 'thumb_' . $filename;
+                $config['new_image']      = $thumbFilePath;
                 $config['maintain_ratio'] = true;
                 $config['width']          = hooks()->apply_filters('contact_profile_image_thumb_width', 320);
                 $config['height']         = hooks()->apply_filters('contact_profile_image_thumb_height', 320);
                 $CI->image_lib->initialize($config);
-                $CI->image_lib->resize();
+                $thumbResized = $CI->image_lib->resize();
+                $resizeError  = strip_tags($CI->image_lib->display_errors('', ''));
                 $CI->image_lib->clear();
                 $config['image_library']  = 'gd2';
                 $config['source_image']   = $newFilePath;
-                $config['new_image']      = 'small_' . $filename;
+                $config['new_image']      = $smallFilePath;
                 $config['maintain_ratio'] = true;
                 $config['width']          = hooks()->apply_filters('contact_profile_image_small_width', 32);
                 $config['height']         = hooks()->apply_filters('contact_profile_image_small_height', 32);
                 $CI->image_lib->initialize($config);
-                $CI->image_lib->resize();
+                $smallResized = $CI->image_lib->resize();
+                $resizeError  = $resizeError ?: strip_tags($CI->image_lib->display_errors('', ''));
+                $CI->image_lib->clear();
+
+                if (!$thumbResized || !$smallResized || !file_exists($thumbFilePath) || !file_exists($smallFilePath)) {
+                    @unlink($newFilePath);
+                    @unlink($thumbFilePath);
+                    @unlink($smallFilePath);
+
+                    set_alert('warning', _l('error_uploading_file') . ($resizeError ? ': ' . $resizeError : ''));
+
+                    return false;
+                }
 
                 $CI->db->where('id', $contact_id);
-                $CI->db->update(db_prefix() . 'contacts', [
+                $updated = $CI->db->update(db_prefix() . 'contacts', [
                     'profile_image' => $filename,
                 ]);
+
+                if (!$updated) {
+                    @unlink($newFilePath);
+                    @unlink($thumbFilePath);
+                    @unlink($smallFilePath);
+                    set_alert('warning', _l('error_uploading_file'));
+
+                    return false;
+                }
+
+                if (!empty($existingProfileImage) && $existingProfileImage !== $filename) {
+                    @unlink($path . 'thumb_' . $existingProfileImage);
+                    @unlink($path . 'small_' . $existingProfileImage);
+                }
+
                 // Remove original image
-                unlink($newFilePath);
+                @unlink($newFilePath);
 
                 return true;
             }
+
+            set_alert('warning', _l('error_uploading_file'));
         }
     }
 

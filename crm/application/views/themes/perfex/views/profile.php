@@ -12,13 +12,6 @@
                 <div class="row">
                     <div class="col-md-12">
                         <div class="form-group">
-                            <?php if ($contact->profile_image == null) { ?>
-                            <div class="form-group profile-image-upload-group">
-                                <label for="profile_image"
-                                    class="profile-image"><?= _l('client_profile_image'); ?></label>
-                                <input type="file" name="profile_image" class="form-control" id="profile_image">
-                            </div>
-                            <?php } ?>
                             <?php if ($contact->profile_image != null) { ?>
                             <div class="form-group profile-image-group">
                                 <div class="row">
@@ -34,6 +27,17 @@
                                 </div>
                             </div>
                             <?php } ?>
+                            <div class="form-group profile-image-upload-group">
+                                <label for="profile_image"
+                                    class="profile-image"><?= _l('client_profile_image'); ?></label>
+                                <input type="file" name="profile_image" class="form-control" id="profile_image"
+                                    accept=".png,.jpg,.jpeg">
+                                <?php if ($contact->profile_image != null) { ?>
+                                <p class="text-muted tw-mt-1 tw-mb-0">
+                                    Upload a new image here to replace the current profile photo.
+                                </p>
+                                <?php } ?>
+                            </div>
 
                         </div>
                         <div class="form-group profile-firstname-group">

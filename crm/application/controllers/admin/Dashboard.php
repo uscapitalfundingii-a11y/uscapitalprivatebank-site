@@ -15,10 +15,6 @@ class Dashboard extends AdminController
     {
         close_setup_menu();
 
-        // The default dashboard becomes too heavy during large import/email waves.
-        // Send staff to the light control panel so the admin portal stays usable.
-        redirect(admin_url('home'));
-
         $this->load->model('departments_model');
         $this->load->model('todo_model');
         $data['departments'] = $this->departments_model->get();
@@ -88,8 +84,73 @@ class Dashboard extends AdminController
             $data['tickets_report'] = (new app\services\TicketsReportByStaff())->filterBy('this_month');
         }
 
+        $data['uscap_dashboard_stats'] = $this->get_uscap_dashboard_stats();
+
         $data = hooks()->apply_filters('before_dashboard_render', $data);
         $this->load->view('admin/dashboard/dashboard', $data);
+    }
+
+    private function get_uscap_dashboard_stats()
+    {
+        $openTicketWhere = 'merged_ticket_id IS NULL AND status IN (1,2,4)';
+        if (!is_admin() && get_option('staff_access_only_assigned_departments') == 1) {
+            $staffDepartments = $this->departments_model->get_staff_departments(get_staff_user_id(), true);
+            if (count($staffDepartments) > 0) {
+                $openTicketWhere .= ' AND department IN (' . implode(',', array_map('intval', $staffDepartments)) . ')';
+            }
+        }
+
+        $overdueTaskWhere = 'status != ' . Tasks_model::STATUS_COMPLETE . ' AND duedate IS NOT NULL AND duedate < "' . date('Y-m-d') . '"';
+        if (staff_cant('view', 'tasks')) {
+            $overdueTaskWhere .= ' AND id IN (SELECT taskid FROM ' . db_prefix() . 'task_assigned WHERE staffid = ' . get_staff_user_id() . ')';
+        }
+
+        $stats = [
+            [
+                'label' => 'Tickets Needing Reply',
+                'value' => total_rows(db_prefix() . 'tickets', $openTicketWhere),
+                'href'  => admin_url('tickets'),
+                'icon'  => 'fa-life-ring',
+                'tone'  => 'danger',
+            ],
+            [
+                'label' => 'New Leads',
+                'value' => total_rows(db_prefix() . 'leads', 'junk=0 AND lost=0 AND status=0'),
+                'href'  => admin_url('leads'),
+                'icon'  => 'fa-filter',
+                'tone'  => 'info',
+            ],
+            [
+                'label' => 'Customers',
+                'value' => total_rows(db_prefix() . 'clients', 'active=1'),
+                'href'  => admin_url('clients'),
+                'icon'  => 'fa-building',
+                'tone'  => 'primary',
+            ],
+            [
+                'label' => 'Overdue Tasks',
+                'value' => total_rows(db_prefix() . 'tasks', $overdueTaskWhere),
+                'href'  => admin_url('tasks?filter=overdue'),
+                'icon'  => 'fa-list-check',
+                'tone'  => 'warning',
+            ],
+            [
+                'label' => 'This Week Events',
+                'value' => count($this->dashboard_model->get_upcoming_events()),
+                'href'  => admin_url('utilities/calendar'),
+                'icon'  => 'fa-calendar-days',
+                'tone'  => 'success',
+            ],
+            [
+                'label' => 'Mailbox',
+                'value' => 'Open',
+                'href'  => admin_url('mailbox/folder/inbox'),
+                'icon'  => 'fa-envelope',
+                'tone'  => 'default',
+            ],
+        ];
+
+        return hooks()->apply_filters('uscap_dashboard_stats', $stats);
     }
 
     // Chart weekly payments statistics on home page / ajax

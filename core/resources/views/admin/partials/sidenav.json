@@ -875,6 +875,20 @@
         "submenu": [
             {
                 "keyword": [
+                    "Funded Account Audit",
+                    "Balance Audit",
+                    "Ledger Audit",
+                    "Suspicious Credits",
+                    "Account Credits",
+                    "Funding Review",
+                    "Transaction Investigation"
+                ],
+                "title": "Funded Account Audit",
+                "route_name": "admin.report.funded.transaction.audit",
+                "menu_active": "admin.report.funded.transaction.audit"
+            },
+            {
+                "keyword": [
                     "Transaction Log",
                     "Report",
                     "Transaction report",

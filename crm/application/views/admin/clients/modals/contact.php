@@ -3,7 +3,7 @@
 <div class="modal fade" id="contact" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
-            <?= form_open(admin_url('clients/form_contact/' . $customer_id . ($contactid ? '/' . $contactid : '')), ['id' => 'contact-form', 'autocomplete' => 'off']); ?>
+            <?= form_open_multipart(admin_url('clients/form_contact/' . $customer_id . ($contactid ? '/' . $contactid : '')), ['id' => 'contact-form', 'autocomplete' => 'off']); ?>
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
                         aria-hidden="true">&times;</span></button>
@@ -35,10 +35,16 @@
                     <div class="col-md-12">
 
                         <div id="contact-profile-image"
-                            class="form-group<?= (isset($contact) && ! empty($contact->profile_image)) ? ' hide' : ''; ?>">
+                            class="form-group">
                             <label for="profile_image"
                                 class="profile-image"><?= _l('client_profile_image'); ?></label>
-                            <input type="file" name="profile_image" class="form-control" id="profile_image">
+                            <input type="file" name="profile_image" class="form-control" id="profile_image"
+                                accept=".png,.jpg,.jpeg">
+                            <?php if (isset($contact) && ! empty($contact->profile_image)) { ?>
+                            <p class="text-muted tw-mt-1 tw-mb-0">
+                                Upload a new image here to replace the current contact profile photo.
+                            </p>
+                            <?php } ?>
                         </div>
                         <?php if (isset($contact)) { ?>
                         <div class="alert alert-warning hide" role="alert" id="contact_proposal_warning">

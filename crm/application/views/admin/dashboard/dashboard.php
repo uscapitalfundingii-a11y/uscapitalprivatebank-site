@@ -20,6 +20,8 @@
 
             <div class="clearfix"></div>
 
+            <?php $this->load->view('admin/dashboard/uscap_overview'); ?>
+
             <div class="col-md-12 mtop20" data-container="top-12">
                 <?php render_dashboard_widgets('top-12'); ?>
             </div>

@@ -10,13 +10,6 @@
 
             <div class="panel_s">
                 <div class="panel-body">
-                    <?php if ($current_user->profile_image == null) { ?>
-                    <div class="form-group">
-                        <label for="profile_image"
-                            class="profile-image"><?= _l('staff_edit_profile_image'); ?></label>
-                        <input type="file" name="profile_image" class="form-control" id="profile_image">
-                    </div>
-                    <?php } ?>
                     <?php if ($current_user->profile_image != null) { ?>
                     <div class="form-group">
                         <div class="row">
@@ -30,15 +23,16 @@
                             </div>
                         </div>
                     </div>
-                    <div class="form-group">
+                    <?php } ?>
+                    <div class="form-group profile-image-upload-group">
                         <label for="profile_image"
                             class="profile-image"><?= _l('staff_edit_profile_image'); ?></label>
-                        <input type="file" name="profile_image" class="form-control" id="profile_image">
+                        <input type="file" name="profile_image" class="form-control" id="profile_image"
+                            accept=".png,.jpg,.jpeg">
                         <p class="text-muted tw-mt-1 tw-mb-0">
-                            Upload a new image here to replace the current profile photo.
+                            Upload a new image here to change your profile photo.
                         </p>
                     </div>
-                    <?php } ?>
                     <div class="form-group">
                         <label for="firstname"
                             class="control-label"><?= _l('staff_add_edit_firstname'); ?></label>

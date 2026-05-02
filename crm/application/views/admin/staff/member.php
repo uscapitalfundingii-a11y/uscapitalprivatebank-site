@@ -120,13 +120,6 @@
                                         </div>
                                     </div>
                                     <hr />
-                                    <?php if ((isset($member) && $member->profile_image == null) || ! isset($member)) { ?>
-                                    <div class="form-group">
-                                        <label for="profile_image"
-                                            class="profile-image"><?= _l('staff_edit_profile_image'); ?></label>
-                                        <input type="file" name="profile_image" class="form-control" id="profile_image">
-                                    </div>
-                                    <?php } ?>
                                     <?php if (isset($member) && $member->profile_image != null) { ?>
                                     <div class="form-group">
                                         <div class="row">
@@ -140,15 +133,16 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="form-group">
+                                    <?php } ?>
+                                    <div class="form-group profile-image-upload-group">
                                         <label for="profile_image"
                                             class="profile-image"><?= _l('staff_edit_profile_image'); ?></label>
-                                        <input type="file" name="profile_image" class="form-control" id="profile_image">
+                                        <input type="file" name="profile_image" class="form-control" id="profile_image"
+                                            accept=".png,.jpg,.jpeg">
                                         <p class="text-muted tw-mt-1 tw-mb-0">
-                                            Upload a new image here to replace the current staff profile photo.
+                                            Upload a new image here to change this staff profile photo.
                                         </p>
                                     </div>
-                                    <?php } ?>
                                     <?php $value = (isset($member) ? $member->firstname : ''); ?>
                                     <?php $attrs = (isset($member) ? [] : ['autofocus' => true]); ?>
                                     <?= render_input('firstname', 'staff_add_edit_firstname', $value, 'text', $attrs); ?>

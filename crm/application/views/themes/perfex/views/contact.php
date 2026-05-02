@@ -29,10 +29,16 @@
                 <hr />
                 <?php } ?>
                 <div id="contact-profile-image"
-                    class="form-group<?= isset($my_contact) && ! empty($my_contact->profile_image) ? ' hide' : ''; ?>">
+                    class="form-group">
                     <label for="profile_image"
                         class="profile-image"><?= _l('client_profile_image'); ?></label>
-                    <input type="file" name="profile_image" class="form-control" id="profile_image">
+                    <input type="file" name="profile_image" class="form-control" id="profile_image"
+                        accept=".png,.jpg,.jpeg">
+                    <?php if (isset($my_contact) && ! empty($my_contact->profile_image)) { ?>
+                    <p class="text-muted tw-mt-1 tw-mb-0">
+                        Upload a new image here to replace the current contact profile photo.
+                    </p>
+                    <?php } ?>
                 </div>
                 <div class="row">
                     <div class="col-md-6">
