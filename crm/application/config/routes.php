@@ -56,9 +56,10 @@ $route['404_override']         = '';
 $route['translate_uri_dashes'] = false;
 
 /**
- * Dashboard clean route
+ * Admin landing route
+ * Keep the admin entrypoint lightweight during large imports/campaigns.
  */
-$route['admin'] = 'admin/dashboard';
+$route['admin'] = 'admin/clients';
 
 /**
  * Misc controller routes

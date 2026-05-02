@@ -153,6 +153,7 @@ function app_init_admin_sidebar_menu_items()
 
     if ((!is_staff_member() && get_option('access_tickets_to_none_staff_members') == 1) || is_staff_member()) {
         $enable_badge = get_option('enable_support_menu_badges');
+        $isTicketsArea = $CI->router->fetch_class() === 'tickets';
         $CI->app_menu->add_sidebar_menu_item('support', [
             'collapse' => $enable_badge ? true : null,
             'name'     => _l('support'),
@@ -167,15 +168,20 @@ function app_init_admin_sidebar_menu_items()
 
         if ($enable_badge) {
             foreach ($statuses as $status) {
-                $CI->app_menu->add_sidebar_children_item('support', [
-                    'slug'     => 'support-' . $status['ticketstatusid'],
-                    'name'     => ticket_status_translate($status['ticketstatusid']),
-                    'href'     => admin_url('tickets/index/' . $status['ticketstatusid']),
-                    'position' => $status['statusorder'],
-                    'badge'    => [
+                $badge = [];
+                if ($isTicketsArea) {
+                    $badge = [
                         'value' => $CI->tickets_model->ticket_count($status['ticketstatusid']),
                         'color' => $status['statuscolor'],
-                    ],
+                    ];
+                }
+
+                $CI->app_menu->add_sidebar_children_item('support', [
+                    'slug'     => 'support-' . $status['ticketstatusid'],
+                    'name'     => $status['name'],
+                    'href'     => admin_url('tickets/index/' . $status['ticketstatusid']),
+                    'position' => $status['statusorder'],
+                    'badge'    => $badge,
                 ]);
             }
         }

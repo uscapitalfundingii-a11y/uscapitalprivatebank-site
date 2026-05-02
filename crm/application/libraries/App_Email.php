@@ -167,6 +167,35 @@ class App_Email extends App_mailer
             return;
         }
 
+        $cycleMinutes = (int) get_option('email_queue_active_cycle_minutes');
+        $pauseMinutes = (int) get_option('email_queue_pause_minutes');
+        $pauseUntil   = (int) get_option('email_queue_pause_until');
+        $cycleStarted = (int) get_option('email_queue_cycle_started_at');
+
+        if ($pauseMinutes > 0 && $pauseUntil > time()) {
+            log_message('debug', 'Email queue is in a scheduled pause window.');
+
+            return;
+        }
+
+        if ($cycleMinutes > 0 && $pauseMinutes > 0) {
+            if ($cycleStarted <= 0) {
+                update_option('email_queue_cycle_started_at', time());
+                $cycleStarted = time();
+            }
+
+            if (time() >= ($cycleStarted + ($cycleMinutes * 60))) {
+                $pauseUntil = time() + ($pauseMinutes * 60);
+
+                update_option('email_queue_pause_until', $pauseUntil);
+                update_option('email_queue_cycle_started_at', 0);
+
+                log_message('debug', 'Email queue entered a scheduled cooldown window.');
+
+                return;
+            }
+        }
+
         $this->set_status('pending');
         $emails = $this->get_queue_emails($batchSize);
 

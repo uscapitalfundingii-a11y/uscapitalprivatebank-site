@@ -282,9 +282,31 @@ echo render_input('settings[smtp_password]', 'settings_email_password', $ps, 'pa
                 ); ?>
             </div>
         </div>
+        <div class="row">
+            <div class="col-md-6">
+                <?= render_input(
+                    'settings[email_queue_active_cycle_minutes]',
+                    'email_queue_active_cycle_minutes',
+                    get_option('email_queue_active_cycle_minutes') ?: 120,
+                    'number',
+                    ['min' => 0, 'step' => 1]
+                ); ?>
+            </div>
+            <div class="col-md-6">
+                <?= render_input(
+                    'settings[email_queue_pause_minutes]',
+                    'email_queue_pause_minutes',
+                    get_option('email_queue_pause_minutes') ?: 30,
+                    'number',
+                    ['min' => 0, 'step' => 1]
+                ); ?>
+            </div>
+        </div>
         <?php
         $queueBatchSize       = (int) (get_option('email_queue_batch_size') ?: 25);
         $queueIntervalSeconds = (int) (get_option('email_queue_interval_seconds') ?: 60);
+        $queueCycleMinutes    = (int) (get_option('email_queue_active_cycle_minutes') ?: 120);
+        $queuePauseMinutes    = (int) (get_option('email_queue_pause_minutes') ?: 30);
         $queueIntervalSeconds = max(0, $queueIntervalSeconds);
         $queuePerMinute       = $queueIntervalSeconds > 0
             ? round(($queueBatchSize * 60) / $queueIntervalSeconds, 2)
@@ -296,14 +318,28 @@ echo render_input('settings[smtp_password]', 'settings_email_password', $ps, 'pa
         <p class="text-muted">
             <?= _l('email_queue_cron_note'); ?>
         </p>
+        <p class="text-muted">
+            <?= sprintf(_l('email_queue_cycle_note'), $queueCycleMinutes, $queuePauseMinutes); ?>
+        </p>
         <?php
         $queueEmails     = [];
+        $queueStats      = [];
         $queueTableError = '';
         $queueTable      = db_prefix() . 'mail_queue';
 
         if ($this->db->table_exists($queueTable)) {
             try {
-                $queueEmails = $this->db->order_by('id', 'DESC')->get($queueTable)->result();
+                $queueStats = $this->db
+                    ->select('status, COUNT(*) as total')
+                    ->group_by('status')
+                    ->get($queueTable)
+                    ->result();
+
+                $queueEmails = $this->db
+                    ->order_by('id', 'DESC')
+                    ->limit(100)
+                    ->get($queueTable)
+                    ->result();
             } catch (Throwable $e) {
                 $queueTableError = $e->getMessage();
             } catch (Exception $e) {
@@ -322,6 +358,22 @@ echo render_input('settings[smtp_password]', 'settings_email_password', $ps, 'pa
         <div class="alert alert-warning">
             <?= e($queueTableError); ?>
         </div>
+        <?php } ?>
+
+        <?php if (! empty($queueStats)) { ?>
+        <div class="row mtop15">
+            <?php foreach ($queueStats as $stat) { ?>
+            <div class="col-md-3">
+                <div class="panel_s">
+                    <div class="panel-body">
+                        <h5 class="no-margin text-uppercase text-muted"><?= e($stat->status); ?></h5>
+                        <h3 class="mtop10 mbot0"><?= (int) $stat->total; ?></h3>
+                    </div>
+                </div>
+            </div>
+            <?php } ?>
+        </div>
+        <p class="text-muted"><?= _l('email_queue_table_recent_note'); ?></p>
         <?php } ?>
 
         <table class="table dt-table">

@@ -14,6 +14,11 @@ class Dashboard extends AdminController
     public function index()
     {
         close_setup_menu();
+
+        // The default dashboard becomes too heavy during large import/email waves.
+        // Send staff to the lighter customer list so the admin portal stays usable.
+        redirect(admin_url('clients'));
+
         $this->load->model('departments_model');
         $this->load->model('todo_model');
         $data['departments'] = $this->departments_model->get();

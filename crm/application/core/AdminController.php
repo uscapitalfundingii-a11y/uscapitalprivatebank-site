@@ -2,13 +2,34 @@
 
 defined('BASEPATH') or exit('No direct script access allowed');
 
+if (!function_exists('admin_bootstrap_trace')) {
+    function admin_bootstrap_trace($message)
+    {
+        if (!defined('FCPATH')) {
+            return;
+        }
+
+        $line = sprintf(
+            "[%s] %s | uri=%s | mem=%s\n",
+            date('c'),
+            $message,
+            $_SERVER['REQUEST_URI'] ?? '',
+            function_exists('memory_get_usage') ? number_format(memory_get_usage(true)) : 'n/a'
+        );
+
+        @file_put_contents(FCPATH . 'admin_bootstrap_trace.log', $line, FILE_APPEND);
+    }
+}
+
 class AdminController extends App_Controller
 {
     public function __construct()
     {
         parent::__construct();
+        admin_bootstrap_trace('AdminController parent complete');
 
         if ($this->app->is_db_upgrade_required($this->current_db_version)) {
+            admin_bootstrap_trace('db upgrade required');
             if ($this->input->post('upgrade_database')) {
                 hooks()->do_action('pre_upgrade_database');
 
@@ -18,9 +39,12 @@ class AdminController extends App_Controller
             die(include_once(VIEWPATH . 'admin/includes/db_update_required.php'));
         }
 
+        admin_bootstrap_trace('before pre_admin_init');
         hooks()->do_action('pre_admin_init');
+        admin_bootstrap_trace('after pre_admin_init');
 
         if (!is_staff_logged_in()) {
+            admin_bootstrap_trace('staff not logged in');
             if (strpos(current_full_url(), get_admin_uri() . '/authentication') === false) {
                 redirect_after_login_to_current_url();
             }
@@ -40,8 +64,10 @@ class AdminController extends App_Controller
         // Update staff last activity
         $this->db->where('staffid', get_staff_user_id());
         $this->db->update('staff', ['last_activity' => date('Y-m-d H:i:s')]);
+        admin_bootstrap_trace('updated staff activity');
 
         $this->load->model('staff_model');
+        admin_bootstrap_trace('loaded staff_model');
 
         // Do not check on ajax requests
         if (!$this->input->is_ajax_request()) {
@@ -56,12 +82,15 @@ class AdminController extends App_Controller
             _maybe_system_setup_warnings();
 
             $this->init_quick_actions_links();
+            admin_bootstrap_trace('init_quick_actions_links complete');
         }
 
         $currentUser = $this->staff_model->get(get_staff_user_id());
+        admin_bootstrap_trace('loaded current user');
 
         // Deleted or inactive but have session
         if (!$currentUser || $currentUser->active == 0) {
+            admin_bootstrap_trace('current user invalid, logging out');
             $this->authentication_model->logout();
             redirect(admin_url('authentication'));
         }
@@ -69,8 +98,10 @@ class AdminController extends App_Controller
         $GLOBALS['current_user'] = $currentUser;
 
         init_admin_assets();
+        admin_bootstrap_trace('init_admin_assets complete');
 
         hooks()->do_action('admin_init');
+        admin_bootstrap_trace('after admin_init');
 
         $vars = [
             'current_user'    => $currentUser,
@@ -80,7 +111,9 @@ class AdminController extends App_Controller
 
         if (!$this->input->is_ajax_request()) {
             $vars['sidebar_menu'] = $this->app_menu->get_sidebar_menu_items();
+            admin_bootstrap_trace('sidebar menu built');
             $vars['setup_menu']   = $this->app_menu->get_setup_menu_items();
+            admin_bootstrap_trace('setup menu built');
         }
 
         /**
@@ -89,6 +122,7 @@ class AdminController extends App_Controller
         */
         $vars = hooks()->apply_filters('admin_area_auto_loaded_vars', $vars);
         $this->load->vars($vars);
+        admin_bootstrap_trace('admin vars loaded');
     }
 
     private function init_quick_actions_links()
