@@ -83,7 +83,7 @@ foreach ($rResult as $aRow) {
 
             if (($has_permission_delete && ($has_permission_delete && ! is_admin($aRow['staffid']))) || is_admin()) {
                 if ($has_permission_delete && $output['iTotalRecords'] > 1 && $aRow['staffid'] != get_staff_user_id()) {
-                    $_data .= ' | <a href="#" onclick="delete_staff_member(' . $aRow['staffid'] . '); return false;" class="text-danger">' . _l('delete') . '</a>';
+                    $_data .= ' | <a href="#" class="text-danger js-delete-staff-member" data-staff-id="' . e($aRow['staffid']) . '" data-staff-name="' . e($aRow['firstname'] . ' ' . $aRow['lastname']) . '" data-staff-email="' . e($aRow['email']) . '">' . _l('delete') . '</a>';
                 }
             }
 

@@ -44,11 +44,16 @@
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
                         aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title"><?php echo _l('delete_staff'); ?></h4>
+                <h4 class="modal-title" id="delete_staff_modal_title"><?php echo _l('delete_staff'); ?></h4>
             </div>
             <div class="modal-body">
                 <div class="delete_id">
                     <?php echo form_hidden('id'); ?>
+                </div>
+                <div class="alert alert-warning" id="delete_staff_member_warning">
+                    <p style="margin-bottom:6px;"><strong>Are you sure you want to delete this staff member?</strong></p>
+                    <p style="margin-bottom:0;" id="delete_staff_member_name"></p>
+                    <p style="margin-bottom:0;" class="text-muted" id="delete_staff_member_email"></p>
                 </div>
                 <p><?php echo _l('delete_staff_info'); ?></p>
                 <?php
@@ -67,14 +72,31 @@
 <script>
 $(function() {
     initDataTable('.table-staff', window.location.href);
+
+    $('.table-staff').on('click', '.js-delete-staff-member', function(e) {
+        e.preventDefault();
+
+        delete_staff_member($(this).data('staff-id'), $(this).data('staff-name'), $(this).data('staff-email'));
+    });
 });
 
-function delete_staff_member(id) {
-    $('#delete_staff').modal('show');
+function delete_staff_member(id, name, email) {
+    name = name || '';
+    email = email || '';
+
     $('#transfer_data_to').find('option').prop('disabled', false);
     $('#transfer_data_to').find('option[value="' + id + '"]').prop('disabled', true);
     $('#delete_staff .delete_id input').val(id);
+
+    if (!name) {
+        name = $('#transfer_data_to').find('option[value="' + id + '"]').text();
+    }
+
+    $('#delete_staff_modal_title').text(name ? '<?php echo _l('delete_staff'); ?>: ' + name : '<?php echo _l('delete_staff'); ?>');
+    $('#delete_staff_member_name').text(name ? 'Staff member: ' + name : '');
+    $('#delete_staff_member_email').text(email);
     $('#transfer_data_to').selectpicker('refresh');
+    $('#delete_staff').modal('show');
 }
 </script>
 </body>

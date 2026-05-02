@@ -23,6 +23,7 @@ class Invoice_items_model extends App_Model
         $data = [
             'description'      => $_data['description'] . ' - Copy',
             'rate'             => $_data['rate'],
+            'base_price'       => isset($_data['base_price']) ? $_data['base_price'] : null,
             'tax'              => $_data['taxid'],
             'tax2'             => $_data['taxid_2'],
             'group_id'         => $_data['group_id'],
@@ -79,12 +80,13 @@ class Invoice_items_model extends App_Model
     {
         $columns             = $this->db->list_fields(db_prefix() . 'items');
         $rateCurrencyColumns = '';
+        $basePriceColumn     = in_array('base_price', $columns) ? db_prefix() . 'items.base_price as base_price,' : '0 as base_price,';
         foreach ($columns as $column) {
             if (strpos($column, 'rate_currency_') !== false) {
                 $rateCurrencyColumns .= $column . ',';
             }
         }
-        $this->db->select($rateCurrencyColumns . '' . db_prefix() . 'items.id as itemid,rate,
+        $this->db->select($rateCurrencyColumns . $basePriceColumn . '' . db_prefix() . 'items.id as itemid,rate,
             t1.taxrate as taxrate,t1.id as taxid,t1.name as taxname,
             t2.taxrate as taxrate_2,t2.id as taxid_2,t2.name as taxname_2,
             description,long_description,group_id,' . db_prefix() . 'items_groups.name as group_name,unit');
@@ -154,6 +156,12 @@ class Invoice_items_model extends App_Model
 
         $this->load->dbforge();
 
+        if (!in_array('base_price', $columns) && array_key_exists('base_price', $data)) {
+            unset($data['base_price']);
+        } elseif (isset($data['base_price']) && $data['base_price'] === '') {
+            $data['base_price'] = null;
+        }
+
         foreach ($data as $column => $itemData) {
             if (!in_array($column, $columns) && strpos($column, 'rate_currency_') !== false) {
                 $field = [
@@ -210,6 +218,12 @@ class Invoice_items_model extends App_Model
 
         $columns = $this->db->list_fields(db_prefix() . 'items');
         $this->load->dbforge();
+
+        if (!in_array('base_price', $columns) && array_key_exists('base_price', $data)) {
+            unset($data['base_price']);
+        } elseif (isset($data['base_price']) && $data['base_price'] === '') {
+            $data['base_price'] = null;
+        }
 
         foreach ($data as $column => $itemData) {
             if (!in_array($column, $columns) && strpos($column, 'rate_currency_') !== false) {

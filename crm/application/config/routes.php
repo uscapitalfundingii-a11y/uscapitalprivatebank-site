@@ -59,7 +59,7 @@ $route['translate_uri_dashes'] = false;
  * Admin landing route
  * Keep the admin entrypoint lightweight during large imports/campaigns.
  */
-$route['admin'] = 'admin/clients';
+$route['admin'] = 'admin/home';
 
 /**
  * Misc controller routes

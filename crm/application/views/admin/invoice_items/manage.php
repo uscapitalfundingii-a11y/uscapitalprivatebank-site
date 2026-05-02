@@ -80,6 +80,7 @@
         _l('invoice_items_list_description'),
         _l('invoice_item_long_description'),
         _l('invoice_items_list_rate'),
+        _l('invoice_item_internal_base_price'),
         _l('tax_1'),
         _l('tax_2'),
         _l('unit'),
@@ -208,6 +209,7 @@ render_datatable($table_data, 'invoice-items'); ?>
                     .replace(
                         /(<|<)br\s*\/*(>|>)/g, " "));
                 $itemModal.find('input[name="rate"]').val(response.rate);
+                $itemModal.find('input[name="base_price"]').val(response.base_price);
                 $itemModal.find('input[name="unit"]').val(response.unit);
                 $('select[name="tax"]').selectpicker('val', response.taxid).change();
                 $('select[name="tax2"]').selectpicker('val', response.taxid_2).change();

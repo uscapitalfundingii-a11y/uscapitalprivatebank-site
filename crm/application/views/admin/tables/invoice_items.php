@@ -8,10 +8,13 @@ if (staff_can('delete', 'items')) {
     $aColumns[] = '1';
 }
 
+$hasBasePriceColumn = $this->ci->db->field_exists('base_price', db_prefix() . 'items');
+
 $aColumns = array_merge($aColumns, [
     'description',
     'long_description',
     db_prefix() . 'items.rate as rate',
+    $hasBasePriceColumn ? db_prefix() . 'items.base_price as base_price' : '0 as base_price',
     't1.taxrate as taxrate_1',
     't2.taxrate as taxrate_2',
     'unit',
@@ -82,6 +85,7 @@ foreach ($rResult as $aRow) {
     $row[] = e($aRow['long_description']);
 
     $row[] = '<span class="tw-font-medium">' . e(app_format_money($aRow['rate'], get_base_currency())) . '</span>';
+    $row[] = '<span class="tw-font-medium text-muted">' . e(app_format_money($aRow['base_price'], get_base_currency())) . '</span>';
 
     $aRow['taxrate_1'] ??= 0;
     $row[] = '<span data-toggle="tooltip" title="' . e($aRow['taxname_1']) . '" data-taxid="' . $aRow['tax_id_1'] . '">' . e(app_format_number($aRow['taxrate_1'])) . '%</span>';

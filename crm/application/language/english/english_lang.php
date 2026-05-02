@@ -7,6 +7,8 @@ $lang['id']                   = 'ID';
 $lang['name']                 = 'Name';
 $lang['options']              = 'Options';
 $lang['submit']               = 'Save';
+$lang['invoice_item_internal_base_price'] = 'Internal Base Price';
+$lang['invoice_item_internal_base_price_note'] = 'Admin only; minimum floor before customer-facing flex pricing.';
 
 # Version 2.3.0
 

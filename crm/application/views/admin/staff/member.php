@@ -140,6 +140,14 @@
                                             </div>
                                         </div>
                                     </div>
+                                    <div class="form-group">
+                                        <label for="profile_image"
+                                            class="profile-image"><?= _l('staff_edit_profile_image'); ?></label>
+                                        <input type="file" name="profile_image" class="form-control" id="profile_image">
+                                        <p class="text-muted tw-mt-1 tw-mb-0">
+                                            Upload a new image here to replace the current staff profile photo.
+                                        </p>
+                                    </div>
                                     <?php } ?>
                                     <?php $value = (isset($member) ? $member->firstname : ''); ?>
                                     <?php $attrs = (isset($member) ? [] : ['autofocus' => true]); ?>

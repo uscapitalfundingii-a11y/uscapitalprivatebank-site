@@ -28,7 +28,7 @@ class Api extends App_Controller
         }
 
         $this->json([
-            'modules' => ['customers', 'contacts', 'leads', 'tasks', 'tickets', 'notes'],
+            'modules' => ['customers', 'contacts', 'leads', 'tasks', 'tickets', 'notes', 'native_chat'],
             'custom_fields_recommended' => [
                 'onboarding_stage',
                 'welcome_package_status',
@@ -59,6 +59,9 @@ class Api extends App_Controller
                 'POST /uscap_mcp_bridge/api/tasks',
                 'POST /uscap_mcp_bridge/api/notes',
                 'GET /uscap_mcp_bridge/api/tickets',
+                'GET /uscap_mcp_bridge/api/chat_unread',
+                'GET /uscap_mcp_bridge/api/chat_conversation/{peer}',
+                'POST /uscap_mcp_bridge/api/chat_reply',
             ],
         ]);
     }
@@ -362,6 +365,140 @@ class Api extends App_Controller
         $this->json($this->db->get(db_prefix() . 'tasks')->result_array());
     }
 
+    public function chat_unread(): void
+    {
+        if (! $this->authorize()) {
+            return;
+        }
+
+        if (! $this->tableExists('chatclientmessages')) {
+            $this->json(['records' => [], 'note' => 'Native Perfex chat table is not present.']);
+            return;
+        }
+
+        $staffParam = strtolower(trim((string) ($this->input->get('staff_id', true) ?: 'all')));
+        $limit = max(1, min(100, (int) ($this->input->get('limit', true) ?: 50)));
+
+        $this->db
+            ->select('id, sender_id, reciever_id, message, viewed, time_sent, viewed_at')
+            ->from(db_prefix() . 'chatclientmessages')
+            ->where('viewed', '0')
+            ->like('sender_id', 'client_', 'after');
+
+        if ($staffParam !== 'all') {
+            $this->db->where('reciever_id', 'staff_' . (int) $staffParam);
+        } else {
+            $this->db->like('reciever_id', 'staff_', 'after');
+        }
+
+        $this->db
+            ->order_by('time_sent', 'DESC')
+            ->limit($limit);
+
+        $rows = $this->db->get()->result_array();
+        $this->json([
+            'staff_id' => $staffParam,
+            'records' => array_map(fn ($row) => $this->decorateClientChatMessage($row), $rows),
+        ]);
+    }
+
+    public function chat_conversation($peer = ''): void
+    {
+        if (! $this->authorize()) {
+            return;
+        }
+
+        if (! $this->tableExists('chatclientmessages')) {
+            $this->json(['records' => [], 'note' => 'Native Perfex chat table is not present.']);
+            return;
+        }
+
+        $staffId = (int) ($this->input->get('staff_id', true) ?: 39);
+        $limit = max(1, min(200, (int) ($this->input->get('limit', true) ?: 50)));
+        $peer = trim((string) ($peer ?: $this->input->get('peer', true) ?: $this->input->get('client_ref', true)));
+        if ($peer === '') {
+            $this->jsonError('missing_required_field', 'peer/client_ref is required, for example client_6.', 422);
+            return;
+        }
+        if (ctype_digit($peer)) {
+            $peer = 'client_' . $peer;
+        }
+
+        $staffRef = 'staff_' . $staffId;
+        $this->db
+            ->select('id, sender_id, reciever_id, message, viewed, time_sent, viewed_at')
+            ->from(db_prefix() . 'chatclientmessages')
+            ->group_start()
+                ->group_start()
+                    ->where('sender_id', $peer)
+                    ->where('reciever_id', $staffRef)
+                ->group_end()
+                ->or_group_start()
+                    ->where('sender_id', $staffRef)
+                    ->where('reciever_id', $peer)
+                ->group_end()
+            ->group_end()
+            ->order_by('time_sent', 'DESC')
+            ->limit($limit);
+
+        $rows = array_reverse($this->db->get()->result_array());
+        $this->json([
+            'staff_id' => $staffId,
+            'staff_ref' => $staffRef,
+            'peer' => $peer,
+            'records' => array_map(fn ($row) => $this->decorateClientChatMessage($row), $rows),
+        ]);
+    }
+
+    public function chat_reply(): void
+    {
+        if (! $this->authorize()) {
+            return;
+        }
+
+        if ($this->method() !== 'POST') {
+            $this->jsonError('not_found', 'Unsupported chat_reply route', 404);
+            return;
+        }
+
+        if (! $this->tableExists('chatclientmessages')) {
+            $this->jsonError('not_supported', 'Native Perfex chat table is not present.', 501);
+            return;
+        }
+
+        $data = $this->payload();
+        $staffId = (int) ($data['staff_id'] ?? 39);
+        $peer = trim((string) ($data['peer'] ?? $data['client_ref'] ?? $data['client_id'] ?? ''));
+        $message = trim((string) ($data['message'] ?? ''));
+        if ($peer === '' || $message === '') {
+            $this->jsonError('missing_required_field', 'peer/client_ref and message are required.', 422);
+            return;
+        }
+        if (ctype_digit($peer)) {
+            $peer = 'client_' . $peer;
+        }
+        if (! preg_match('/^client_[0-9]+$/', $peer)) {
+            $this->jsonError('invalid_field', 'peer must look like client_123 or be a numeric client/contact id.', 422);
+            return;
+        }
+
+        $this->db->insert(db_prefix() . 'chatclientmessages', [
+            'sender_id' => 'staff_' . $staffId,
+            'reciever_id' => $peer,
+            'message' => nl2br($message),
+            'viewed' => '0',
+            'time_sent' => date('Y-m-d H:i:s'),
+            'viewed_at' => null,
+        ]);
+
+        $this->json([
+            'created' => true,
+            'message_id' => $this->db->insert_id(),
+            'staff_id' => $staffId,
+            'peer' => $peer,
+        ], 201);
+    }
+
     private function authorize(): bool
     {
         if (get_option('uscap_mcp_bridge_enabled') !== '1') {
@@ -455,6 +592,23 @@ class Api extends App_Controller
             }
             return $row;
         }, $rows);
+    }
+
+    private function tableExists(string $table): bool
+    {
+        return $this->db->table_exists(db_prefix() . $table);
+    }
+
+    private function decorateClientChatMessage(array $row): array
+    {
+        $row['direction'] = str_starts_with((string) $row['sender_id'], 'client_') ? 'inbound' : 'outbound';
+        $row['plain_message'] = trim(strip_tags(str_replace(['<br>', '<br/>', '<br />'], "\n", (string) $row['message'])));
+        if (str_starts_with((string) $row['sender_id'], 'client_')) {
+            $row['client_id'] = (int) substr((string) $row['sender_id'], 7);
+        } elseif (str_starts_with((string) $row['reciever_id'], 'client_')) {
+            $row['client_id'] = (int) substr((string) $row['reciever_id'], 7);
+        }
+        return $row;
     }
 
     private function rowById(string $table, string $idField, int $id, array $hidden = []): array

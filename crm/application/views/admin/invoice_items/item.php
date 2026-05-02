@@ -27,6 +27,13 @@
                                 <?= _l('invoice_item_add_edit_rate_currency', e($base_currency->name) . ' <small>(' . _l('base_currency_string') . ')</small>'); ?></label>
                             <input type="number" id="rate" name="rate" class="form-control" value="">
                         </div>
+                        <div class="form-group">
+                            <label for="base_price" class="control-label">
+                                <?= _l('invoice_item_internal_base_price'); ?>
+                                <small class="text-muted"><?= _l('invoice_item_internal_base_price_note'); ?></small>
+                            </label>
+                            <input type="number" id="base_price" name="base_price" class="form-control" value="">
+                        </div>
                         <?php
                             foreach ($currencies as $currency) {
                                 if ($currency['isdefault'] == 0 && total_rows(db_prefix() . 'clients', ['default_currency' => $currency['id']]) > 0) { ?>
@@ -205,6 +212,7 @@
                     $itemModal.find('textarea[name="long_description"]').val(response.long_description
                         .replace(/(<|<)br\s*\/*(>|>)/g, " "));
                     $itemModal.find('input[name="rate"]').val(response.rate);
+                    $itemModal.find('input[name="base_price"]').val(response.base_price);
                     $itemModal.find('input[name="unit"]').val(response.unit);
                     $('select[name="tax"]').selectpicker('val', response.taxid).change();
                     $('select[name="tax2"]').selectpicker('val', response.taxid_2).change();
