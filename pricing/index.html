@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Onboarding & Pricing | U.S. Capital Private Bank</title>
+    <meta name="description" content="Quick pricing summary for U.S. Capital Private Bank onboarding, account tiers, banking fees, SWIFT fees, Smart Plan transfer protocol, and advisory billing.">
+    <link rel="icon" href="/favicon.ico">
+    <style>
+        :root {
+            --navy: #0f1f45;
+            --navy-deep: #0a1632;
+            --sky: #1ea7ff;
+            --text: #1d2840;
+            --muted: #61708d;
+            --surface: #f4f8fd;
+            --white: #ffffff;
+            --border: rgba(15, 31, 69, 0.12);
+            --shadow: 0 24px 70px rgba(10, 22, 50, 0.12);
+        }
+
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text);
+            background: linear-gradient(180deg, #eef5fc 0%, #ffffff 34%, #f5f8fd 100%);
+        }
+        a { color: inherit; text-decoration: none; }
+        .site-header {
+            position: sticky;
+            top: 0;
+            z-index: 30;
+            background: rgba(15, 31, 69, 0.94);
+            backdrop-filter: blur(16px);
+            box-shadow: 0 10px 30px rgba(10, 22, 50, 0.18);
+        }
+        .site-header__inner {
+            max-width: 1480px;
+            margin: 0 auto;
+            padding: 14px 24px;
+            display: flex;
+            align-items: center;
+            gap: 22px;
+        }
+        .site-logo img { width: auto; height: 68px; display: block; }
+        .site-nav {
+            display: flex;
+            flex: 1;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px 18px;
+        }
+        .site-nav a {
+            color: rgba(255, 255, 255, 0.88);
+            font-size: 0.98rem;
+            transition: color 0.2s ease;
+        }
+        .site-nav a:hover,
+        .site-nav a.is-active { color: #83d2ff; }
+        .button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 46px;
+            padding: 0 18px;
+            border-radius: 12px;
+            border: 1px solid transparent;
+            font-weight: 700;
+            transition: transform 0.2s ease, background-color 0.2s ease;
+        }
+        .button:hover { transform: translateY(-1px); }
+        .button--solid {
+            background: linear-gradient(135deg, #1ea7ff 0%, #0c85d4 100%);
+            color: var(--white);
+            box-shadow: 0 16px 30px rgba(30, 167, 255, 0.28);
+        }
+        .button--ghost {
+            background: transparent;
+            border-color: rgba(255, 255, 255, 0.26);
+            color: var(--white);
+        }
+        main {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 64px 24px 80px;
+        }
+        .hero {
+            border-radius: 8px;
+            background:
+                radial-gradient(circle at top left, rgba(30, 167, 255, 0.26), transparent 36%),
+                linear-gradient(135deg, var(--navy-deep), var(--navy));
+            color: var(--white);
+            padding: 44px;
+            box-shadow: var(--shadow);
+        }
+        .eyebrow {
+            margin: 0 0 14px;
+            color: #bde7ff;
+            font-size: 0.8rem;
+            font-weight: 800;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+        }
+        h1 {
+            margin: 0;
+            max-width: 780px;
+            font-size: clamp(2.4rem, 4vw, 4.6rem);
+            line-height: 1.02;
+        }
+        .hero p {
+            max-width: 800px;
+            margin: 20px 0 0;
+            color: rgba(255, 255, 255, 0.86);
+            font-size: 1.06rem;
+            line-height: 1.75;
+        }
+        .hero__actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 14px;
+            margin-top: 30px;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 22px;
+            margin-top: 28px;
+        }
+        .card {
+            overflow: hidden;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--white);
+            box-shadow: 0 14px 40px rgba(10, 22, 50, 0.08);
+        }
+        .card h2 {
+            margin: 0;
+            padding: 20px 22px;
+            border-bottom: 1px solid var(--border);
+            color: var(--navy);
+            font-size: 1.1rem;
+        }
+        .row {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 16px;
+            padding: 15px 22px;
+            border-bottom: 1px solid rgba(15, 31, 69, 0.08);
+        }
+        .row:last-child { border-bottom: 0; }
+        .row span:first-child { color: #3a4862; }
+        .row span:last-child {
+            color: var(--navy-deep);
+            font-weight: 800;
+            text-align: right;
+        }
+        .notice {
+            margin-top: 28px;
+            border: 1px solid rgba(30, 167, 255, 0.24);
+            border-radius: 8px;
+            background: rgba(30, 167, 255, 0.08);
+            padding: 18px 22px;
+            color: #263853;
+            line-height: 1.7;
+        }
+        @media (max-width: 900px) {
+            .site-header__inner { flex-direction: column; align-items: flex-start; }
+            .site-nav { justify-content: flex-start; }
+            .grid { grid-template-columns: 1fr; }
+            .hero { padding: 32px 24px; }
+            .row { grid-template-columns: 1fr; }
+            .row span:last-child { text-align: left; }
+        }
+    </style>
+</head>
+<body>
+    <header class="site-header">
+        <div class="site-header__inner">
+            <a class="site-logo" href="https://www.uscapitalprivatebank.com/">
+                <img src="https://www.uscapitalprivatebank.com/assets/images/logoIcon/logo.png" alt="U.S. Capital Private Bank">
+            </a>
+            <nav class="site-nav" aria-label="Primary">
+                <a href="https://www.uscapitalprivatebank.com/">Home</a>
+                <a href="https://www.uscapitalprivatebank.com/about">About Us</a>
+                <a href="https://www.uscapitalprivatebank.com/services">Services</a>
+                <a href="https://www.uscapitalprivatebank.com/faq">FAQ</a>
+                <a class="is-active" href="https://www.uscapitalprivatebank.com/pricing/">Pricing</a>
+                <a href="https://www.uscapitalprivatebank.com/swift-nft">Swift-NFT</a>
+                <a href="https://www.uscapitalprivatebank.com/uscpbgold">USCPBGOLD</a>
+                <a href="https://www.uscapitalprivatebank.com/support/">Support</a>
+                <a href="https://www.uscapitalprivatebank.com/trading">Trading</a>
+                <a href="https://www.uscapitalprivatebank.com/contact">Contact</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="hero">
+            <p class="eyebrow">Onboarding and pricing</p>
+            <h1>Quick Pricing Summary</h1>
+            <p>
+                A short price-only reference for account activation tiers, core banking fees, SWIFT and instrument pricing, Smart Plan transfer fees, and advisory billing.
+            </p>
+            <div class="hero__actions">
+                <a class="button button--solid" href="https://www.uscapitalprivatebank.com/crm/verify/viewfile.php?file=doc-20260414-8e7c7a96.pdf" target="_blank" rel="noopener noreferrer">Open Full Pricing Guide</a>
+                <a class="button button--ghost" href="https://www.uscapitalprivatebank.com/support/">Contact Support</a>
+            </div>
+        </section>
+
+        <div class="grid">
+            <section class="card">
+                <h2>Account Activation Tiers</h2>
+                <div class="row"><span>Operating Accounts</span><span>$1,000+</span></div>
+                <div class="row"><span>Investment Accounts</span><span>$10,000+</span></div>
+                <div class="row"><span>Wealth Management Accounts</span><span>$100,000+</span></div>
+                <div class="row"><span>Institutional Accounts</span><span>$200,000+</span></div>
+                <div class="row"><span>High-Tier Institutional Accounts</span><span>$100M+</span></div>
+            </section>
+
+            <section class="card">
+                <h2>Core Banking Fees</h2>
+                <div class="row"><span>Operating account opening</span><span>$500 - $1,000</span></div>
+                <div class="row"><span>Monthly maintenance</span><span>$20 - $150</span></div>
+                <div class="row"><span>Account reconciliation</span><span>$100/hour</span></div>
+                <div class="row"><span>Domestic wire transfer</span><span>$10 - $50</span></div>
+                <div class="row"><span>International wire transfer</span><span>$50 - $150</span></div>
+                <div class="row"><span>Debit card issuance</span><span>$50 - $150</span></div>
+                <div class="row"><span>Replacement debit card</span><span>$0 - $50</span></div>
+                <div class="row"><span>ATM usage</span><span>$0 - $5</span></div>
+                <div class="row"><span>Foreign transaction fee</span><span>1% - 3%</span></div>
+                <div class="row"><span>Card issuance</span><span>$50 - $200</span></div>
+            </section>
+
+            <section class="card">
+                <h2>SWIFT, Instruments and Advisory</h2>
+                <div class="row"><span>MT760 instrument issuance</span><span>EUR 2,800 + 0.40% - 0.75%</span></div>
+                <div class="row"><span>MT103 cash transfer / standard wire</span><span>$10 - $150</span></div>
+                <div class="row"><span>SBLC / BG purchase model</span><span>30% - 40% of face value</span></div>
+                <div class="row"><span>Consultation / advisory</span><span>EUR 250/hour</span></div>
+            </section>
+
+            <section class="card">
+                <h2>Smart Plan Transfer Protocol</h2>
+                <div class="row"><span>$500M transfer level</span><span>$185,000</span></div>
+                <div class="row"><span>$1B transfer level</span><span>$370,000</span></div>
+                <div class="row"><span>$10B transfer level</span><span>$3,700,000</span></div>
+                <div class="row"><span>$100B transfer level</span><span>$37,000,000</span></div>
+                <div class="row"><span>$1T transfer level</span><span>$370,000,000</span></div>
+            </section>
+        </div>
+
+        <div class="notice">
+            Final pricing is confirmed after review of the client profile, account tier, funding status, transaction structure, instrument verbiage, compliance requirements, and execution risk. The full guide contains the detailed terms and context.
+        </div>
+    </main>
+</body>
+</html>

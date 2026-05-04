@@ -60,6 +60,9 @@
                                 <a href="{{ route('branches') }}" class="footer-menu__link">@lang('Our Branches')</a>
                             </li>
                             <li class="footer-menu__item">
+                                <a href="{{ url('/pricing/') }}" class="footer-menu__link">@lang('Pricing Guide')</a>
+                            </li>
+                            <li class="footer-menu__item">
                                 <a href="{{ route('contact') }}" class="footer-menu__link">@lang('Contact')</a>
                             </li>
                         </ul>

@@ -1,4 +1,5 @@
 <li><a class="{{ menuActive('home') }}" href="{{ route('home') }}">@lang('Home')</a></li>
+<li><a class="{{ request()->is('pricing*') ? 'active' : '' }}" href="{{ url('/pricing/') }}">@lang('Pricing')</a></li>
 @php
     $pages = App\Models\Page::where('tempname', $activeTemplate)
         ->where('is_default', 0)

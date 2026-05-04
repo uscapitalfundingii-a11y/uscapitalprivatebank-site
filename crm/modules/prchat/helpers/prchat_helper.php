@@ -601,7 +601,11 @@ function get_customer_admins()
     $CI = &get_instance();
 
     $select = 'SELECT firstname, lastname, staffid, email, profile_image, admin, role FROM ' . db_prefix() . 'staff';
-    $managedAgentIds = '39,40,41,42,43,44';
+    $managedAgentOrder = prchat_uscap_managed_agent_order($CI);
+    $managedAgentIds = implode(',', array_keys($managedAgentOrder));
+    if ($managedAgentIds === '') {
+        $managedAgentIds = '0';
+    }
 
 
     /**
@@ -643,15 +647,6 @@ function get_customer_admins()
 
     $customer_admins = array_values($customer_admins);
     $activity = prchat_get_staff_communication_activity($CI, array_column($customer_admins, 'staffid'));
-    $managedAgentOrder = [
-        39 => 1, // Avery Morgan
-        40 => 2, // Maya Bennett
-        41 => 3, // Elena Brooks
-        42 => 4, // Sophia Grant
-        43 => 5, // Julian Carter
-        44 => 6, // Naomi Reed
-    ];
-
     foreach ($customer_admins as &$admin) {
         $staffId = (int) $admin['staffid'];
         $admin['chat_activity_count'] = isset($activity[$staffId]) ? (int) $activity[$staffId]['message_count'] : 0;
@@ -690,6 +685,34 @@ function get_customer_admins()
     });
 
     echo json_encode($customer_admins);
+}
+
+function prchat_uscap_managed_agent_order($CI)
+{
+    $managedAgentOrder = [
+        39 => 1, // Avery Morgan
+        40 => 2, // Maya Bennett
+        41 => 3, // Elena Brooks
+        42 => 4, // Sophia Grant
+        43 => 5, // Julian Carter
+        44 => 6, // Naomi Reed
+    ];
+
+    $auroraId = (int) get_option('uscap_aurora_crm_overseer_staffid');
+    if ($auroraId <= 0) {
+        $row = $CI->db
+            ->select('staffid')
+            ->where('email', 'aurora@uscpb.net')
+            ->get(db_prefix() . 'staff')
+            ->row();
+        $auroraId = $row ? (int) $row->staffid : 0;
+    }
+
+    if ($auroraId > 0) {
+        $managedAgentOrder = [$auroraId => 0] + $managedAgentOrder;
+    }
+
+    return $managedAgentOrder;
 }
 
 /**

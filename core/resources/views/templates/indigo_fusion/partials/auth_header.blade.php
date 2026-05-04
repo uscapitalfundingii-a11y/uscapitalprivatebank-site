@@ -1,4 +1,5 @@
 <li><a class="{{ menuActive('user.home') }}" href="{{ route('user.home') }}">@lang('Dashboard')</a></li>
+<li><a class="{{ request()->is('pricing*') ? 'active' : '' }}" href="{{ url('/pricing/') }}">@lang('Pricing')</a></li>
 
 @if (gs()->modules->deposit)
     <li> <a class="{{ menuActive('user.deposit*') }}" href="{{ route('user.deposit.history') }}">@lang('Deposit')</a></li>

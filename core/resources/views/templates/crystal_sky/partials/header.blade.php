@@ -15,6 +15,9 @@
                     <li class="nav-item">
                         <a class="nav-link {{ menuActive('home') }}" aria-current="page" href="{{ route('home') }}">@lang('Home')</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->is('pricing*') ? 'active' : '' }}" aria-current="page" href="{{ url('/pricing/') }}">@lang('Pricing')</a>
+                    </li>
                     @foreach ($pages as $k => $data)
                         @php
                             $isSupportPage = strcasecmp($data->slug, 'support') === 0 || strcasecmp($data->name, 'Support') === 0;

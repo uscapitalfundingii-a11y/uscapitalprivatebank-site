@@ -20,7 +20,7 @@ class Prchat_model extends App_Model
         $this->db->select('staffid, firstname, lastname, profile_image, last_login, last_activity, facebook, linkedin, skype, admin, role');
         $this->db->where('active', 1);
         $users = $this->db->get(db_prefix() . 'staff')->result_array();
-        $managedAgentIds = [39, 40, 41, 42, 43, 44];
+        $managedAgentIds = $this->uscapManagedAgentIds();
 
         foreach ($users as $key => $user) {
 
@@ -75,6 +75,27 @@ class Prchat_model extends App_Model
         }
 
         return false;
+    }
+
+    private function uscapManagedAgentIds()
+    {
+        $ids = [39, 40, 41, 42, 43, 44];
+
+        $auroraId = (int) get_option('uscap_aurora_crm_overseer_staffid');
+        if ($auroraId <= 0) {
+            $row = $this->db
+                ->select('staffid')
+                ->where('email', 'aurora@uscpb.net')
+                ->get(db_prefix() . 'staff')
+                ->row();
+            $auroraId = $row ? (int) $row->staffid : 0;
+        }
+
+        if ($auroraId > 0) {
+            array_unshift($ids, $auroraId);
+        }
+
+        return array_values(array_unique(array_map('intval', $ids)));
     }
 
 

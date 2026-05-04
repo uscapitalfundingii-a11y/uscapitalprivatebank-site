@@ -36,6 +36,7 @@
                             @endif
                         @endauth
                         <li><a href="{{ route('branches') }}">@lang('Our Branches')</a></li>
+                        <li><a href="{{ url('/pricing/') }}">@lang('Pricing Guide')</a></li>
                         <li><a href="{{ route('contact') }}">@lang('Contact')</a></li>
                     </ul>
                 </div>
