@@ -32,13 +32,13 @@
                     class="form-group">
                     <label for="profile_image"
                         class="profile-image"><?= _l('client_profile_image'); ?></label>
-                    <input type="file" name="profile_image" class="form-control" id="profile_image"
-                        accept=".png,.jpg,.jpeg">
-                    <?php if (isset($my_contact) && ! empty($my_contact->profile_image)) { ?>
                     <p class="text-muted tw-mt-1 tw-mb-0">
-                        Upload a new image here to replace the current contact profile photo.
+                        Choose a JPG or PNG contact photo, then save the contact.
                     </p>
-                    <?php } ?>
+                    <input type="file" name="profile_image" class="form-control profile-image-file-input"
+                        id="profile_image" accept=".png,.jpg,.jpeg"
+                        style="display:block !important; visibility:visible !important; opacity:1 !important; position:static !important; width:100%; height:auto; padding:8px 12px; cursor:pointer;"
+                        data-profile-photo-upload="1">
                 </div>
                 <div class="row">
                     <div class="col-md-6">
