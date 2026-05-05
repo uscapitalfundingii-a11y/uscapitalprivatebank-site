@@ -32,6 +32,7 @@ $crmPortalLanguages = [
     'nl'    => 'Dutch',
     'ha'    => 'Hausa',
 ];
+$bookAppointmentUrl = 'https://www.uscapitalprivatebank.com/crm/appointment_manager/appointment_manager_client/public_form';
 ?>
 <?= theme_head_view(); ?>
 <?php get_template_part($navigationEnabled ? 'navigation' : ''); ?>
@@ -77,6 +78,45 @@ $crmPortalLanguages = [
         position: absolute;
         width: 0;
     }
+
+    .crm-global-appointment-cta {
+        align-items: center;
+        background: linear-gradient(135deg, #0f2742, #1d4973);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 999px;
+        bottom: 24px;
+        box-shadow: 0 18px 38px rgba(15, 39, 66, 0.26);
+        color: #fff;
+        display: inline-flex;
+        font-weight: 700;
+        gap: 9px;
+        left: 24px;
+        min-height: 48px;
+        padding: 12px 18px;
+        position: fixed;
+        text-decoration: none;
+        z-index: 1040;
+    }
+
+    .crm-global-appointment-cta:hover,
+    .crm-global-appointment-cta:focus {
+        color: #fff;
+        text-decoration: none;
+        transform: translateY(-1px);
+    }
+
+    .crm-global-appointment-cta i {
+        color: #d9b66a;
+    }
+
+    @media (max-width: 640px) {
+        .crm-global-appointment-cta {
+            bottom: 14px;
+            left: 14px;
+            min-height: 44px;
+            padding: 10px 14px;
+        }
+    }
 </style>
 <div id="wrapper">
     <div id="content">
@@ -99,7 +139,7 @@ $crmPortalLanguages = [
                 <ul class="submenu customer-top-submenu">
                     <?php hooks()->do_action('before_customers_area_sub_menu_start'); ?>
                     <li class="customers-top-submenu-appointment">
-                        <a href="https://www.uscapitalprivatebank.com/crm/appointment_manager/appointment_manager_client/public_form"
+                        <a href="<?= e($bookAppointmentUrl); ?>"
                             class="tw-inline-flex tw-items-center">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                                 stroke="currentColor" class="tw-w-5 tw-h-5 tw-mr-1">
@@ -141,6 +181,10 @@ $crmPortalLanguages = [
     </div>
 </div>
 </div>
+<a class="crm-global-appointment-cta" href="<?= e($bookAppointmentUrl); ?>" aria-label="Book an appointment with U.S. Capital Private Bank">
+    <i class="fa fa-calendar-check-o" aria-hidden="true"></i>
+    <span>Book Appointment</span>
+</a>
 <div id="crm-google-translate-element" aria-hidden="true"></div>
 <?= theme_footer_view();
 

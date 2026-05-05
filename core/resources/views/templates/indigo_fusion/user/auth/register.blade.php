@@ -5,7 +5,7 @@
         $signupBg = getContent('signup_bg.content', true);
     @endphp
 
-    <section class="account-section registration-section bg_img" style="background-image: url(' {{ getImage('assets/images/frontend/signup_bg/' . @$signupBg->data_values->image, '1920x1280') }}');">
+    <section class="account-section registration-section bg_img" style="background-image: url('{{ getImage('assets/images/frontend/signup_bg/' . @$signupBg->data_values->image, '1920x1280') }}');">
         <div class="account-section-left">
             <div class="account-section-left-inner d-none d-sm-block">
                 <h4 class="title text-white mb-2">{{ __(@$signupBg->data_values->heading) }}</h4>

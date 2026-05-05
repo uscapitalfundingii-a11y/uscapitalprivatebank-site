@@ -35,7 +35,7 @@ $crmPortalLanguages = [
 ];
 $siteLinks = [
     ['label' => 'Home', 'href' => 'https://uscapitalprivatebank.com/'],
-    ['label' => 'Contact', 'href' => 'https://uscapitalprivatebank.com/contact'],
+    ['label' => 'Contact', 'href' => 'https://uscapitalprivatebank.org/contact'],
     ['label' => 'Branches', 'href' => 'https://uscapitalprivatebank.com/branches'],
     ['label' => 'Legal Identity', 'href' => 'https://uscapitalprivatebank.com/corporate-identity-legal-independence'],
     ['label' => 'Support', 'href' => site_url('authentication/login')],
@@ -639,7 +639,7 @@ $siteLinks = [
         <div class="crm-support-info">
             <h3>Client Care</h3>
             <p>Coordinate support requests, follow document updates, and keep transaction communication inside one secure workspace instead of fragmented email chains.</p>
-            <a href="https://uscapitalprivatebank.com/contact">Contact Support</a>
+            <a href="https://uscapitalprivatebank.org/contact">Contact Support</a>
         </div>
         <div class="crm-support-info">
             <h3>Guided Onboarding</h3>

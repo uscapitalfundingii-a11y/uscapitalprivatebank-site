@@ -6,6 +6,7 @@ if ($isHttps) {
     loadChatComponent('AudioComponent');
 }
 ?>
+    <link rel="stylesheet" href="<?php echo module_dir_url('prchat', 'assets/css/pr-chat-voice.css'); ?>?v=20260505voice">
     <div class="ch_pointer">
         <div id="ch_pointer-main" class="ch_pointer-main">
             <div class="chatNewNotification"></div>
@@ -95,8 +96,15 @@ if ($isHttps) {
                         <input type="submit" name="submit" class="save" value="save" />
                         <input type="hidden" name="<?php echo $this->security->get_csrf_token_name(); ?>" value="<?php echo $this->security->get_csrf_hash(); ?>">
                     </form>
-                    <form method="post" enctype="multipart/form-data" id="staffMessagesForm" onsubmit="return false;">
+                    <form method="post" enctype="multipart/form-data" id="staffMessagesForm" class="prchat-voice-scope" onsubmit="return false;">
+                        <span class="prchat-voice-status" aria-live="polite"></span>
                         <i class="fa fa-paper-plane send_client_message" aria-hidden="true"></i>
+                        <button type="button" class="prchat-voice-button prchat-voice-dictate prchat-client-dictate" aria-label="Speak your message" aria-pressed="false" data-container="body" data-toggle="tooltip" title="Speak your message">
+                            <i class="fa fa-microphone" aria-hidden="true"></i>
+                        </button>
+                        <button type="button" class="prchat-voice-button prchat-voice-speaker prchat-client-speaker" aria-label="Read support replies aloud" aria-pressed="false" data-container="body" data-toggle="tooltip" title="Read support replies aloud">
+                            <i class="fa fa-volume-off" aria-hidden="true"></i>
+                        </button>
                         <textarea class="clients_textarea ays-ignore" placeholder="<?= _l('chat_type_a_message'); ?>" autocomplete="off"></textarea>
                         <input type="hidden" class="ays-ignore from" name="from" value="" />
                         <input type="hidden" class="ays-ignore to" name="to" value="" />
@@ -110,6 +118,7 @@ if ($isHttps) {
         </div>
     </div>
 <?php require 'modules/prchat/assets/module_includes/mutual_and_helper_functions.php'; ?>
+    <script src="<?php echo module_dir_url('prchat', 'assets/js/pr-chat-voice.js'); ?>?v=20260505voice"></script>
     <script>
         var clientsArea = $(".clients_textarea");
         var contact_id = "<?= get_contact_user_id(); ?>";
@@ -414,6 +423,9 @@ if ($isHttps) {
                 msgHtml += data.from_name + "</span><p class=\"staff_message \">" + data.message + "</p></li></div>";
 
                 $(".m-area ol.chat").append(msgHtml);
+                if (window.USCPBPrchatVoice) {
+                    window.USCPBPrchatVoice.speakClientReply(data.from_name, data.message);
+                }
                 scrollBottom();
             }
 

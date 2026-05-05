@@ -39,6 +39,7 @@ $siteLinks = [
     ['label' => 'FAQ', 'href' => 'https://uscapitalprivatebank.com/faq'],
     ['label' => 'Support', 'href' => site_url('authentication/login')],
 ];
+$bookAppointmentUrl = 'https://www.uscapitalprivatebank.com/crm/appointment_manager/appointment_manager_client/public_form';
 $wizardSteps = [
     1 => 'Primary Contact',
     2 => 'Company Profile',
@@ -552,6 +553,14 @@ $wizardSteps = [
         color: #fff;
     }
 
+    .crm-register-btn--appointment,
+    .crm-register-menu__appointment {
+        background: linear-gradient(135deg, #d9b66a, #c58b2b);
+        border: 0;
+        box-shadow: 0 14px 26px rgba(156, 108, 31, 0.2);
+        color: #fff !important;
+    }
+
     .crm-register-wizard-nav {
         display: none;
         justify-content: space-between;
@@ -676,6 +685,7 @@ $wizardSteps = [
                 <?php foreach ($siteLinks as $link) { ?>
                     <a href="<?= $link['href']; ?>"<?= $link['label'] === 'Support' ? ' class="is-active"' : ''; ?>><?= $link['label']; ?></a>
                 <?php } ?>
+                <a class="crm-register-menu__cta crm-register-menu__appointment" href="<?= e($bookAppointmentUrl); ?>">Book Appointment</a>
                 <a class="crm-register-menu__cta" href="<?= site_url('authentication/login'); ?>">Client Login</a>
             </nav>
         </div>
@@ -960,6 +970,7 @@ $wizardSteps = [
                     <span class="crm-register-login-note">Already have access? <a href="<?= site_url('authentication/login'); ?>">Return to login</a></span>
                 </div>
                 <div class="crm-register-actions__right">
+                    <a href="<?= e($bookAppointmentUrl); ?>" class="crm-register-btn crm-register-btn--appointment">Book Appointment</a>
                     <button type="submit" autocomplete="off" data-loading-text="<?= _l('wait_text'); ?>" class="crm-register-btn crm-register-btn--primary">
                         <?= _l('clients_register_string'); ?>
                     </button>

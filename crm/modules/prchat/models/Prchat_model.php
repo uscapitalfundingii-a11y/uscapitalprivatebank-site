@@ -51,7 +51,7 @@ class Prchat_model extends App_Model
                 }
             }
 
-            $users[$key]['status'] = ($this->_get_chat_status($user['staffid'])) ? $this->_get_chat_status($user['staffid']) : 'online';
+            $users[$key]['status'] = in_array((int) $user['staffid'], $managedAgentIds, true) ? 'online' : (($this->_get_chat_status($user['staffid'])) ? $this->_get_chat_status($user['staffid']) : 'online');
             $users[$key]['uscap_managed_agent'] = in_array((int) $user['staffid'], $managedAgentIds, true) ? 1 : 0;
             $users[$key]['uscap_always_online'] = in_array((int) $user['staffid'], $managedAgentIds, true) ? 1 : 0;
 
@@ -71,7 +71,7 @@ class Prchat_model extends App_Model
         }
 
         if ($users) {
-            return $users;
+            return $this->sortUscapManagedAgentsFirst(array_values($users));
         }
 
         return false;
@@ -79,7 +79,20 @@ class Prchat_model extends App_Model
 
     private function uscapManagedAgentIds()
     {
-        $ids = [39, 40, 41, 42, 43, 44];
+        $ids = [
+            39, // Avery Morgan
+            40, // Maya Bennett
+            41, // Elena Brooks
+            42, // Sophia Grant
+            43, // Julian Carter
+            44, // Naomi Reed
+            45, // Adrian Sterling
+            46, // Victor Hale
+            47, // Miles Carter
+            48, // Vanessa Hart
+            49, // Bennett Cole
+            50, // Morpheus | CRM Support Lead
+        ];
 
         $auroraId = (int) get_option('uscap_aurora_crm_overseer_staffid');
         if ($auroraId <= 0) {
@@ -1669,9 +1682,52 @@ class Prchat_model extends App_Model
 
     public function appendMoreStaff($offset)
     {
-        $this->db->select('staffid, firstname, lastname, profile_image');
+        $this->db->select('staffid, firstname, lastname, profile_image, last_login, last_activity, facebook, linkedin, skype, admin, role');
+        $this->db->where('active', 1);
+        $users = $this->db->get(db_prefix() . 'staff', 10, $offset)->result_array();
+        $managedAgentIds = $this->uscapManagedAgentIds();
 
-        return $this->db->get(db_prefix() . 'staff', 10, $offset)->result_array();
+        foreach ($users as $key => $user) {
+            $users[$key]['status'] = in_array((int) $user['staffid'], $managedAgentIds, true) ? 'online' : (($this->_get_chat_status($user['staffid'])) ? $this->_get_chat_status($user['staffid']) : 'online');
+            $users[$key]['uscap_managed_agent'] = in_array((int) $user['staffid'], $managedAgentIds, true) ? 1 : 0;
+            $users[$key]['uscap_always_online'] = in_array((int) $user['staffid'], $managedAgentIds, true) ? 1 : 0;
+        }
+
+        return $this->sortUscapManagedAgentsFirst($users);
+    }
+
+    private function sortUscapManagedAgentsFirst($users)
+    {
+        $managedAgentIds = $this->uscapManagedAgentIds();
+        $managedOrder = array_flip($managedAgentIds);
+
+        usort($users, function ($a, $b) use ($managedOrder) {
+            $aId = (int) $a['staffid'];
+            $bId = (int) $b['staffid'];
+            $aManaged = isset($managedOrder[$aId]);
+            $bManaged = isset($managedOrder[$bId]);
+
+            if ($aManaged && $bManaged) {
+                return $managedOrder[$aId] - $managedOrder[$bId];
+            }
+
+            if ($aManaged !== $bManaged) {
+                return $aManaged ? -1 : 1;
+            }
+
+            $aStatus = isset($a['status']) ? (string) $a['status'] : 'online';
+            $bStatus = isset($b['status']) ? (string) $b['status'] : 'online';
+            $aOnline = !in_array($aStatus, ['offline', 'busy'], true);
+            $bOnline = !in_array($bStatus, ['offline', 'busy'], true);
+
+            if ($aOnline !== $bOnline) {
+                return $aOnline ? -1 : 1;
+            }
+
+            return strcasecmp(trim($a['firstname'] . ' ' . $a['lastname']), trim($b['firstname'] . ' ' . $b['lastname']));
+        });
+
+        return array_values($users);
     }
 
     /**

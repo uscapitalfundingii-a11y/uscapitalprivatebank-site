@@ -696,6 +696,12 @@ function prchat_uscap_managed_agent_order($CI)
         42 => 4, // Sophia Grant
         43 => 5, // Julian Carter
         44 => 6, // Naomi Reed
+        50 => 7, // Morpheus | CRM Support Lead
+        45 => 8, // Adrian Sterling
+        46 => 9, // Victor Hale
+        47 => 10, // Miles Carter
+        48 => 11, // Vanessa Hart
+        49 => 12, // Bennett Cole
     ];
 
     $auroraId = (int) get_option('uscap_aurora_crm_overseer_staffid');

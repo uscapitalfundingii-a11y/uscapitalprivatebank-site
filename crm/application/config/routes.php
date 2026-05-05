@@ -161,6 +161,22 @@ $route['register']        = 'authentication/register';
  */
 $route['terms-and-conditions'] = 'terms_and_conditions';
 $route['privacy-policy']       = 'privacy_policy';
+$route['regulatorynotice']     = 'regulatorynotice';
+$route['regulatory-notice']    = 'regulatorynotice';
+
+// Public regulatory/legal disclosure hub routes
+$route['institutional-risk-disclosure']             = 'regulatorynotice/index/institutional-risk-disclosure';
+$route['corporate-registration']                    = 'regulatorynotice/index/corporate-registration';
+$route['corporate-identity-legal-independence']     = 'regulatorynotice/index/corporate-identity-legal-independence';
+$route['compliance-aml-policy']                     = 'regulatorynotice/index/compliance-aml-policy';
+$route['bank-to-bank-communication-policy']         = 'regulatorynotice/index/bank-to-bank-communication-policy';
+$route['reputation-protection-policy']              = 'regulatorynotice/index/reputation-protection-policy';
+$route['official-clarification']                    = 'regulatorynotice/index/official-clarification';
+$route['official-notice']                           = 'regulatorynotice/index/official-notice';
+$route['fraud-clarification']                       = 'regulatorynotice/index/fraud-clarification';
+$route['sitemap']                                   = 'regulatorynotice/index/sitemap';
+$route['regulatorynotice/(:any)']                   = 'regulatorynotice/index/$1';
+$route['regulatory-notice/(:any)']                  = 'regulatorynotice/index/$1';
 
 /**
  * @since 2.3.0

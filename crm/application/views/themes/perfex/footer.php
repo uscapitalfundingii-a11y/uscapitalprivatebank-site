@@ -13,6 +13,10 @@
                     <?= _l('terms_and_conditions'); ?>
                 </a>
                 <?php } ?>
+                - <a href="<?= site_url('regulatorynotice'); ?>"
+                    class="regulatory-notice-footer">
+                    Regulatory Notice
+                </a>
                 <?php if (is_gdpr() && is_client_logged_in() && get_option('show_gdpr_link_in_footer') == '1') { ?>
                 - <a href="<?= site_url('clients/gdpr'); ?>"
                     class="gdpr-footer">

@@ -11,6 +11,7 @@ $isHttps = (isset($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) == 'on' ? 
 if ($isHttps) loadChatComponent('AudioComponent');
 
 ?>
+    <link rel="stylesheet" href="<?php echo module_dir_url('prchat', 'assets/css/pr-chat-voice.css'); ?>?v=20260505voice">
 
     <div id="frame">
 
@@ -34,6 +35,7 @@ if ($isHttps) loadChatComponent('AudioComponent');
 
     <!-- Include various mutual functions file -->
 <?php require('modules/prchat/assets/module_includes/mutual_and_helper_functions.php'); ?>
+    <script src="<?php echo module_dir_url('prchat', 'assets/js/pr-chat-voice.js'); ?>?v=20260505voice"></script>
 <?php
 if (!chatStaffCanDelete()) { ?>
     <style>
@@ -73,6 +75,21 @@ if (!chatStaffCanDelete()) { ?>
         var chat_desktop_notifications_enabled = "<?php echo get_option('chat_desktop_messages_notifications') ?>";
         chat_desktop_notifications_enabled = (chat_desktop_notifications_enabled == "0") ? false : true;
         var user_chat_status = "<?= get_user_chat_status(); ?>";
+        var uscapManagedAgentIds = [29, 39, 40, 41, 42, 43, 44, 50, 45, 46, 47, 48, 49];
+
+        function isUscapManagedAgent(id)
+        {
+            return uscapManagedAgentIds.indexOf(parseInt(id, 10)) !== -1;
+        }
+
+        function normalizeUscapManagedStatus(id, status)
+        {
+            if (isUscapManagedAgent(id)) {
+                return "online";
+            }
+
+            return (status != undefined && status !== "") ? status : "online";
+        }
 
         if (staffCanCreateGroups === "0" && !isAdmin) {
             $("#add_group_btn").remove();
@@ -381,6 +398,14 @@ if (!chatStaffCanDelete()) { ?>
         /*---------------* New chat members tracking / removing *---------------*/
         function removeChatMember(members)
         {
+            if (isUscapManagedAgent(members.id)) {
+                $("a#" + members.id + " .wrap span").addClass("online").removeClass("offline away busy");
+                $("#contacts li.contact#" + members.id).prependTo("#contacts ul");
+                $(".liveUsers").remove();
+                $("#menu .menu-item-prchat span.menu-text").append("<span class=\"liveUsers badge menu-badge bg-info\" data-toggle=\"tooltip\" title=\"" + prchatSettings.onlineUsersMenu + "\">" + $("#contacts li a.on").length + "</span>");
+                return;
+            }
+
             pendingRemoves[members.id] = setTimeout(function () {
                 if (presenceChannel.members.count > 0) {
                     $(".liveUsers").remove();
@@ -425,6 +450,9 @@ if (!chatStaffCanDelete()) { ?>
                 var optionsMore = deleteOrForward(userSessionId);
 
                 $(".messages#id_" + data.from + " ul").append("<li class=\"replies\"><img class=\"friendProfilePic\" src=\"" + fetchUserAvatar(data.from, data.sender_image) + "\"/><p class=\"friend\">" + data.message + "</p>" + optionsMore + "</li>");
+                if (window.USCPBPrchatVoice) {
+                    window.USCPBPrchatVoice.speakStaffIncoming(data.from_name, data.message);
+                }
 
                 if (data.message.includes("class='quickMentionLink'")) {
                     data.message = unescapeHtml(data.message);
@@ -610,7 +638,8 @@ if (!chatStaffCanDelete()) { ?>
 
                         if (value.time_sent_formatted == undefined) value.time_sent_formatted = "";
 
-                        var user_status = (value.status != undefined && value.status !== "") ? value.status : "online";
+                        var isManagedAgent = value.uscap_always_online == 1 || isUscapManagedAgent(value.staffid);
+                        var user_status = normalizeUscapManagedStatus(value.staffid, value.status);
 
                         var translated_status = "";
                         for (var status in chat_user_statuses) {
@@ -624,7 +653,7 @@ if (!chatStaffCanDelete()) { ?>
                             value.message = value.message.replace(/<[^>]*>?/gm, "");
                         }
 
-                        var isManagedAvailable = value.uscap_always_online == 1 && user_status !== "offline" && user_status !== "busy";
+                        var isManagedAvailable = isManagedAgent;
 
                         if (user != null || isManagedAvailable) {
                             onlineUser += "<li class=\"contact\" id=\"" + value.staffid + '" data-toggle="tooltip" data-container="body" title="<?php echo _l('chat_user_active_now'); ?>">';

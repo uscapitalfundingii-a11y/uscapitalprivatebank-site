@@ -1,4 +1,5 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
+<?php $bookAppointmentUrl = 'https://www.uscapitalprivatebank.com/crm/appointment_manager/appointment_manager_client/public_form'; ?>
 <nav class="navbar navbar-default header">
     <div class="container">
         <!-- Brand and toggle get grouped for better mobile display -->
@@ -16,6 +17,12 @@
         <div class="collapse navbar-collapse" id="theme-navbar-collapse">
             <ul class="nav navbar-nav navbar-right">
                 <?php hooks()->do_action('customers_navigation_start'); ?>
+                <li class="customers-nav-item-book-appointment">
+                    <a href="<?= e($bookAppointmentUrl); ?>">
+                        <i class="fa fa-calendar-check-o"></i>
+                        Book Appointment
+                    </a>
+                </li>
                 <?php foreach ($menu as $item_id => $item) { ?>
                 <li class="customers-nav-item-<?= e($item_id); ?><?= $item['href'] === current_full_url() ? ' active' : ''; ?>"
                     <?= _attributes_to_string($item['li_attributes'] ?? []); ?>>

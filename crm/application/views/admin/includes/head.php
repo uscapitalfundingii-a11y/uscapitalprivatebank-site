@@ -15,6 +15,10 @@
     </title>
 
     <?= app_compile_css(); ?>
+    <?php $uscapAdminPolish = FCPATH . 'assets/css/uscap-crm-admin-polish.css'; ?>
+    <?php if (file_exists($uscapAdminPolish)) { ?>
+        <link rel="stylesheet" href="<?= base_url('assets/css/uscap-crm-admin-polish.css?v=' . filemtime($uscapAdminPolish)); ?>">
+    <?php } ?>
     <?php render_admin_js_variables(); ?>
 
     <script>

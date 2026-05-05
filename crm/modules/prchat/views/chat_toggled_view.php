@@ -6,6 +6,7 @@ $color = pr_get_chat_color(get_staff_user_id(), 'chat_color');
 $currentChatColor = validateChatColorBeforeApply($color);
 
 ?>
+<link rel="stylesheet" href="<?php echo module_dir_url('prchat', 'assets/css/pr-chat-voice.css'); ?>?v=20260505voice">
 <div class="modal_container"></div>
 <div id="pusherChat">
     <div id="mainChatId" class="draggable" style="display:none;">
@@ -139,13 +140,20 @@ $currentChatColor = validateChatColorBeforeApply($color);
                     <input type="submit" name="submit" class="save" value="save" />
                     <input type="hidden" name="<?php echo $this->security->get_csrf_token_name(); ?>" value="<?php echo $this->security->get_csrf_hash(); ?>">
                 </form>
-                <form method="post" enctype="multipart/form-data" name="pusherMessagesForm" onsubmit="return false;">
+                <form method="post" enctype="multipart/form-data" name="pusherMessagesForm" class="prchat-voice-scope" onsubmit="return false;">
                     <div>
+                        <span class="prchat-voice-status" aria-live="polite"></span>
                         <div class="enterBtn">
                             <svg class="fa-paper-plane" viewBox="0 0 24 24">
                                 <path d="M8,7.71L18,12L8,16.29V12.95L15.14,12L8,11.05V7.71M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4Z" />
                             </svg>
                         </div>
+                        <button type="button" class="prchat-voice-button prchat-voice-dictate prchat-staff-dictate" aria-label="Speak your reply" aria-pressed="false" data-toggle="tooltip" title="Speak your reply">
+                            <i class="fa fa-microphone" aria-hidden="true"></i>
+                        </button>
+                        <button type="button" class="prchat-voice-button prchat-voice-speaker prchat-staff-speaker" aria-label="Read incoming chat aloud" aria-pressed="false" data-toggle="tooltip" title="Read incoming chat aloud">
+                            <i class="fa fa-volume-off" aria-hidden="true"></i>
+                        </button>
                         <textarea name="msg" class="chatbox" rows="3" placeholder="<?php echo _l('chat_type_a_message'); ?>"></textarea>
                         <input type="hidden" name="from" class="from" />
                         <input type="hidden" name="to" class="to" />
@@ -169,6 +177,7 @@ $currentChatColor = validateChatColorBeforeApply($color);
 <?php require('modules/prchat/assets/module_includes/chat_settings.php'); ?>
 <!-- Include chat statuses file -->
 <?php require('modules/prchat/assets/module_includes/chat_statuses.php'); ?>
+<script src="<?php echo module_dir_url('prchat', 'assets/js/pr-chat-voice.js'); ?>?v=20260505voice"></script>
 
 <script>
     $(function () {
@@ -202,6 +211,21 @@ $currentChatColor = validateChatColorBeforeApply($color);
     var chat_desktop_notifications_enabled = "<?php echo get_option('chat_desktop_messages_notifications') ?>";
     chat_desktop_notifications_enabled = (chat_desktop_notifications_enabled == "0") ? false : true;
     var user_chat_status = "<?= get_user_chat_status(); ?>";
+    var uscapManagedAgentIds = [29, 39, 40, 41, 42, 43, 44, 50, 45, 46, 47, 48, 49];
+
+    function isUscapManagedAgent(id)
+    {
+        return uscapManagedAgentIds.indexOf(parseInt(id, 10)) !== -1;
+    }
+
+    function normalizeUscapManagedStatus(id, status)
+    {
+        if (isUscapManagedAgent(id)) {
+            return "online";
+        }
+
+        return (status != undefined && status !== "") ? status : "online";
+    }
 
     $("#pusherChat").on("click", ".fileUpload", function () {
         $(this).parents(".pusherChatBox").find("form input:first").trigger("click");
@@ -486,6 +510,9 @@ $currentChatColor = validateChatColorBeforeApply($color);
             data.message = ifAudioRender(data.message);
 
             $("#pusherChat .pusherChatBox#id_" + data.from + " .msgTxt").append("<div class=\"conversation_from\"><img class=\"friendProfilePic\" data-toggle=\"tooltip\" title=\"" + current_time + "\" src=\"" + fetchUserAvatar(data.from, data.sender_image) + "\"/></br><div class=\"message_container\"><p class=\"friend\">" + data.message + "</p>" + optionsMore + "<div class=\"fixinline\"></div></div></div>");
+            if (window.USCPBPrchatVoice) {
+                window.USCPBPrchatVoice.speakStaffIncoming(data.from_name, data.message);
+            }
             $("title").html("");
             if ($("title").text().search('<?php echo _l('chat_sent_you_a_message'); ?>') == -1) {
                 if (name !== undefined) {
@@ -1020,6 +1047,9 @@ $currentChatColor = validateChatColorBeforeApply($color);
 
     chat_status.bind("status-changed-event", function (user) {
         if (user.user_id !== userSessionId) {
+            if (isUscapManagedAgent(user.user_id)) {
+                user.status = "online";
+            }
             if (user.status == "online") {
                 user.status = "";
             }
@@ -1120,6 +1150,9 @@ $currentChatColor = validateChatColorBeforeApply($color);
 
             if (user_chat_status != "busy" && user_chat_status != "offline") {
                 playPushSound();
+            }
+            if (window.USCPBPrchatVoice) {
+                window.USCPBPrchatVoice.speakStaffIncoming(data.contact_full_name, data.message);
             }
 
             if ($(".chatNewMessages").length > 0) {
