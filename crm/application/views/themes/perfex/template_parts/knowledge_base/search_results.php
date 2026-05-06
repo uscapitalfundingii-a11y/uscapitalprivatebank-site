@@ -1,7 +1,7 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed');
 if (count($articles) > 0) { ?>
 <div class="col-md-12 kb-search-results">
-    <h2 class="tw-font-medium tw-text-lg tw-mt-0">
+    <h2 class="tw-font-medium tw-text-lg tw-mt-0" style="color:#102033;font-weight:900;margin-bottom:18px;">
         <?= e($title); ?>
     </h2>
 </div>

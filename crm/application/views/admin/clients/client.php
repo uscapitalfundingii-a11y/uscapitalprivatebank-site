@@ -92,6 +92,7 @@
             <?php if (isset($client)) { ?>
             <div class="md:tw-max-w-64 tw-w-full">
                 <?php $this->load->view('admin/clients/tabs'); ?>
+                <?php $this->load->view('admin/clients/account_controls'); ?>
             </div>
             <?php } ?>
             <div

@@ -65,6 +65,8 @@ $route['admin'] = 'admin/dashboard';
  */
 $route['admin/access_denied'] = 'admin/misc/access_denied';
 $route['admin/not_found']     = 'admin/misc/not_found';
+$route['admin/reminder']      = 'admin/misc/reminders';
+$route['admin/reminders']     = 'admin/misc/reminders';
 
 /**
  * Staff Routes

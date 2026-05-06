@@ -481,10 +481,21 @@ class Clients extends AdminController
 
     public function mark_as_active($id)
     {
-        $this->db->where('userid', $id);
-        $this->db->update(db_prefix() . 'clients', [
-            'active' => 1,
-        ]);
+        if (staff_cant('edit', 'customers') && !is_customer_admin($id)) {
+            access_denied('customers');
+        }
+
+        $this->clients_model->change_client_status($id, 1);
+        redirect(admin_url('clients/client/' . $id));
+    }
+
+    public function mark_as_inactive($id)
+    {
+        if (staff_cant('edit', 'customers') && !is_customer_admin($id)) {
+            access_denied('customers');
+        }
+
+        $this->clients_model->change_client_status($id, 0);
         redirect(admin_url('clients/client/' . $id));
     }
 
@@ -687,6 +698,10 @@ class Clients extends AdminController
     /* Change client status / active / inactive */
     public function change_client_status($id, $status)
     {
+        if (staff_cant('edit', 'customers') && !is_customer_admin($id)) {
+            ajax_access_denied();
+        }
+
         if ($this->input->is_ajax_request()) {
             $this->clients_model->change_client_status($id, $status);
         }

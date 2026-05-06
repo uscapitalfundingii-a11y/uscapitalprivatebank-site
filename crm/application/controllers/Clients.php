@@ -828,12 +828,14 @@ class Clients extends ClientsController
 
             if ($this->form_validation->run() !== false) {
                 $projectName   = trim((string) $this->input->post('project_name'));
-                $category      = trim((string) $this->input->post('project_category'));
-                $serviceType   = trim((string) $this->input->post('support_service_type'));
+                $categoryValue = trim((string) $this->input->post('project_category'));
+                $serviceValue  = trim((string) $this->input->post('support_service_type'));
                 $customService = trim((string) $this->input->post('custom_service_type'));
                 $summary       = trim((string) $this->input->post('project_summary'));
+                $category      = $this->resolve_project_category_label($categoryValue);
+                $serviceType   = $this->resolve_support_service_label($serviceValue);
 
-                if ($serviceType === 'other' && $customService !== '') {
+                if ($serviceValue === 'other' && $customService !== '') {
                     $serviceType = $customService;
                 }
 
@@ -909,6 +911,23 @@ class Clients extends ClientsController
 
     protected function get_project_category_options()
     {
+        $options = [];
+
+        if ($this->db->table_exists(db_prefix() . 'departments')) {
+            $this->db->select('departmentid,name');
+            $this->db->where('hidefromclient', 0);
+            $this->db->order_by('name', 'asc');
+            $departments = $this->db->get(db_prefix() . 'departments')->result_array();
+
+            foreach ($departments as $department) {
+                $options['department:' . $department['departmentid']] = $department['name'];
+            }
+        }
+
+        if (!empty($options)) {
+            return $options;
+        }
+
         return [
             'trade finance'     => 'Trade Finance',
             'banking services'  => 'Banking Services',
@@ -922,6 +941,24 @@ class Clients extends ClientsController
 
     protected function get_support_transaction_options()
     {
+        $options = [];
+
+        if ($this->db->table_exists(db_prefix() . 'services')) {
+            $this->db->select('serviceid,name');
+            $this->db->order_by('name', 'asc');
+            $services = $this->db->get(db_prefix() . 'services')->result_array();
+
+            foreach ($services as $service) {
+                $options['service:' . $service['serviceid']] = $service['name'];
+            }
+        }
+
+        if (!empty($options)) {
+            $options['other'] = 'Other';
+
+            return $options;
+        }
+
         return [
             'standby letter of credit' => 'Standby Letter of Credit',
             'letter of credit'         => 'Letter of Credit',
@@ -954,6 +991,46 @@ class Clients extends ClientsController
         ];
     }
 
+    protected function resolve_project_category_label($value)
+    {
+        if (strpos($value, 'department:') === 0) {
+            $departmentId = (int) substr($value, strlen('department:'));
+            if ($departmentId > 0 && $this->db->table_exists(db_prefix() . 'departments')) {
+                $this->db->select('name');
+                $this->db->where('departmentid', $departmentId);
+                $department = $this->db->get(db_prefix() . 'departments')->row();
+
+                if ($department) {
+                    return $department->name;
+                }
+            }
+        }
+
+        $options = $this->get_project_category_options();
+
+        return $options[$value] ?? $value;
+    }
+
+    protected function resolve_support_service_label($value)
+    {
+        if (strpos($value, 'service:') === 0) {
+            $serviceId = (int) substr($value, strlen('service:'));
+            if ($serviceId > 0 && $this->db->table_exists(db_prefix() . 'services')) {
+                $this->db->select('name');
+                $this->db->where('serviceid', $serviceId);
+                $service = $this->db->get(db_prefix() . 'services')->row();
+
+                if ($service) {
+                    return $service->name;
+                }
+            }
+        }
+
+        $options = $this->get_support_transaction_options();
+
+        return $options[$value] ?? $value;
+    }
+
     protected function create_client_support_project($projectName, $category = '', $serviceType = '', $summary = '')
     {
         $projectStatuses = $this->projects_model->get_project_statuses();
@@ -965,7 +1042,7 @@ class Clients extends ClientsController
 
         $descriptionParts = [];
         if ($category !== '') {
-            $descriptionParts[] = 'Category: ' . $category;
+            $descriptionParts[] = 'Department / Category: ' . $category;
         }
         if ($serviceType !== '') {
             $descriptionParts[] = 'Support / Service Type: ' . $serviceType;

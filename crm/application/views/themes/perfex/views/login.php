@@ -37,7 +37,7 @@ $siteLinks = [
     ['label' => 'Home', 'href' => 'https://uscapitalprivatebank.com/'],
     ['label' => 'Contact', 'href' => 'https://uscapitalprivatebank.org/contact'],
     ['label' => 'Branches', 'href' => 'https://uscapitalprivatebank.com/branches'],
-    ['label' => 'Legal Identity', 'href' => 'https://uscapitalprivatebank.com/corporate-identity-legal-independence'],
+    ['label' => 'Legal Identity', 'href' => site_url('corporate-identity-legal-independence')],
     ['label' => 'Support', 'href' => site_url('authentication/login')],
 ];
 ?>
@@ -625,7 +625,7 @@ $siteLinks = [
                         <?php } ?>
                     </div>
                     <div class="crm-support-identity-link">
-                        Need corporate verification? <a href="https://uscapitalprivatebank.com/corporate-identity-legal-independence" target="_blank" rel="noopener">View Legal / Corporate Identity</a>
+                        Need corporate verification? <a href="<?= site_url('corporate-identity-legal-independence'); ?>" target="_blank" rel="noopener">View Legal / Corporate Identity</a>
                     </div>
 
                     <?php hooks()->do_action('clients_login_form_end'); ?>

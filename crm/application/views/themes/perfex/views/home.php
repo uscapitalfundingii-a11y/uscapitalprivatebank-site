@@ -53,6 +53,13 @@
     color: #fff;
     border-color: rgba(255,255,255,.35);
 }
+.client-dashboard-actions .client-dashboard-start-btn {
+    font-size: 18px;
+    font-weight: 800;
+    line-height: 1.15;
+    min-height: 56px;
+    padding: 16px 28px;
+}
 .client-dashboard-steps {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -98,7 +105,7 @@
             <h1 class="client-dashboard-title">Secure project management for every banking request.</h1>
             <p class="client-dashboard-copy">Use this portal to open a structured project, upload documents into the correct transaction workspace, and keep your communication with the bank organized, traceable, and professionally routed.</p>
             <div class="client-dashboard-actions">
-                <a href="<?= site_url('clients/new_project'); ?>" class="btn btn-primary">Need help? Try the wizard.</a>
+                <a href="<?= site_url('clients/new_project'); ?>" class="btn btn-primary client-dashboard-start-btn">Start Here!</a>
                 <a href="<?= site_url('clients/projects'); ?>" class="btn btn-default">View Projects</a>
                 <a href="<?= site_url('clients/tickets'); ?>" class="btn btn-default">Support Tickets</a>
             </div>

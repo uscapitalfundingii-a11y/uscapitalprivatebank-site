@@ -2,6 +2,7 @@
 <style>
 .client-portal-hero {
     position: relative;
+    z-index: 1;
     overflow: hidden;
     border-radius: 24px;
     padding: 34px 36px;
@@ -71,12 +72,15 @@
 }
 .client-wizard-panel {
     border-radius: 20px;
-    overflow: hidden;
+    overflow: visible;
     border: 1px solid #dbe6f2;
     box-shadow: 0 18px 36px rgba(15, 38, 73, 0.08);
+    position: relative;
+    z-index: 5;
 }
 .client-wizard-panel .panel-body {
     padding: 30px;
+    overflow: visible;
 }
 .client-wizard-panel .panel-footer {
     padding: 20px 30px;
@@ -140,6 +144,17 @@
     color: #48617f;
     font-size: 13px;
 }
+.client-wizard-panel .bootstrap-select,
+.client-wizard-panel .bootstrap-select.open {
+    position: relative;
+    z-index: 20;
+}
+.client-wizard-panel .bootstrap-select.open .dropdown-menu {
+    z-index: 3050;
+}
+.client-wizard-panel .dropdown-menu.open {
+    z-index: 3050;
+}
 @media (max-width: 767px) {
     .client-portal-hero {
         padding: 26px 22px;
@@ -188,7 +203,7 @@
         <div class="row">
             <div class="col-md-6">
                 <div class="form-group">
-                    <label for="project_category">Category</label>
+                    <label for="project_category">Department / Category</label>
                     <select name="project_category" id="project_category" class="form-control selectpicker" data-none-selected-text="Select a category">
                         <option value=""></option>
                         <?php foreach ($category_options as $value => $label) { ?>
