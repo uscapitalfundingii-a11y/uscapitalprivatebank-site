@@ -1,0 +1,11 @@
+Hello {contact_firstname} {contact_lastname}
+
+New project discussion created from {discussion_creator}
+
+Subject: {discussion_subject}
+Description: {discussion_description}
+
+You can view the discussion on the following link: {discussion_subject}
+
+Kind Regards,
+{email_signature}

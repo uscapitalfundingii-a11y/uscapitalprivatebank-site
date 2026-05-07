@@ -1,0 +1,13 @@
+Hi {contact_firstname} {contact_lastname}
+
+You have a new ticket reply to ticket #{ticket_id}
+
+Ticket Subject: {ticket_subject}
+
+Ticket message:
+{ticket_message}
+
+You can view the ticket on the following link: #{ticket_id}
+
+Kind Regards,
+{email_signature}

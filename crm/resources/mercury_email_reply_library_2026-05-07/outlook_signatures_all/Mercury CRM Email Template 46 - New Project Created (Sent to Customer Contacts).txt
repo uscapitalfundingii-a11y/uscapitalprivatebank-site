@@ -1,0 +1,13 @@
+Hello {contact_firstname} {contact_lastname}
+
+New project is assigned to your company.
+
+Project Name: {project_name}
+Project Start Date: {project_start_date}
+
+You can view the project on the following link: {project_name}
+
+We are looking forward hearing from you.
+
+Kind Regards,
+{email_signature}

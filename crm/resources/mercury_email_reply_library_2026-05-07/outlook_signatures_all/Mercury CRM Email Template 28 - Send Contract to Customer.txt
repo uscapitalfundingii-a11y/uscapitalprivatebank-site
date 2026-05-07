@@ -1,0 +1,10 @@
+Hi {contact_firstname} {contact_lastname}
+
+Please find the {contract_subject} attached.
+
+Description: {contract_description}
+
+Looking forward to hear from you.
+
+Kind Regards,
+{email_signature}

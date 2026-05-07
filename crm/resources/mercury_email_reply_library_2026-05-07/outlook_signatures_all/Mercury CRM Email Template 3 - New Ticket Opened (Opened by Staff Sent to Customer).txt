@@ -1,0 +1,15 @@
+Hi {contact_firstname} {contact_lastname}
+
+New support ticket has been opened.
+
+Subject: {ticket_subject}
+Department: {ticket_department}
+Priority: {ticket_priority}
+
+Ticket message:
+{ticket_message}
+
+You can view the ticket on the following link: #{ticket_id}
+
+Kind Regards,
+{email_signature}

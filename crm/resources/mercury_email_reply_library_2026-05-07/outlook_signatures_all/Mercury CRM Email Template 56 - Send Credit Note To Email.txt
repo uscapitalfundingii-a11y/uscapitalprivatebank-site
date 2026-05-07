@@ -1,0 +1,11 @@
+Dear {contact_firstname} {contact_lastname}
+
+We have attached the credit note with number #{credit_note_number} for your reference.
+
+Date: {credit_note_date}
+Total Amount: {credit_note_total}
+
+Please contact us for more information.
+
+Kind Regards,
+{email_signature}

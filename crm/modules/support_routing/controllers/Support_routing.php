@@ -14,6 +14,8 @@ class Support_routing extends AdminController
 
     public function index()
     {
+        $routingResult = support_routing_route_unassigned_tickets(50);
+
         $filters = [
             'source_site' => trim((string) $this->input->get('source_site', true)),
             'specialist'  => trim((string) $this->input->get('specialist', true)),
@@ -68,13 +70,30 @@ class Support_routing extends AdminController
         }
 
         $data = [
-            'title'    => 'Support Routing',
-            'items'    => $items,
-            'filters'  => $filters,
-            'statuses' => $this->db->order_by('statusorder', 'ASC')->get(db_prefix() . 'tickets_status')->result_array(),
+            'title'          => 'Support Routing',
+            'items'          => $items,
+            'filters'        => $filters,
+            'routing_result' => $routingResult,
+            'statuses'       => $this->db->order_by('statusorder', 'ASC')->get(db_prefix() . 'tickets_status')->result_array(),
         ];
 
         $this->load->view('support_routing/admin/overview', $data);
+    }
+
+    public function route_now()
+    {
+        if (!$this->input->is_ajax_request() && strtoupper($this->input->method()) !== 'POST') {
+            show_404();
+        }
+
+        $result = support_routing_route_unassigned_tickets(50);
+
+        $this->output
+            ->set_content_type('application/json')
+            ->set_output(json_encode([
+                'success' => true,
+                'result'  => $result,
+            ]));
     }
 
     private function parse_routing_note($description)
@@ -85,6 +104,7 @@ class Support_routing extends AdminController
         }
         $metadata['assignment_status'] = '';
         $metadata['assigned_staffid'] = '';
+        $metadata['route_reason'] = '';
         $metadata['captured_at'] = '';
         $metadata['capture_status'] = 'not_captured';
 

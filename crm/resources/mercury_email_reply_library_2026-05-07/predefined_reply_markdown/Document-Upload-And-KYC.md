@@ -1,0 +1,12 @@
+# Predefined Reply - Document Upload And KYC
+
+Hello <Client Name>,
+
+Thank you for your message. For your protection, please submit identity, KYC, compliance, or supporting documents only through the secure client portal:
+
+https://uscapitalprivatebank.com/crm/
+
+Once the documents are uploaded, the appropriate team can review your submission and follow up through the proper workflow.
+
+Thank you,
+US Capital Private Bank Client Relations

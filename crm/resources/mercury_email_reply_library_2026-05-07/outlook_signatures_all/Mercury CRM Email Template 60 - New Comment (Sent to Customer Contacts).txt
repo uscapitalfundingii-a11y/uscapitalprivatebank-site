@@ -1,0 +1,8 @@
+Dear {contact_firstname} {contact_lastname}
+
+A new comment has been made on the following contract: {contract_subject}
+
+You can view and reply to the comment on the following link: {contract_subject}
+
+Kind Regards,
+{email_signature}

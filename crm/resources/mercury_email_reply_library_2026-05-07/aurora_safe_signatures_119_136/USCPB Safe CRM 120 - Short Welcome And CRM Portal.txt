@@ -1,0 +1,12 @@
+Hello [Client Name],
+
+Thank you for reaching out. [Acknowledge the client's actual request in one clear sentence.]
+
+Welcome to U.S. Capital Private Bank. To keep onboarding, document uploads, support requests, and account-service communication properly tracked, please use the secure client portal:
+
+https://uscapitalprivatebank.com/crm/
+
+Once your request is submitted through the portal, our team can route it to the appropriate department and follow up with the next step.
+
+Thank you,
+US Capital Private Bank Client Relations

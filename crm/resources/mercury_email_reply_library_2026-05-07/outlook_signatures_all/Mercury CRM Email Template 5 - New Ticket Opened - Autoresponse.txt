@@ -1,0 +1,15 @@
+Hi {contact_firstname} {contact_lastname}
+
+Thank you for contacting our support team. A support ticket has now been opened for your request. You will be notified when a response is made by email.
+
+Subject: {ticket_subject}
+Department: {ticket_department}
+Priority: {ticket_priority}
+
+Ticket message:
+{ticket_message}
+
+You can view the ticket on the following link: #{ticket_id}
+
+Kind Regards,
+{email_signature}

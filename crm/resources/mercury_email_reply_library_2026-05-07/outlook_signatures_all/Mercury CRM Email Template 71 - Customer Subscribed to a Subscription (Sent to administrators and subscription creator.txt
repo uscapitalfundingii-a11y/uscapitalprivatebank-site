@@ -1,0 +1,12 @@
+The customer {client_company} subscribed to a subscription with name {subscription_name}
+
+ID: {subscription_id}
+Subscription name: {subscription_name}
+Subscription description: {subscription_description}
+
+You can view the subscription by clicking here
+
+Best Regards,
+{email_signature}
+
+You are receiving this email because you are either administrator or you are creator of the subscription.

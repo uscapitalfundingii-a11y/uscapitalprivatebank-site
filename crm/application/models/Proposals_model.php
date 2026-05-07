@@ -85,7 +85,7 @@ class Proposals_model extends App_Model
             unset($data['newitems']);
         }
 
-        if ($this->copy == false) {
+        if ($this->copy == false && (!isset($data['content']) || trim((string) $data['content']) === '')) {
             $data['content'] = '{proposal_items}';
         }
 

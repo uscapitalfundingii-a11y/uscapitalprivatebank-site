@@ -13,6 +13,124 @@ class Proposals extends AdminController
         $this->load->model('currencies_model');
     }
 
+    private function proposal_templates()
+    {
+        return [
+            'crm-portal-onboarding' => [
+                'slug'        => 'crm-portal-onboarding',
+                'category'    => 'Client onboarding',
+                'title'       => 'CRM Portal / Client Onboarding',
+                'subject'     => 'CRM Portal And Client Onboarding Proposal',
+                'description' => 'Use when a client needs a structured CRM workspace, document upload guidance, and relationship-team routing.',
+                'content'     => '<h2>CRM Portal And Client Onboarding</h2>'
+                    . '<p>Thank you for the opportunity to support your onboarding request. This proposal outlines a secure CRM workspace where your relationship team can organize communication, document requests, project updates, and support tickets in one traceable record.</p>'
+                    . '<h3>Recommended Scope</h3>'
+                    . '<ul><li>Create or confirm the client portal profile and project workspace.</li><li>Route support questions to the correct department or specialist.</li><li>Provide document upload guidance for welcome-package, profile, and onboarding materials.</li><li>Keep follow-up items visible through tickets, tasks, and project updates.</li></ul>'
+                    . '<h3>Important Boundaries</h3>'
+                    . '<p>This proposal does not guarantee approval, funding, KYC outcome, account activation, wire movement, bank instrument issuance, legal outcome, investment result, or return. Restricted matters are reviewed by the appropriate compliance, legal, security, or executive team.</p>'
+                    . '<h3>Proposal Items</h3>{proposal_items}',
+            ],
+            'institutional-services-review' => [
+                'slug'        => 'institutional-services-review',
+                'category'    => 'Institutional services',
+                'title'       => 'Institutional Services Review',
+                'subject'     => 'Institutional Services Review Proposal',
+                'description' => 'Use for institutional intake, relationship discovery, and next-step planning without promising outcomes.',
+                'content'     => '<h2>Institutional Services Review</h2>'
+                    . '<p>We appreciate the opportunity to review your institutional request. This proposal provides a structured path for discovery, document readiness, and specialist routing so the right team can evaluate the request responsibly.</p>'
+                    . '<h3>Recommended Scope</h3>'
+                    . '<ul><li>Confirm the organization, authorized contacts, and requested service area.</li><li>Collect the high-level transaction, treasury, or account-service background needed for routing.</li><li>Identify the correct internal department and relationship specialist.</li><li>Prepare a follow-up path for documents, calls, and next-step review.</li></ul>'
+                    . '<h3>Important Boundaries</h3>'
+                    . '<p>Any KYC, account, credit, banking, transaction, deposit, wire, SBLC, monetization, compliance, legal, or investment matter remains subject to formal review. No approval, funding, returns, facility issuance, or transaction outcome is implied.</p>'
+                    . '<h3>Proposal Items</h3>{proposal_items}',
+            ],
+            'kyc-document-readiness' => [
+                'slug'        => 'kyc-document-readiness',
+                'category'    => 'KYC / documents',
+                'title'       => 'KYC And Document Readiness',
+                'subject'     => 'KYC And Document Readiness Proposal',
+                'description' => 'Use when the client needs help preparing and uploading documents for review.',
+                'content'     => '<h2>KYC And Document Readiness</h2>'
+                    . '<p>This proposal is intended to help organize the documents and support steps needed for a clear review process. The goal is to reduce back-and-forth and keep the client record complete, traceable, and easy for the review team to inspect.</p>'
+                    . '<h3>Recommended Scope</h3>'
+                    . '<ul><li>Confirm the client profile and contact details in the CRM portal.</li><li>Guide the client to the proper document upload area.</li><li>Identify missing or unclear document categories for follow-up.</li><li>Route sensitive or restricted documents to the correct review owner.</li></ul>'
+                    . '<h3>Important Boundaries</h3>'
+                    . '<p>This support does not approve KYC, verify identity outcomes, activate accounts, or confirm transaction capability. Review decisions remain with the authorized review team.</p>'
+                    . '<h3>Proposal Items</h3>{proposal_items}',
+            ],
+            'asset-transaction-intake' => [
+                'slug'        => 'asset-transaction-intake',
+                'category'    => 'Asset / transaction intake',
+                'title'       => 'Asset Or Transaction Intake',
+                'subject'     => 'Asset Or Transaction Intake Proposal',
+                'description' => 'Use for structured intake of gemstone, asset, instrument, or transaction review requests.',
+                'content'     => '<h2>Asset Or Transaction Intake</h2>'
+                    . '<p>This proposal creates an organized intake path for reviewing the client request, supporting documents, and appropriate specialist routing. It is designed to keep the conversation professional, documented, and ready for qualified internal review.</p>'
+                    . '<h3>Recommended Scope</h3>'
+                    . '<ul><li>Open a CRM project or ticket record for the request.</li><li>Collect summary details, supporting documents, and contact information.</li><li>Route asset, instrument, or transaction questions to the assigned specialist.</li><li>Track follow-up questions and requested documentation inside the CRM.</li></ul>'
+                    . '<h3>Important Boundaries</h3>'
+                    . '<p>Submitted information is not proof of value, validity, transaction readiness, bank acceptance, or monetization eligibility. No funding, returns, instrument issuance, or transaction outcome is promised.</p>'
+                    . '<h3>Proposal Items</h3>{proposal_items}',
+            ],
+            'trading-platform-onboarding' => [
+                'slug'        => 'trading-platform-onboarding',
+                'category'    => 'Trading platform',
+                'title'       => 'Trading Platform Onboarding',
+                'subject'     => 'Trading Platform Onboarding Proposal',
+                'description' => 'Use for trading platform registration, support routing, and paper/live trading readiness questions.',
+                'content'     => '<h2>Trading Platform Onboarding</h2>'
+                    . '<p>This proposal outlines a support path for trading platform registration, account setup questions, documentation routing, and platform support. The objective is to help the client reach the correct support lane quickly.</p>'
+                    . '<h3>Recommended Scope</h3>'
+                    . '<ul><li>Guide the client through registration and portal access.</li><li>Route KYC, suitability, and account setup questions to the proper review team.</li><li>Help identify platform access, market data, or technical support issues.</li><li>Escalate restricted trading, advisory, pricing, or account outcome questions.</li></ul>'
+                    . '<h3>Important Boundaries</h3>'
+                    . '<p>This proposal does not provide trading advice, investment advice, suitability approval, account approval, performance projection, returns, or live-trading authorization.</p>'
+                    . '<h3>Proposal Items</h3>{proposal_items}',
+            ],
+            'swift-transaction-support' => [
+                'slug'        => 'swift-transaction-support',
+                'category'    => 'SWIFT / transaction support',
+                'title'       => 'SWIFT And Transaction Support',
+                'subject'     => 'SWIFT And Transaction Support Proposal',
+                'description' => 'Use for safe SWIFT or transaction support intake while keeping restricted operational details private.',
+                'content'     => '<h2>SWIFT And Transaction Support</h2>'
+                    . '<p>This proposal provides a secure intake and routing structure for SWIFT or transaction-support questions. The CRM record will preserve the request context and route sensitive items to authorized reviewers.</p>'
+                    . '<h3>Recommended Scope</h3>'
+                    . '<ul><li>Capture the client request and supporting context without exposing restricted details.</li><li>Route forwarded screenshots, bank-to-bank verification questions, or transaction questions to the proper specialist.</li><li>Track required follow-up and document requests inside the CRM.</li><li>Escalate sensitive payment, wire, settlement, compliance, or security matters.</li></ul>'
+                    . '<h3>Important Boundaries</h3>'
+                    . '<p>We do not confirm SWIFT validity, payment movement, settlement, wire status, UETR status, RWA, POF, BCL, account status, or instrument issuance in proposal text or chat. Restricted operational details remain internal-only.</p>'
+                    . '<h3>Proposal Items</h3>{proposal_items}',
+            ],
+            'fresh-start-client-plan' => [
+                'slug'        => 'fresh-start-client-plan',
+                'category'    => 'Fresh Start Financials',
+                'title'       => 'Fresh Start Financials Client Plan',
+                'subject'     => 'Fresh Start Financials Client Plan Proposal',
+                'description' => 'Use for financial restart intake, support organization, and approved next-step planning.',
+                'content'     => '<h2>Fresh Start Financials Client Plan</h2>'
+                    . '<p>This proposal organizes the client request into a practical intake and support plan. The goal is to understand the client objective, gather relevant information, and route the matter to the correct support lane.</p>'
+                    . '<h3>Recommended Scope</h3>'
+                    . '<ul><li>Confirm client goals and current support needs.</li><li>Identify required documents, forms, and next-step appointments.</li><li>Route account, credit, billing, or support issues to the appropriate specialist.</li><li>Track follow-up tasks and status updates in the CRM.</li></ul>'
+                    . '<h3>Important Boundaries</h3>'
+                    . '<p>This proposal does not provide legal, tax, investment, or credit advice and does not guarantee approval, settlement, funding, account changes, or financial outcome.</p>'
+                    . '<h3>Proposal Items</h3>{proposal_items}',
+            ],
+            'media-strategy' => [
+                'slug'        => 'media-strategy',
+                'category'    => 'Media / marketing',
+                'title'       => 'One World Media Strategy',
+                'subject'     => 'Media Strategy And Client Communication Proposal',
+                'description' => 'Use for media, communications, broadcasting, public-facing copy, or campaign support requests.',
+                'content'     => '<h2>Media Strategy And Client Communication</h2>'
+                    . '<p>This proposal outlines a structured path for media, communication, and campaign-support requests. The focus is on message clarity, routing, review, and controlled publication approval.</p>'
+                    . '<h3>Recommended Scope</h3>'
+                    . '<ul><li>Define the communication objective and audience.</li><li>Prepare draft language for internal review.</li><li>Route approvals through the appropriate marketing, compliance, or executive reviewer.</li><li>Track approved assets and follow-up actions in the CRM.</li></ul>'
+                    . '<h3>Important Boundaries</h3>'
+                    . '<p>Draft language must not be published, sent, advertised, or customer-visible until the approved reviewer confirms final language, links, audience, and compliance posture.</p>'
+                    . '<h3>Proposal Items</h3>{proposal_items}',
+            ],
+        ];
+    }
+
     public function index($proposal_id = '')
     {
         $this->list_proposals($proposal_id);
@@ -196,14 +314,59 @@ class Proposals extends AdminController
         $data['currencies']    = $this->currencies_model->get();
         $data['base_currency'] = $this->currencies_model->get_base_currency();
 
+        if ($id == '') {
+            $template_slug = $this->input->get('template');
+            $templates     = $this->proposal_templates();
+
+            if ($template_slug && isset($templates[$template_slug])) {
+                $data['selected_proposal_template'] = $templates[$template_slug];
+                $data['proposal_template_content']  = $templates[$template_slug]['content'];
+                $data['proposal_template_subject']  = $templates[$template_slug]['subject'];
+            }
+        }
+
         $data['title'] = $title;
         $this->load->view('admin/proposals/proposal', $data);
     }
 
+    public function templates()
+    {
+        close_setup_menu();
+
+        if (staff_cant('view', 'proposals') && staff_cant('view_own', 'proposals') && staff_cant('create', 'proposals')) {
+            access_denied('proposals');
+        }
+
+        $data['title']     = 'Proposal Templates';
+        $data['templates'] = $this->proposal_templates();
+
+        $this->load->view('admin/proposals/templates', $data);
+    }
+
     public function get_template()
     {
-        $name = $this->input->get('name');
-        echo $this->load->view('admin/proposals/templates/' . $name, [], true);
+        if (staff_cant('view', 'proposals') && staff_cant('view_own', 'proposals') && staff_cant('create', 'proposals')) {
+            ajax_access_denied();
+        }
+
+        $name      = $this->input->get('name');
+        $templates = $this->proposal_templates();
+
+        if (!isset($templates[$name])) {
+            $this->output
+                ->set_status_header(404)
+                ->set_content_type('application/json')
+                ->set_output(json_encode(['success' => false, 'message' => 'Template not found']));
+
+            return;
+        }
+
+        $this->output
+            ->set_content_type('application/json')
+            ->set_output(json_encode([
+                'success'  => true,
+                'template' => $templates[$name],
+            ]));
     }
 
     public function send_expiry_reminder($id)

@@ -1,0 +1,10 @@
+Hi {contact_firstname} {contact_lastname}
+
+This is an overdue notice for invoice # {invoice_number}
+
+This invoice was due: {invoice_duedate}
+
+You can view the invoice on the following link: {invoice_number}
+
+Kind Regards,
+{email_signature}

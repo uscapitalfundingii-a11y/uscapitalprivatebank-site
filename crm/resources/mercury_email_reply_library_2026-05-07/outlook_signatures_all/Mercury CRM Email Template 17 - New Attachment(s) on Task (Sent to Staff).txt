@@ -1,0 +1,10 @@
+Hi {staff_firstname}
+
+{task_user_take_action} added an attachment on the following task:
+
+Name: {task_name}
+
+You can view the task on the following link: {task_name}
+
+Kind Regards,
+{email_signature}

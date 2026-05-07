@@ -1,0 +1,7 @@
+Hi
+
+Customer ({client_company}) accepted estimate with number # {estimate_number}
+
+You can view the estimate on the following link: {estimate_number}
+
+{email_signature}

@@ -1,0 +1,8 @@
+Hi
+
+Customer {proposal_proposal_to} declined the proposal {proposal_subject}
+
+View the proposal on the following link {proposal_number} or from the admin area.
+
+Kind Regards,
+{email_signature}

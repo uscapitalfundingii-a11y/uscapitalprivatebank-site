@@ -13,6 +13,11 @@
                 <i class="fa-regular fa-plus tw-mr-1"></i>
                 <?= _l('new_proposal'); ?>
             </a>
+            <a href="<?= admin_url('proposals/templates'); ?>"
+                class="btn btn-default pull-left display-block">
+                <i class="fa-regular fa-copy tw-mr-1"></i>
+                Proposal Templates
+            </a>
             <?php } ?>
             <a href="<?= admin_url('proposals/pipeline/' . $switch_pipeline); ?>"
                 class="btn btn-default pull-left switch-pipeline hidden-xs !tw-px-3" data-toggle="tooltip"

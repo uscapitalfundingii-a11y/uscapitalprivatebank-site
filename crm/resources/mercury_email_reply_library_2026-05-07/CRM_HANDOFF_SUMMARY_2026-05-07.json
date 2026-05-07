@@ -1,0 +1,20 @@
+{
+  "created": "2026-05-07T01:17:03.559291",
+  "crm_stage": "D:\\GithubRepos\\uscapitalprivatebank-site\\crm\\resources\\mercury_email_reply_library_2026-05-07",
+  "outlook_signature_folder": "C:\\Users\\uscap\\AppData\\Roaming\\Microsoft\\Signatures",
+  "outlook_signature_counts_after": {
+    "htm": 351,
+    "txt": 351,
+    "rtf": 351,
+    "aurora_safe_119_136_htm": 18
+  },
+  "staged_counts": {
+    "outlook_signatures_all_files": 1053,
+    "aurora_safe_signature_files": 54,
+    "predefined_reply_markdown_files": 42,
+    "manifest_report_files": 9,
+    "safe_items": 18
+  },
+  "import_json": "D:\\GithubRepos\\uscapitalprivatebank-site\\crm\\resources\\mercury_email_reply_library_2026-05-07\\aurora_safe_predefined_replies_119_136_import_ready.json",
+  "import_csv": "D:\\GithubRepos\\uscapitalprivatebank-site\\crm\\resources\\mercury_email_reply_library_2026-05-07\\aurora_safe_predefined_replies_119_136_import_ready.csv"
+}

@@ -1,0 +1,10 @@
+Hello {contact_firstname} {contact_lastname}
+
+You are receiving this email because project {project_name} has been marked as finished. This project is assigned under your company and we just wanted to keep you up to date.
+
+You can view the project on the following link: {project_name}
+
+If you have any questions don't hesitate to contact us.
+
+Kind Regards,
+{email_signature}

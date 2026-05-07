@@ -1,0 +1,11 @@
+Hello {contact_firstname} {contact_lastname}
+
+New discussion comment has been made on {discussion_subject} from {comment_creator}
+
+Discussion subject: {discussion_subject}
+Comment: {discussion_comment}
+
+You can view the discussion on the following link: {discussion_subject}
+
+Kind Regards,
+{email_signature}

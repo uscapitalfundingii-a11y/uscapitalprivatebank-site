@@ -1,0 +1,58 @@
+Secure Your Account with Google Authenticator
+
+For your security, we require all users to enable Two-Factor Authentication (2FA) using the Google Authenticator app. This will serve as your security key for accessing your bank account.
+
+Step-by-Step Instructions:
+
+-
+Download Google Authenticator
+Install the app from the App Store (iOS) or Google Play Store (Android).
+
+-
+Enable 2FA in the Bank Portal
+
+-
+Log in to your online banking account.
+
+-
+Click on the “More” link in the top menu.
+
+-
+Select “2FA” from the dropdown.
+
+-
+Follow the prompt to connect the Authenticator app.
+
+-
+Set Up the Authenticator App
+
+-
+Open the Google Authenticator app.
+
+-
+Tap the “+” icon in the lower right corner.
+
+-
+Select “Scan a QR code.”
+
+-
+Use your phone to scan the QR code displayed on the bank portal.
+
+-
+Enter the Code
+
+-
+Once scanned, the app will generate a 6-digit code.
+
+-
+Enter this code in the appropriate box on the website.
+
+-
+Save your settings and close your browser.
+
+In the future, each time you log in, you’ll be prompted to open the Authenticator app and enter your verification code, ensuring only you have access to your account.
+
+If you have any questions or need assistance, our support team is here to help.
+
+Thank you,
+US Capital Private Bank Client Relations

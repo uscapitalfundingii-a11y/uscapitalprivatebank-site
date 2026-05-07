@@ -1,0 +1,8 @@
+Hi {staff_firstname}
+
+You received this email because you have enabled two factor authentication in your account.
+Use the following code to confirm your login:
+
+{two_factor_auth_code}
+
+{email_signature}

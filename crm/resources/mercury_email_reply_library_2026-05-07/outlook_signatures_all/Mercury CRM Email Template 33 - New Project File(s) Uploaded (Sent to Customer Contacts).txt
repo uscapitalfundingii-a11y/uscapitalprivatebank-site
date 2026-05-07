@@ -1,0 +1,10 @@
+Hello {contact_firstname} {contact_lastname}
+
+New project file is uploaded on {project_name} from {file_creator}
+
+You can view the project on the following link: {project_name}
+
+To view the file in our CRM you can click on the following link: {discussion_subject}
+
+Kind Regards,
+{email_signature}

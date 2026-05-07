@@ -1,0 +1,8 @@
+Hello {contact_firstname} {contact_lastname}
+
+Your subscription {subscription_name} has been canceled, if you have any questions don't hesitate to contact us.
+
+It was a pleasure doing business with you.
+
+Best Regards,
+{email_signature}

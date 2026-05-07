@@ -1,0 +1,10 @@
+Dear {proposal_proposal_to}
+
+Thank for for accepting the proposal.
+
+We look forward to doing business with you.
+
+We will contact you as soon as possible
+
+Kind Regards,
+{email_signature}

@@ -1,0 +1,11 @@
+Hi {staff_firstname}
+
+{task_user_take_action} marked task as {task_status}
+
+Name: {task_name}
+Due date: {task_duedate}
+
+You can view the task on the following link: {task_name}
+
+Kind Regards,
+{email_signature}

@@ -1,0 +1,12 @@
+Hello,
+
+{estimate_request_email} submitted an estimate request via the {estimate_request_form_name} form.
+
+You can view the request at the following link: {estimate_request_link}
+
+==
+
+{estimate_request_submitted_data}
+
+Kind Regards,
+{email_signature}

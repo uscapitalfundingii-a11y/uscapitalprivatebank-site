@@ -1,0 +1,5 @@
+Hi {staff_firstname} !
+
+This is a reminder for event {treatment} scheduled at {appointment_date}.
+
+Regards.

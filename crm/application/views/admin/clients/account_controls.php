@@ -10,44 +10,54 @@
             Manage this customer account, portal profile, contacts, and customer access from one place.
         </p>
 
-        <div class="tw-flex tw-flex-col tw-gap-2">
+        <div class="uscap-customer-action-grid">
             <?php if (is_admin()) { ?>
-            <a href="<?= admin_url('clients/login_as_client/' . $client->userid); ?>"
-                target="_blank"
-                class="btn btn-default btn-block">
-                <i class="fa-regular fa-user tw-mr-1"></i>
-                <?= _l('login_as_client'); ?>
-            </a>
+            <div class="uscap-customer-action">
+                <a href="<?= admin_url('clients/login_as_client/' . $client->userid); ?>"
+                    target="_blank"
+                    class="btn btn-default btn-block">
+                    <i class="fa-regular fa-user tw-mr-1"></i>
+                    <?= _l('login_as_client'); ?>
+                </a>
+            </div>
             <?php } ?>
 
-            <a href="<?= admin_url('clients/client/' . $client->userid . '?group=contacts'); ?>"
-                class="btn btn-default btn-block">
-                <i class="fa-regular fa-address-book tw-mr-1"></i>
-                Manage Contact Profiles
-            </a>
+            <div class="uscap-customer-action">
+                <a href="<?= admin_url('clients/client/' . $client->userid . '?group=contacts'); ?>"
+                    class="btn btn-default btn-block">
+                    <i class="fa-regular fa-address-book tw-mr-1"></i>
+                    Manage Contact Profiles
+                </a>
+            </div>
 
             <?php if (staff_can('edit', 'customers') || is_admin()) { ?>
                 <?php if ((int) $client->active === 1) { ?>
-                <a href="<?= admin_url('clients/mark_as_inactive/' . $client->userid); ?>"
-                    class="btn btn-warning btn-block _delete">
-                    <i class="fa fa-ban tw-mr-1"></i>
-                    Deactivate Customer Account
-                </a>
+                <div class="uscap-customer-action">
+                    <a href="<?= admin_url('clients/mark_as_inactive/' . $client->userid); ?>"
+                        class="btn btn-warning btn-block _delete">
+                        <i class="fa fa-ban tw-mr-1"></i>
+                        Deactivate Customer Account
+                    </a>
+                </div>
                 <?php } else { ?>
-                <a href="<?= admin_url('clients/mark_as_active/' . $client->userid); ?>"
-                    class="btn btn-success btn-block">
-                    <i class="fa fa-check tw-mr-1"></i>
-                    Reactivate Customer Account
-                </a>
+                <div class="uscap-customer-action">
+                    <a href="<?= admin_url('clients/mark_as_active/' . $client->userid); ?>"
+                        class="btn btn-success btn-block">
+                        <i class="fa fa-check tw-mr-1"></i>
+                        Reactivate Customer Account
+                    </a>
+                </div>
                 <?php } ?>
             <?php } ?>
 
             <?php if (staff_can('delete', 'customers')) { ?>
-            <a href="<?= admin_url('clients/delete/' . $client->userid); ?>"
-                class="btn btn-danger btn-block _delete">
-                <i class="fa-regular fa-trash-can tw-mr-1"></i>
-                Permanently Delete Customer
-            </a>
+            <div class="uscap-customer-action">
+                <a href="<?= admin_url('clients/delete/' . $client->userid); ?>"
+                    class="btn btn-danger btn-block _delete">
+                    <i class="fa-regular fa-trash-can tw-mr-1"></i>
+                    Permanently Delete Customer
+                </a>
+            </div>
             <?php } ?>
         </div>
 

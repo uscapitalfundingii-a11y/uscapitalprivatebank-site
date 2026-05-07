@@ -1,0 +1,8 @@
+Hello {contact_firstname} {contact_lastname}
+
+We have prepared the subscription {subscription_name} for your company.
+
+Click here to review the subscription and subscribe.
+
+Best Regards,
+{email_signature}

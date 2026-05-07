@@ -1,0 +1,11 @@
+Hi {staff_firstname}
+
+You have been added as follower on the following task:
+
+Name: {task_name}
+Start date: {task_startdate}
+
+You can view the task on the following link: {task_name}
+
+Kind Regards,
+{email_signature}

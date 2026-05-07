@@ -1,0 +1,8 @@
+Hello {proposal_proposal_to}
+
+The proposal {proposal_number} will expire on {proposal_open_till}
+
+You can view the proposal on the following link: {proposal_number}
+
+Kind Regards,
+{email_signature}

@@ -1,0 +1,8 @@
+Hello,
+
+Your request has been received.
+
+This email is to let you know that we received your request and we will get back to you as soon as possible with more information.
+
+Best Regards,
+{email_signature}

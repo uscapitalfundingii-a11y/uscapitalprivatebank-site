@@ -1,0 +1,10 @@
+Hello {staff_firstname}
+
+You have a new reminder linked to {staff_reminder_relation_name}!
+
+Reminder description:
+{staff_reminder_description}
+
+Click here to view {staff_reminder_relation_name}
+
+Best Regards

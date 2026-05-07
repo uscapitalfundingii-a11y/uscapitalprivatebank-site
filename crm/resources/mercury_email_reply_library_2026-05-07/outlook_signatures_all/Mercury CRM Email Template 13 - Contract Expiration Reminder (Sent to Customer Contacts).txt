@@ -1,0 +1,13 @@
+Dear {client_company}
+
+This is a reminder that the following contract will expire soon:
+
+Subject: {contract_subject}
+Description: {contract_description}
+Date Start: {contract_datestart}
+Date End: {contract_dateend}
+
+Please contact us for more information.
+
+Kind Regards,
+{email_signature}

@@ -1301,6 +1301,43 @@ if (!chatStaffCanDelete()) { ?>
             });
         });
 
+        function uscapRepairChatAnnouncementPickers(context)
+        {
+            var pickerContext = context || document;
+
+            $(pickerContext).find("#members, #clients").each(function () {
+                var $picker = $(this);
+
+                if (!$picker.length || !$picker.selectpicker) {
+                    return;
+                }
+
+                $picker.selectpicker("destroy");
+                $picker.selectpicker({
+                    actionsBox: true,
+                    selectAllText: "Select all",
+                    deselectAllText: "Deselect all",
+                    enableFiltering: true,
+                    enableCaseInsensitiveFiltering: true,
+                    selectedTextFormat: "count > 2",
+                    width: "100%",
+                    buttonWidth: "100%",
+                    size: 12
+                });
+                $picker.selectpicker("refresh");
+            });
+        }
+
+        $(document).on("shown.bs.modal", "#_staffAnnouncementModal, #_clientsAnnouncementModal", function () {
+            uscapRepairChatAnnouncementPickers(this);
+        });
+
+        $(document).ajaxComplete(function () {
+            setTimeout(function () {
+                uscapRepairChatAnnouncementPickers(document);
+            }, 50);
+        });
+
 
         /*---------------* Some cached variables for group chat  *---------------*/
         var chat_group_messages = $("#frame .content .group_messages .chat_group_messages");

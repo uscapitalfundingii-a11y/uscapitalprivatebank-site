@@ -1,0 +1,7 @@
+Hi!
+
+New file(s) is uploaded into the customer ({client_company}) profile by {contact_firstname}
+
+You can check the uploaded files into the admin area by clicking here or at the following link: {customer_profile_files_admin_link}
+
+{email_signature}

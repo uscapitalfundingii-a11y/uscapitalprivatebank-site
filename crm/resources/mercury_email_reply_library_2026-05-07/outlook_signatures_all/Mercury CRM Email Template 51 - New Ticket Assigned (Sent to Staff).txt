@@ -1,0 +1,15 @@
+Hi
+
+A new support ticket has been assigned to you.
+
+Subject: {ticket_subject}
+Department: {ticket_department}
+Priority: {ticket_priority}
+
+Ticket message:
+{ticket_message}
+
+You can view the ticket on the following link: #{ticket_id}
+
+Kind Regards,
+{email_signature}

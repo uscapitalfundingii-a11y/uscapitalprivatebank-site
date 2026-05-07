@@ -1,0 +1,5 @@
+Hi {staff_firstname}!
+
+This is a reminder for event {event_title} scheduled at {event_start_date}.
+
+Regards.

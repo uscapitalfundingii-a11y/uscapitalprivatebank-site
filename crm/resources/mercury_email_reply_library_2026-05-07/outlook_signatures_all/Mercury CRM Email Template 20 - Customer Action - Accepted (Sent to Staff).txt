@@ -1,0 +1,12 @@
+Hi
+
+Client {proposal_proposal_to} accepted the following proposal:
+
+Number: {proposal_number}
+Subject: {proposal_subject}
+Total: {proposal_total}
+
+View the proposal on the following link: {proposal_number}
+
+Kind Regards,
+{email_signature}

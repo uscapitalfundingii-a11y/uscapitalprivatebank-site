@@ -1,0 +1,12 @@
+Hello [Client Name],
+
+Thank you for your message. The secure client portal is available here:
+
+https://uscapitalprivatebank.com/crm/
+
+If you already have an account, please log in with your registered email address. If you are new, please register and then open a support request so the correct department can assist you.
+
+If you are having trouble logging in, please use the password reset option on the portal and let us know if the issue continues.
+
+Thank you,
+US Capital Private Bank Client Relations

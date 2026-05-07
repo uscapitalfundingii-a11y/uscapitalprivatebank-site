@@ -1,0 +1,10 @@
+Hi {contact_firstname} {contact_lastname}
+
+Ticket {ticket_subject} has been auto close due to inactivity.
+
+Ticket #: {ticket_id}
+Department: {ticket_department}
+Priority: {ticket_priority}
+
+Kind Regards,
+{email_signature}

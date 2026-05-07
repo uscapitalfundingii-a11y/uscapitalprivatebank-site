@@ -1,0 +1,11 @@
+# USCPB Safe - Indemnity Commitment Document
+
+Hi [Client Name],
+
+An indemnity or commitment document may be requested when a transaction involves collateral, guarantees, bank instruments, or structured transaction assets. Please complete the requested document and upload it through the secure portal for review.
+
+Portal:
+https://uscapitalprivatebank.com/crm/
+
+The team cannot interpret legal obligations or confirm transaction acceptance in chat.
+

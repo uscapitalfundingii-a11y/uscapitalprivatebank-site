@@ -1,0 +1,12 @@
+Hello {contact_firstname} {contact_lastname}
+Unfortunately, your most recent invoice payment for {subscription_name} was declined.
+
+This could be due to a change in your card number, your card expiring,
+cancellation of your credit card, or the card issuer not recognizing the
+payment and therefore taking action to prevent it.
+
+Please update your payment information as soon as possible by logging in here:
+{crm_url}/login
+
+Best Regards,
+{email_signature}

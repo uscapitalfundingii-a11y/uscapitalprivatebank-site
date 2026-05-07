@@ -1,0 +1,13 @@
+A new support ticket reply from {contact_firstname} {contact_lastname}
+
+Subject: {ticket_subject}
+Department: {ticket_department}
+Priority: {ticket_priority}
+
+Ticket message:
+{ticket_message}
+
+You can view the ticket on the following link: #{ticket_id}
+
+Kind Regards,
+{email_signature}

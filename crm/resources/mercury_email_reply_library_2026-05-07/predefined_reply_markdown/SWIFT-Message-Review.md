@@ -1,0 +1,10 @@
+# USCPB Safe - SWIFT Message Review
+
+Hello <Client Name>,
+
+For SWIFT-related matters, please upload the relevant documents through the secure portal and open a ticket. The operations team can review the message type, parties, purpose, and supporting documentation through the proper verification process.
+
+Portal:
+https://uscapitalprivatebank.com/crm/
+
+Live chat cannot confirm SWIFT validity, funding, settlement, wire movement, or instrument issuance.

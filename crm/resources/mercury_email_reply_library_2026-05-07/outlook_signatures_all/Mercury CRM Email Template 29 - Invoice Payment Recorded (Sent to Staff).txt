@@ -1,0 +1,8 @@
+Hi
+
+Customer recorded payment for invoice # {invoice_number}
+
+You can view the invoice on the following link: {invoice_number}
+
+Kind Regards,
+{email_signature}

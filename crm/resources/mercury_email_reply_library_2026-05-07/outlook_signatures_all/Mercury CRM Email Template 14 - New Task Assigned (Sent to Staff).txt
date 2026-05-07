@@ -1,0 +1,13 @@
+Dear {staff_firstname}
+
+You have been assigned to a new task:
+
+Name: {task_name}
+Start Date: {task_startdate}
+Due date: {task_duedate}
+Priority: {task_priority}
+
+You can view the task on the following link: {task_name}
+
+Kind Regards,
+{email_signature}

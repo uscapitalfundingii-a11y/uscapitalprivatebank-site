@@ -1,0 +1,168 @@
+{
+  "created": "2026-05-07T01:17:03.555807",
+  "source": "D:\\GithubRepos\\Sales-AI-Knowledgebase\\05-Predefined-Replies",
+  "items": [
+    {
+      "id": 119,
+      "name": "USCPB Safe - Delayed Response And Resume",
+      "signature_name": "USCPB Safe CRM 119 - Delayed Response And Resume",
+      "source_file": "D:\\GithubRepos\\Sales-AI-Knowledgebase\\05-Predefined-Replies\\Delayed-Response-And-Resume.md",
+      "risk_level": "Low",
+      "use_case": "Use when a client waited for a reply and we need to acknowledge the delay while moving the matter forward.",
+      "client_facing_reply": "Hello [Client Name],\n\nThank you for your patience. I apologize for the delay in getting back to you.\n\nI am reviewing your message now and will make sure it is routed to the correct department for the next step. To keep the request properly tracked, please continue this matter through the secure client portal when possible:\n\nhttps://uscapitalprivatebank.com/crm/\n\nIf there is a specific document, question, or deadline you want us to prioritize, please reply with that detail and we will attach it to the request.\n\nThank you,\nUS Capital Private Bank Client Relations"
+    },
+    {
+      "id": 120,
+      "name": "USCPB Safe - Short Welcome And CRM Portal",
+      "signature_name": "USCPB Safe CRM 120 - Short Welcome And CRM Portal",
+      "source_file": "D:\\GithubRepos\\Sales-AI-Knowledgebase\\05-Predefined-Replies\\Short-Welcome-And-CRM-Portal.md",
+      "risk_level": "Low",
+      "use_case": "Use for new clients or prospects who need the correct CRM portal link and a short onboarding direction.",
+      "client_facing_reply": "Hello [Client Name],\n\nThank you for reaching out. [Acknowledge the client's actual request in one clear sentence.]\n\nWelcome to U.S. Capital Private Bank. To keep onboarding, document uploads, support requests, and account-service communication properly tracked, please use the secure client portal:\n\nhttps://uscapitalprivatebank.com/crm/\n\nOnce your request is submitted through the portal, our team can route it to the appropriate department and follow up with the next step.\n\nThank you,\nUS Capital Private Bank Client Relations"
+    },
+    {
+      "id": 121,
+      "name": "USCPB Safe - Pricing Guide Request",
+      "signature_name": "USCPB Safe CRM 121 - Pricing Guide Request",
+      "source_file": "D:\\GithubRepos\\Sales-AI-Knowledgebase\\05-Predefined-Replies\\Pricing-Guide-Request.md",
+      "risk_level": "Medium",
+      "use_case": "Use when a client asks how much services cost or requests the onboarding/pricing guide.",
+      "client_facing_reply": "Hello [Client Name],\n\nThank you for your message. The current onboarding and pricing guide can be reviewed here:\n\nhttps://www.uscapitalprivatebank.com/crm/verify/viewfile.php?file=doc-20260414-8e7c7a96.pdf\n\nThe guide is intended to help you understand available service categories and onboarding requirements. Final routing and next steps depend on the details of your request, required documentation, and internal review.\n\nIf you would like our team to review your specific situation, please submit the request through the secure client portal:\n\nhttps://uscapitalprivatebank.com/crm/\n\nThank you,\nUS Capital Private Bank Client Relations"
+    },
+    {
+      "id": 122,
+      "name": "USCPB Safe - KYC And Document Upload Help",
+      "signature_name": "USCPB Safe CRM 122 - KYC And Document Upload Help",
+      "source_file": "D:\\GithubRepos\\Sales-AI-Knowledgebase\\05-Predefined-Replies\\KYC-And-Document-Upload-Help.md",
+      "risk_level": "Medium",
+      "use_case": "Use when the client needs help uploading KYC, business, identity, or supporting documents.",
+      "client_facing_reply": "Hello [Client Name],\n\nThank you for your message. For security and proper tracking, please upload KYC and supporting documents through the secure client portal rather than ordinary email:\n\nhttps://uscapitalprivatebank.com/crm/\n\nAfter logging in, open or update your support request and attach the documents there. Please make sure the files are clear, complete, and match the name or organization connected to the request.\n\nOnce uploaded, our team can review the submission and route it to the appropriate department.\n\nThank you,\nUS Capital Private Bank Client Relations"
+    },
+    {
+      "id": 123,
+      "name": "USCPB Safe - Profile Photo Upload Issue",
+      "signature_name": "USCPB Safe CRM 123 - Profile Photo Upload Issue",
+      "source_file": "D:\\GithubRepos\\Sales-AI-Knowledgebase\\05-Predefined-Replies\\Profile-Photo-Upload-Issue.md",
+      "risk_level": "Low",
+      "use_case": "Use when a client or staff member cannot find the photo upload/browse button or needs help changing a profile photo.",
+      "client_facing_reply": "Hello [Client Name],\n\nThank you for letting us know. We are checking the profile photo upload option so clients and staff can update their photo properly.\n\nPlease log in to the secure portal, open your profile page, and check whether the upload or browse option appears near the profile image area:\n\nhttps://uscapitalprivatebank.com/crm/\n\nIf the button still does not appear, please reply with your device type, browser, and a screenshot of the profile section so our CRM team can troubleshoot it.\n\nThank you,\nUS Capital Private Bank Client Relations"
+    },
+    {
+      "id": 124,
+      "name": "USCPB Safe - CRM Login Or Portal Access Help",
+      "signature_name": "USCPB Safe CRM 124 - CRM Login Or Portal Access Help",
+      "source_file": "D:\\GithubRepos\\Sales-AI-Knowledgebase\\05-Predefined-Replies\\CRM-Login-Or-Portal-Access-Help.md",
+      "risk_level": "Low",
+      "use_case": "Use when a client cannot find the portal, needs the correct CRM link, or needs general login guidance.",
+      "client_facing_reply": "Hello [Client Name],\n\nThank you for your message. The secure client portal is available here:\n\nhttps://uscapitalprivatebank.com/crm/\n\nIf you already have an account, please log in with your registered email address. If you are new, please register and then open a support request so the correct department can assist you.\n\nIf you are having trouble logging in, please use the password reset option on the portal and let us know if the issue continues.\n\nThank you,\nUS Capital Private Bank Client Relations"
+    },
+    {
+      "id": 125,
+      "name": "USCPB Safe - Broker Or Intermediary Routing",
+      "signature_name": "USCPB Safe CRM 125 - Broker Or Intermediary Routing",
+      "source_file": "D:\\GithubRepos\\Sales-AI-Knowledgebase\\05-Predefined-Replies\\Broker-Or-Intermediary-Routing.md",
+      "risk_level": "Medium",
+      "use_case": "Use when a broker, intermediary, introducer, mandate, advisor, or third-party representative contacts us about a client or transaction.",
+      "client_facing_reply": "Hello [Client Name],\n\nThank you for your message. If you are acting on behalf of a client or principal, please provide documentation showing your authority to communicate for that party.\n\nFor proper routing, please submit the request and supporting authorization through the secure client portal:\n\nhttps://uscapitalprivatebank.com/crm/\n\nOnce the authorization and request details are received, our team can determine the appropriate department for review.\n\nThank you,\nUS Capital Private Bank Client Relations"
+    },
+    {
+      "id": 126,
+      "name": "USCPB Safe - High Value Instrument Or Transaction Intake",
+      "signature_name": "USCPB Safe CRM 126 - High Value Instrument Or Transaction Intake",
+      "source_file": "D:\\GithubRepos\\Sales-AI-Knowledgebase\\05-Predefined-Replies\\High-Value-Instrument-Or-Transaction-Intake.md",
+      "risk_level": "High",
+      "use_case": "Use when someone asks about SBLC, BG, LC, RWA, POF, BCL, monetization, large transactions, settlement, BTC/crypto purchase, escrow, or similar high-value matters.",
+      "client_facing_reply": "Hello [Client Name],\n\nThank you for the information. Because this appears to involve a high-value or specialized transaction, our team will need to review the details through the proper intake process.\n\nPlease submit the request through the secure client portal and include the relevant supporting documents, parties involved, transaction objective, timeline, and any authorization documents if you are representing another party:\n\nhttps://uscapitalprivatebank.com/crm/\n\nWe can acknowledge receipt and route the matter for review, but we cannot confirm availability, approval, settlement, pricing, issuance, monetization, or transaction outcome by ordinary email.\n\nThank you,\nUS Capital Private Bank Client Relations"
+    },
+    {
+      "id": 127,
+      "name": "USCPB Safe - Restricted Deposit Wire Or Balance Question",
+      "signature_name": "USCPB Safe CRM 127 - Restricted Deposit Wire Or Balance Question",
+      "source_file": "D:\\GithubRepos\\Sales-AI-Knowledgebase\\05-Predefined-Replies\\Restricted-Deposit-Wire-Or-Balance-Question.md",
+      "risk_level": "High",
+      "use_case": "Use when someone asks about deposits, wires, balances, ledger entries, account funds, transaction posting, or money movement.",
+      "client_facing_reply": "Hello [Client Name],\n\nThank you for your message. For security reasons, deposit, wire, balance, and account-transaction matters must be handled through the secure client portal and reviewed by the appropriate department.\n\nPlease submit the request through the portal and include any non-sensitive reference details that help identify the matter:\n\nhttps://uscapitalprivatebank.com/crm/\n\nWe cannot provide wire instructions, confirm balances, approve deposits, or verify transaction outcomes through ordinary email.\n\nThank you,\nUS Capital Private Bank Client Relations"
+    },
+    {
+      "id": 128,
+      "name": "USCPB Safe - Suspicious Email Or Link Security Escalation",
+      "signature_name": "USCPB Safe CRM 128 - Suspicious Email Or Link Security Escalation",
+      "source_file": "D:\\GithubRepos\\Sales-AI-Knowledgebase\\05-Predefined-Replies\\Suspicious-Email-Or-Link-Security-Escalation.md",
+      "risk_level": "High",
+      "use_case": "Use when a client reports a suspicious email, link, attachment, payment change, login alert, or possible impersonation.",
+      "client_facing_reply": "Hello [Client Name],\n\nThank you for reporting this. Please do not click any suspicious links, open unexpected attachments, or share passwords, codes, recovery phrases, payment details, or account credentials.\n\nOur security team should review the message before any further action is taken. Please forward only the suspicious message details or screenshot through the secure support portal if possible:\n\nhttps://uscapitalprivatebank.com/crm/\n\nIf you believe an account or device may already be compromised, please tell us immediately and change your password from a trusted device.\n\nThank you,\nUS Capital Private Bank Client Relations"
+    },
+    {
+      "id": 129,
+      "name": "USCPB Safe - Bounced Email Alternate Email Request",
+      "signature_name": "USCPB Safe CRM 129 - Bounced Email Alternate Email Request",
+      "source_file": "D:\\GithubRepos\\Sales-AI-Knowledgebase\\05-Predefined-Replies\\Bounced-Email-Alternate-Email-Request.md",
+      "risk_level": "Low",
+      "use_case": "Use when an email bounced and Mercury needs a valid alternate email or confirmation.",
+      "client_facing_reply": "Hello [Client Name],\n\nWe attempted to reach you by email, but the message may not have delivered successfully.\n\nPlease confirm your best email address for future communication. If you use an alternate email, you may send it here or update it through the secure client portal:\n\nhttps://uscapitalprivatebank.com/crm/\n\nThis helps us keep your record accurate and avoid missed support or onboarding messages.\n\nThank you,\nUS Capital Private Bank Client Relations"
+    },
+    {
+      "id": 130,
+      "name": "USCPB Safe - Consultation Scheduling No Approval Implied",
+      "signature_name": "USCPB Safe CRM 130 - Consultation Scheduling No Approval Implied",
+      "source_file": "D:\\GithubRepos\\Sales-AI-Knowledgebase\\05-Predefined-Replies\\Consultation-Scheduling-No-Approval-Implied.md",
+      "risk_level": "Medium",
+      "use_case": "Use when a client asks for a call, meeting, consultation, or review appointment.",
+      "client_facing_reply": "Hello [Client Name],\n\nThank you for your message. We can help route your request for review and scheduling.\n\nPlease submit your request through the secure client portal and include the topic you would like to discuss, your preferred time window, and any relevant documents:\n\nhttps://uscapitalprivatebank.com/crm/\n\nScheduling a consultation allows the team to review the information more efficiently, but it does not imply approval, eligibility, funding, account action, or any final decision.\n\nThank you,\nUS Capital Private Bank Client Relations"
+    },
+    {
+      "id": 131,
+      "name": "USCPB Safe - Still Interested Follow Up",
+      "signature_name": "USCPB Safe CRM 131 - Still Interested Follow Up",
+      "source_file": "D:\\GithubRepos\\Sales-AI-Knowledgebase\\05-Predefined-Replies\\Still-Interested-Follow-Up.md",
+      "risk_level": "Low",
+      "use_case": "Use for a gentle follow-up when a client has not responded and there is no open sensitive issue.",
+      "client_facing_reply": "Hello [Client Name],\n\nI wanted to follow up and see whether you would still like assistance with your U.S. Capital Private Bank request.\n\nIf you would like to continue, please reply with the best next step or submit/update your request through the secure client portal:\n\nhttps://uscapitalprivatebank.com/crm/\n\nOur team can then route the matter to the correct department and help keep the process moving.\n\nThank you,\nUS Capital Private Bank Client Relations"
+    },
+    {
+      "id": 132,
+      "name": "USCPB Safe - Trade Platform Registration Invitation",
+      "signature_name": "USCPB Safe CRM 132 - Trade Platform Registration Invitation",
+      "source_file": "D:\\GithubRepos\\Sales-AI-Knowledgebase\\05-Predefined-Replies\\Trade-Platform-Registration-Invitation.md",
+      "risk_level": "Medium",
+      "use_case": "Use when inviting interested clients to register for the trade platform or related services.",
+      "client_facing_reply": "Hello [Client Name],\n\nThank you for your interest. U.S. Capital is preparing expanded digital access across banking support, client services, trading platform registration, and related project channels.\n\nIf you would like to be routed for trade platform onboarding or receive guidance on the available client portals, please submit your request through the secure client portal:\n\nhttps://uscapitalprivatebank.com/crm/\n\nOur team can help direct you to the correct registration path and support channel. Platform access, account setup, and service availability remain subject to the applicable review and onboarding requirements.\n\nThank you,\nUS Capital Private Bank Client Relations"
+    },
+    {
+      "id": 133,
+      "name": "USCPB Safe - Customer Service Completion Acknowledgement",
+      "signature_name": "USCPB Safe CRM 133 - Customer Service Completion Acknowledgement",
+      "source_file": "D:\\GithubRepos\\Sales-AI-Knowledgebase\\05-Predefined-Replies\\Customer-Service-Completion-Acknowledgement.md",
+      "risk_level": "Low",
+      "use_case": "Use when acknowledging that a support item was received, completed, updated, or routed.",
+      "client_facing_reply": "Hello [Client Name],\n\nThank you for the update. We have recorded your request and routed it to the appropriate support area.\n\nIf there is anything else you would like added to the same matter, please reply in the same thread or update the request through the secure client portal:\n\nhttps://uscapitalprivatebank.com/crm/\n\nKeeping the information in one place helps our team respond faster and avoid duplicate handling.\n\nThank you,\nUS Capital Private Bank Client Relations"
+    },
+    {
+      "id": 134,
+      "name": "USCPB Safe - Social Message To CRM Handoff",
+      "signature_name": "USCPB Safe CRM 134 - Social Message To CRM Handoff",
+      "source_file": "D:\\GithubRepos\\Sales-AI-Knowledgebase\\05-Predefined-Replies\\Social-Message-To-CRM-Handoff.md",
+      "risk_level": "Medium",
+      "use_case": "Use when a client contacts through social messaging and the issue needs formal CRM tracking.",
+      "client_facing_reply": "Hello [Client Name],\n\nThank you for reaching out. We can assist, but to keep this properly tracked and routed to the correct department, please submit or confirm the request through the secure client portal:\n\nhttps://uscapitalprivatebank.com/crm/\n\nYou may continue to message us here for general assistance, but documents, account-service requests, transaction questions, and formal support items should be handled through the portal.\n\nThank you,\nUS Capital Private Bank Client Relations"
+    },
+    {
+      "id": 135,
+      "name": "USCPB Safe - Restricted Legal Financial Advisory Question",
+      "signature_name": "USCPB Safe CRM 135 - Restricted Legal Financial Advisory Question",
+      "source_file": "D:\\GithubRepos\\Sales-AI-Knowledgebase\\05-Predefined-Replies\\Restricted-Legal-Financial-Advisory-Question.md",
+      "risk_level": "High",
+      "use_case": "Use when a client asks for legal, tax, investment, fiduciary, banking authority, underwriting, compliance, or decision advice that Mercury cannot provide.",
+      "client_facing_reply": "Hello [Client Name],\n\nThank you for your message. I can help route your request to the correct department, but I cannot provide legal, tax, investment, fiduciary, underwriting, banking-decision, or compliance advice by email.\n\nPlease submit the details through the secure client portal so the matter can be reviewed and routed appropriately:\n\nhttps://uscapitalprivatebank.com/crm/\n\nIf the matter is time-sensitive, please include the deadline and the specific question you need reviewed.\n\nThank you,\nUS Capital Private Bank Client Relations"
+    },
+    {
+      "id": 136,
+      "name": "USCPB Safe - Transaction Audit Or Balance Origin Question",
+      "signature_name": "USCPB Safe CRM 136 - Transaction Audit Or Balance Origin Question",
+      "source_file": "D:\\GithubRepos\\Sales-AI-Knowledgebase\\05-Predefined-Replies\\Transaction-Audit-Or-Balance-Origin-Question.md",
+      "risk_level": "High",
+      "use_case": "Use when a client or staff member asks where a balance, ledger transfer, deposit, account credit, or transaction originated.",
+      "client_facing_reply": "Hello [Client Name],\n\nThank you for your message. Account balance, ledger-transfer, deposit-origin, and transaction-audit questions must be reviewed through the secure support workflow.\n\nPlease submit the request through the client portal and include any reference number, date, account name, or transaction description available to you:\n\nhttps://uscapitalprivatebank.com/crm/\n\nFor security and audit reasons, we cannot confirm sensitive account or transaction details through ordinary email until the request is reviewed through the proper channel.\n\nThank you,\nUS Capital Private Bank Client Relations"
+    }
+  ]
+}

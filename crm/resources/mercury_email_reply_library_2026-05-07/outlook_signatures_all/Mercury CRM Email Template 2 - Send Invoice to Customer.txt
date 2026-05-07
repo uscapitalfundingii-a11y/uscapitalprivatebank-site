@@ -1,0 +1,12 @@
+Dear {contact_firstname} {contact_lastname}
+
+We have prepared the following invoice for you: # {invoice_number}
+
+Invoice status: {invoice_status}
+
+You can view the invoice on the following link: {invoice_number}
+
+Please contact us for more information.
+
+Kind Regards,
+{email_signature}

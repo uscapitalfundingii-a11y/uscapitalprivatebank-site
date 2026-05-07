@@ -1,0 +1,5 @@
+Hello {staff_firstname} {staff_lastname}
+
+Data removal has been requested by {contact_firstname} {contact_lastname}
+
+You can review this request and take proper actions directly from the admin area.

@@ -1,0 +1,8 @@
+Hello {contact_firstname} {contact_lastname}
+
+The estimate with # {estimate_number} will expire on {estimate_expirydate}
+
+You can view the estimate on the following link: {estimate_number}
+
+Kind Regards,
+{email_signature}

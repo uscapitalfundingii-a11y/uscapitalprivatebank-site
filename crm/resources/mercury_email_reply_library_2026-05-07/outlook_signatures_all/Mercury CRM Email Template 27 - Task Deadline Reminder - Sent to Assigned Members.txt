@@ -1,0 +1,11 @@
+Hi {staff_firstname} {staff_lastname}
+
+This is an automated email from {companyname}.
+
+The task {task_name} deadline is on {task_duedate}.
+This task is still not finished.
+
+You can view the task on the following link: {task_name}
+
+Kind Regards,
+{email_signature}

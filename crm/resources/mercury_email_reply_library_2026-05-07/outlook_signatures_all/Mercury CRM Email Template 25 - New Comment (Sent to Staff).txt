@@ -1,0 +1,7 @@
+Hi
+
+A new comment has been made to the proposal {proposal_subject}
+
+You can view and reply to the comment on the following link: {proposal_number} or from the admin area.
+
+{email_signature}

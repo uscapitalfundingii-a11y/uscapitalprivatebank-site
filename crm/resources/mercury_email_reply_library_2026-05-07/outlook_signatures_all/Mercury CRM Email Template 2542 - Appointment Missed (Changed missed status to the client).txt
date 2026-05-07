@@ -1,0 +1,5 @@
+Hi {client_company}!
+
+This is a notification of your appointment {treatment} which was scheduled at {appointment_date} has {status} by you.
+
+Regards.

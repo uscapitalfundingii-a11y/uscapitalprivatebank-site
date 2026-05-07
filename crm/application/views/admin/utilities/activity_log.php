@@ -1,7 +1,52 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <?php init_head(); ?>
+<style>
+    .uscap-activity-log-page .panel_s,
+    .uscap-activity-log-page .panel-table-full {
+        max-width: 100%;
+    }
+
+    .uscap-activity-log-page .panel-table-full {
+        overflow-x: auto;
+        overflow-y: visible;
+    }
+
+    .uscap-activity-log-page .dataTables_wrapper,
+    .uscap-activity-log-page .dataTables_scroll,
+    .uscap-activity-log-page .dataTables_scrollBody {
+        max-width: 100%;
+    }
+
+    .uscap-activity-log-page table.table-activity-log {
+        table-layout: fixed;
+        width: 100% !important;
+    }
+
+    .uscap-activity-log-page table.table-activity-log > thead > tr > th:first-child,
+    .uscap-activity-log-page table.table-activity-log > tbody > tr > td:first-child {
+        max-width: 760px;
+        overflow: visible;
+        overflow-wrap: anywhere;
+        text-overflow: clip;
+        vertical-align: top;
+        white-space: normal;
+        width: auto;
+    }
+
+    .uscap-activity-log-page table.table-activity-log > thead > tr > th:nth-child(2),
+    .uscap-activity-log-page table.table-activity-log > tbody > tr > td:nth-child(2) {
+        white-space: nowrap;
+        width: 145px !important;
+    }
+
+    .uscap-activity-log-page table.table-activity-log > thead > tr > th:nth-child(3),
+    .uscap-activity-log-page table.table-activity-log > tbody > tr > td:nth-child(3) {
+        white-space: nowrap;
+        width: 190px !important;
+    }
+</style>
 <div id="wrapper">
-    <div class="content">
+    <div class="content uscap-activity-log-page">
         <div class="row">
             <div class="col-md-12">
                 <div class="row">

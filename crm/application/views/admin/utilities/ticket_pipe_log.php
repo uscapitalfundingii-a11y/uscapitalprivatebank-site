@@ -1,7 +1,70 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <?php init_head(); ?>
+<style>
+    .uscap-ticket-pipe-log-page .panel_s,
+    .uscap-ticket-pipe-log-page .panel-table-full {
+        max-width: 100%;
+    }
+
+    .uscap-ticket-pipe-log-page .panel-table-full {
+        overflow-x: auto;
+        overflow-y: visible;
+    }
+
+    .uscap-ticket-pipe-log-page .dataTables_wrapper,
+    .uscap-ticket-pipe-log-page .dataTables_scroll,
+    .uscap-ticket-pipe-log-page .dataTables_scrollBody {
+        max-width: 100%;
+    }
+
+    .uscap-ticket-pipe-log-page table.table-activity-log {
+        table-layout: fixed;
+        width: 100% !important;
+    }
+
+    .uscap-ticket-pipe-log-page table.table-activity-log > thead > tr > th,
+    .uscap-ticket-pipe-log-page table.table-activity-log > tbody > tr > td {
+        overflow: visible;
+        overflow-wrap: anywhere;
+        text-overflow: clip;
+        vertical-align: top;
+        white-space: normal;
+    }
+
+    .uscap-ticket-pipe-log-page table.table-activity-log > thead > tr > th:nth-child(1),
+    .uscap-ticket-pipe-log-page table.table-activity-log > tbody > tr > td:nth-child(1) {
+        width: 150px !important;
+    }
+
+    .uscap-ticket-pipe-log-page table.table-activity-log > thead > tr > th:nth-child(2),
+    .uscap-ticket-pipe-log-page table.table-activity-log > tbody > tr > td:nth-child(2) {
+        width: 120px !important;
+    }
+
+    .uscap-ticket-pipe-log-page table.table-activity-log > thead > tr > th:nth-child(3),
+    .uscap-ticket-pipe-log-page table.table-activity-log > tbody > tr > td:nth-child(3),
+    .uscap-ticket-pipe-log-page table.table-activity-log > thead > tr > th:nth-child(4),
+    .uscap-ticket-pipe-log-page table.table-activity-log > tbody > tr > td:nth-child(4) {
+        width: 190px !important;
+    }
+
+    .uscap-ticket-pipe-log-page table.table-activity-log > thead > tr > th:nth-child(5),
+    .uscap-ticket-pipe-log-page table.table-activity-log > tbody > tr > td:nth-child(5) {
+        width: 190px !important;
+    }
+
+    .uscap-ticket-pipe-log-page table.table-activity-log > thead > tr > th:nth-child(6),
+    .uscap-ticket-pipe-log-page table.table-activity-log > tbody > tr > td:nth-child(6) {
+        min-width: 320px;
+    }
+
+    .uscap-ticket-pipe-log-page table.table-activity-log > thead > tr > th:nth-child(7),
+    .uscap-ticket-pipe-log-page table.table-activity-log > tbody > tr > td:nth-child(7) {
+        width: 140px !important;
+    }
+</style>
 <div id="wrapper">
-    <div class="content">
+    <div class="content uscap-ticket-pipe-log-page">
         <div class="row">
             <div class="col-md-12">
                 <div class="row">

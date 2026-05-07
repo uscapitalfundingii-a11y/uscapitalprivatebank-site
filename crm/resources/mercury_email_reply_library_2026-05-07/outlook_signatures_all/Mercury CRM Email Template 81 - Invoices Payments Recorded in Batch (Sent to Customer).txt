@@ -1,0 +1,11 @@
+Hello {contact_firstname} {contact_lastname}
+
+Thank you for the payments. Please find the payments details below:
+
+{batch_payments_list}
+
+We are looking forward working with you.
+
+Kind Regards,
+
+{email_signature}

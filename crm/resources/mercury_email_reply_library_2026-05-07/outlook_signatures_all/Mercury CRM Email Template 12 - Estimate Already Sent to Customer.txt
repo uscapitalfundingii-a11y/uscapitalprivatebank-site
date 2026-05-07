@@ -1,0 +1,10 @@
+Dear {contact_firstname} {contact_lastname}
+
+Thank you for your estimate request.
+
+You can view the estimate on the following link: {estimate_number}
+
+Please contact us for more information.
+
+Kind Regards,
+{email_signature}

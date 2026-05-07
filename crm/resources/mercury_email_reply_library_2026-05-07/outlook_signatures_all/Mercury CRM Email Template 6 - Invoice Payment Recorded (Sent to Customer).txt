@@ -1,0 +1,18 @@
+Hello {contact_firstname} {contact_lastname}
+
+Thank you for the payment. Find the payment details below:
+
+-------------------------------------------------
+
+Amount: {payment_total}
+Date: {payment_date}
+Invoice number: # {invoice_number}
+
+-------------------------------------------------
+
+You can always view the invoice for this payment at the following link: {invoice_number}
+
+We are looking forward working with you.
+
+Kind Regards,
+{email_signature}

@@ -13,8 +13,6 @@
     </div>
   </div>
 </div>
-</div>
-</div>
 <link rel="stylesheet" type="text/css" href="<?php echo base_url('assets/plugins/elFinder/themes/Material/css/theme-gray.css?v='.get_app_version()); ?>">
 <?php init_tail(); ?>
 <script src="//cdnjs.cloudflare.com/ajax/libs/require.js/2.3.2/require.min.js"></script>

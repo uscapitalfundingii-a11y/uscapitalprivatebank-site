@@ -29,7 +29,16 @@ foreach ($rResult as $aRow) {
         if ($aColumns[$i] == 'date') {
             $_data = e(_dt($_data));
         } elseif ($aColumns[$i] == 'message') {
-            $_data = mb_substr($_data, 0, 800);
+            $_data = html_entity_decode((string) $_data, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+            $_data = strip_tags($_data);
+            $_data = preg_replace('/\s+/u', ' ', $_data);
+            $_data = trim($_data);
+            if (mb_strlen($_data) > 700) {
+                $_data = mb_substr($_data, 0, 700) . '...';
+            }
+            $_data = e($_data);
+        } else {
+            $_data = e($_data);
         }
         $row[] = $_data;
     }

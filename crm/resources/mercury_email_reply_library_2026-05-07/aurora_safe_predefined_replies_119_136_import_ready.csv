@@ -1,0 +1,217 @@
+id,name,signature_name,source_file,risk_level,use_case,client_facing_reply
+119,USCPB Safe - Delayed Response And Resume,USCPB Safe CRM 119 - Delayed Response And Resume,D:\GithubRepos\Sales-AI-Knowledgebase\05-Predefined-Replies\Delayed-Response-And-Resume.md,Low,Use when a client waited for a reply and we need to acknowledge the delay while moving the matter forward.,"Hello [Client Name],
+
+Thank you for your patience. I apologize for the delay in getting back to you.
+
+I am reviewing your message now and will make sure it is routed to the correct department for the next step. To keep the request properly tracked, please continue this matter through the secure client portal when possible:
+
+https://uscapitalprivatebank.com/crm/
+
+If there is a specific document, question, or deadline you want us to prioritize, please reply with that detail and we will attach it to the request.
+
+Thank you,
+US Capital Private Bank Client Relations"
+120,USCPB Safe - Short Welcome And CRM Portal,USCPB Safe CRM 120 - Short Welcome And CRM Portal,D:\GithubRepos\Sales-AI-Knowledgebase\05-Predefined-Replies\Short-Welcome-And-CRM-Portal.md,Low,Use for new clients or prospects who need the correct CRM portal link and a short onboarding direction.,"Hello [Client Name],
+
+Thank you for reaching out. [Acknowledge the client's actual request in one clear sentence.]
+
+Welcome to U.S. Capital Private Bank. To keep onboarding, document uploads, support requests, and account-service communication properly tracked, please use the secure client portal:
+
+https://uscapitalprivatebank.com/crm/
+
+Once your request is submitted through the portal, our team can route it to the appropriate department and follow up with the next step.
+
+Thank you,
+US Capital Private Bank Client Relations"
+121,USCPB Safe - Pricing Guide Request,USCPB Safe CRM 121 - Pricing Guide Request,D:\GithubRepos\Sales-AI-Knowledgebase\05-Predefined-Replies\Pricing-Guide-Request.md,Medium,Use when a client asks how much services cost or requests the onboarding/pricing guide.,"Hello [Client Name],
+
+Thank you for your message. The current onboarding and pricing guide can be reviewed here:
+
+https://www.uscapitalprivatebank.com/crm/verify/viewfile.php?file=doc-20260414-8e7c7a96.pdf
+
+The guide is intended to help you understand available service categories and onboarding requirements. Final routing and next steps depend on the details of your request, required documentation, and internal review.
+
+If you would like our team to review your specific situation, please submit the request through the secure client portal:
+
+https://uscapitalprivatebank.com/crm/
+
+Thank you,
+US Capital Private Bank Client Relations"
+122,USCPB Safe - KYC And Document Upload Help,USCPB Safe CRM 122 - KYC And Document Upload Help,D:\GithubRepos\Sales-AI-Knowledgebase\05-Predefined-Replies\KYC-And-Document-Upload-Help.md,Medium,"Use when the client needs help uploading KYC, business, identity, or supporting documents.","Hello [Client Name],
+
+Thank you for your message. For security and proper tracking, please upload KYC and supporting documents through the secure client portal rather than ordinary email:
+
+https://uscapitalprivatebank.com/crm/
+
+After logging in, open or update your support request and attach the documents there. Please make sure the files are clear, complete, and match the name or organization connected to the request.
+
+Once uploaded, our team can review the submission and route it to the appropriate department.
+
+Thank you,
+US Capital Private Bank Client Relations"
+123,USCPB Safe - Profile Photo Upload Issue,USCPB Safe CRM 123 - Profile Photo Upload Issue,D:\GithubRepos\Sales-AI-Knowledgebase\05-Predefined-Replies\Profile-Photo-Upload-Issue.md,Low,Use when a client or staff member cannot find the photo upload/browse button or needs help changing a profile photo.,"Hello [Client Name],
+
+Thank you for letting us know. We are checking the profile photo upload option so clients and staff can update their photo properly.
+
+Please log in to the secure portal, open your profile page, and check whether the upload or browse option appears near the profile image area:
+
+https://uscapitalprivatebank.com/crm/
+
+If the button still does not appear, please reply with your device type, browser, and a screenshot of the profile section so our CRM team can troubleshoot it.
+
+Thank you,
+US Capital Private Bank Client Relations"
+124,USCPB Safe - CRM Login Or Portal Access Help,USCPB Safe CRM 124 - CRM Login Or Portal Access Help,D:\GithubRepos\Sales-AI-Knowledgebase\05-Predefined-Replies\CRM-Login-Or-Portal-Access-Help.md,Low,"Use when a client cannot find the portal, needs the correct CRM link, or needs general login guidance.","Hello [Client Name],
+
+Thank you for your message. The secure client portal is available here:
+
+https://uscapitalprivatebank.com/crm/
+
+If you already have an account, please log in with your registered email address. If you are new, please register and then open a support request so the correct department can assist you.
+
+If you are having trouble logging in, please use the password reset option on the portal and let us know if the issue continues.
+
+Thank you,
+US Capital Private Bank Client Relations"
+125,USCPB Safe - Broker Or Intermediary Routing,USCPB Safe CRM 125 - Broker Or Intermediary Routing,D:\GithubRepos\Sales-AI-Knowledgebase\05-Predefined-Replies\Broker-Or-Intermediary-Routing.md,Medium,"Use when a broker, intermediary, introducer, mandate, advisor, or third-party representative contacts us about a client or transaction.","Hello [Client Name],
+
+Thank you for your message. If you are acting on behalf of a client or principal, please provide documentation showing your authority to communicate for that party.
+
+For proper routing, please submit the request and supporting authorization through the secure client portal:
+
+https://uscapitalprivatebank.com/crm/
+
+Once the authorization and request details are received, our team can determine the appropriate department for review.
+
+Thank you,
+US Capital Private Bank Client Relations"
+126,USCPB Safe - High Value Instrument Or Transaction Intake,USCPB Safe CRM 126 - High Value Instrument Or Transaction Intake,D:\GithubRepos\Sales-AI-Knowledgebase\05-Predefined-Replies\High-Value-Instrument-Or-Transaction-Intake.md,High,"Use when someone asks about SBLC, BG, LC, RWA, POF, BCL, monetization, large transactions, settlement, BTC/crypto purchase, escrow, or similar high-value matters.","Hello [Client Name],
+
+Thank you for the information. Because this appears to involve a high-value or specialized transaction, our team will need to review the details through the proper intake process.
+
+Please submit the request through the secure client portal and include the relevant supporting documents, parties involved, transaction objective, timeline, and any authorization documents if you are representing another party:
+
+https://uscapitalprivatebank.com/crm/
+
+We can acknowledge receipt and route the matter for review, but we cannot confirm availability, approval, settlement, pricing, issuance, monetization, or transaction outcome by ordinary email.
+
+Thank you,
+US Capital Private Bank Client Relations"
+127,USCPB Safe - Restricted Deposit Wire Or Balance Question,USCPB Safe CRM 127 - Restricted Deposit Wire Or Balance Question,D:\GithubRepos\Sales-AI-Knowledgebase\05-Predefined-Replies\Restricted-Deposit-Wire-Or-Balance-Question.md,High,"Use when someone asks about deposits, wires, balances, ledger entries, account funds, transaction posting, or money movement.","Hello [Client Name],
+
+Thank you for your message. For security reasons, deposit, wire, balance, and account-transaction matters must be handled through the secure client portal and reviewed by the appropriate department.
+
+Please submit the request through the portal and include any non-sensitive reference details that help identify the matter:
+
+https://uscapitalprivatebank.com/crm/
+
+We cannot provide wire instructions, confirm balances, approve deposits, or verify transaction outcomes through ordinary email.
+
+Thank you,
+US Capital Private Bank Client Relations"
+128,USCPB Safe - Suspicious Email Or Link Security Escalation,USCPB Safe CRM 128 - Suspicious Email Or Link Security Escalation,D:\GithubRepos\Sales-AI-Knowledgebase\05-Predefined-Replies\Suspicious-Email-Or-Link-Security-Escalation.md,High,"Use when a client reports a suspicious email, link, attachment, payment change, login alert, or possible impersonation.","Hello [Client Name],
+
+Thank you for reporting this. Please do not click any suspicious links, open unexpected attachments, or share passwords, codes, recovery phrases, payment details, or account credentials.
+
+Our security team should review the message before any further action is taken. Please forward only the suspicious message details or screenshot through the secure support portal if possible:
+
+https://uscapitalprivatebank.com/crm/
+
+If you believe an account or device may already be compromised, please tell us immediately and change your password from a trusted device.
+
+Thank you,
+US Capital Private Bank Client Relations"
+129,USCPB Safe - Bounced Email Alternate Email Request,USCPB Safe CRM 129 - Bounced Email Alternate Email Request,D:\GithubRepos\Sales-AI-Knowledgebase\05-Predefined-Replies\Bounced-Email-Alternate-Email-Request.md,Low,Use when an email bounced and Mercury needs a valid alternate email or confirmation.,"Hello [Client Name],
+
+We attempted to reach you by email, but the message may not have delivered successfully.
+
+Please confirm your best email address for future communication. If you use an alternate email, you may send it here or update it through the secure client portal:
+
+https://uscapitalprivatebank.com/crm/
+
+This helps us keep your record accurate and avoid missed support or onboarding messages.
+
+Thank you,
+US Capital Private Bank Client Relations"
+130,USCPB Safe - Consultation Scheduling No Approval Implied,USCPB Safe CRM 130 - Consultation Scheduling No Approval Implied,D:\GithubRepos\Sales-AI-Knowledgebase\05-Predefined-Replies\Consultation-Scheduling-No-Approval-Implied.md,Medium,"Use when a client asks for a call, meeting, consultation, or review appointment.","Hello [Client Name],
+
+Thank you for your message. We can help route your request for review and scheduling.
+
+Please submit your request through the secure client portal and include the topic you would like to discuss, your preferred time window, and any relevant documents:
+
+https://uscapitalprivatebank.com/crm/
+
+Scheduling a consultation allows the team to review the information more efficiently, but it does not imply approval, eligibility, funding, account action, or any final decision.
+
+Thank you,
+US Capital Private Bank Client Relations"
+131,USCPB Safe - Still Interested Follow Up,USCPB Safe CRM 131 - Still Interested Follow Up,D:\GithubRepos\Sales-AI-Knowledgebase\05-Predefined-Replies\Still-Interested-Follow-Up.md,Low,Use for a gentle follow-up when a client has not responded and there is no open sensitive issue.,"Hello [Client Name],
+
+I wanted to follow up and see whether you would still like assistance with your U.S. Capital Private Bank request.
+
+If you would like to continue, please reply with the best next step or submit/update your request through the secure client portal:
+
+https://uscapitalprivatebank.com/crm/
+
+Our team can then route the matter to the correct department and help keep the process moving.
+
+Thank you,
+US Capital Private Bank Client Relations"
+132,USCPB Safe - Trade Platform Registration Invitation,USCPB Safe CRM 132 - Trade Platform Registration Invitation,D:\GithubRepos\Sales-AI-Knowledgebase\05-Predefined-Replies\Trade-Platform-Registration-Invitation.md,Medium,Use when inviting interested clients to register for the trade platform or related services.,"Hello [Client Name],
+
+Thank you for your interest. U.S. Capital is preparing expanded digital access across banking support, client services, trading platform registration, and related project channels.
+
+If you would like to be routed for trade platform onboarding or receive guidance on the available client portals, please submit your request through the secure client portal:
+
+https://uscapitalprivatebank.com/crm/
+
+Our team can help direct you to the correct registration path and support channel. Platform access, account setup, and service availability remain subject to the applicable review and onboarding requirements.
+
+Thank you,
+US Capital Private Bank Client Relations"
+133,USCPB Safe - Customer Service Completion Acknowledgement,USCPB Safe CRM 133 - Customer Service Completion Acknowledgement,D:\GithubRepos\Sales-AI-Knowledgebase\05-Predefined-Replies\Customer-Service-Completion-Acknowledgement.md,Low,"Use when acknowledging that a support item was received, completed, updated, or routed.","Hello [Client Name],
+
+Thank you for the update. We have recorded your request and routed it to the appropriate support area.
+
+If there is anything else you would like added to the same matter, please reply in the same thread or update the request through the secure client portal:
+
+https://uscapitalprivatebank.com/crm/
+
+Keeping the information in one place helps our team respond faster and avoid duplicate handling.
+
+Thank you,
+US Capital Private Bank Client Relations"
+134,USCPB Safe - Social Message To CRM Handoff,USCPB Safe CRM 134 - Social Message To CRM Handoff,D:\GithubRepos\Sales-AI-Knowledgebase\05-Predefined-Replies\Social-Message-To-CRM-Handoff.md,Medium,Use when a client contacts through social messaging and the issue needs formal CRM tracking.,"Hello [Client Name],
+
+Thank you for reaching out. We can assist, but to keep this properly tracked and routed to the correct department, please submit or confirm the request through the secure client portal:
+
+https://uscapitalprivatebank.com/crm/
+
+You may continue to message us here for general assistance, but documents, account-service requests, transaction questions, and formal support items should be handled through the portal.
+
+Thank you,
+US Capital Private Bank Client Relations"
+135,USCPB Safe - Restricted Legal Financial Advisory Question,USCPB Safe CRM 135 - Restricted Legal Financial Advisory Question,D:\GithubRepos\Sales-AI-Knowledgebase\05-Predefined-Replies\Restricted-Legal-Financial-Advisory-Question.md,High,"Use when a client asks for legal, tax, investment, fiduciary, banking authority, underwriting, compliance, or decision advice that Mercury cannot provide.","Hello [Client Name],
+
+Thank you for your message. I can help route your request to the correct department, but I cannot provide legal, tax, investment, fiduciary, underwriting, banking-decision, or compliance advice by email.
+
+Please submit the details through the secure client portal so the matter can be reviewed and routed appropriately:
+
+https://uscapitalprivatebank.com/crm/
+
+If the matter is time-sensitive, please include the deadline and the specific question you need reviewed.
+
+Thank you,
+US Capital Private Bank Client Relations"
+136,USCPB Safe - Transaction Audit Or Balance Origin Question,USCPB Safe CRM 136 - Transaction Audit Or Balance Origin Question,D:\GithubRepos\Sales-AI-Knowledgebase\05-Predefined-Replies\Transaction-Audit-Or-Balance-Origin-Question.md,High,"Use when a client or staff member asks where a balance, ledger transfer, deposit, account credit, or transaction originated.","Hello [Client Name],
+
+Thank you for your message. Account balance, ledger-transfer, deposit-origin, and transaction-audit questions must be reviewed through the secure support workflow.
+
+Please submit the request through the client portal and include any reference number, date, account name, or transaction description available to you:
+
+https://uscapitalprivatebank.com/crm/
+
+For security and audit reasons, we cannot confirm sensitive account or transaction details through ordinary email until the request is reviewed through the proper channel.
+
+Thank you,
+US Capital Private Bank Client Relations"

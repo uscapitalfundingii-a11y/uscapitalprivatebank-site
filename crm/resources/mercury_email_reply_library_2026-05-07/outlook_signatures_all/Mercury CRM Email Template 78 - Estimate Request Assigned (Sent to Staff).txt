@@ -1,0 +1,8 @@
+Hello {estimate_request_assigned},
+
+Estimate request #{estimate_request_id} has been assigned to you.
+
+You can view the request at the following link: {estimate_request_link}
+
+Kind Regards,
+{email_signature}

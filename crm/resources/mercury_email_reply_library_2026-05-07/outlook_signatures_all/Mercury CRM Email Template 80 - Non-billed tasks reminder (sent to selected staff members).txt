@@ -1,0 +1,9 @@
+Hello {staff_firstname}
+
+The following tasks are marked as complete but not yet billed:
+
+{unbilled_tasks_list}
+
+Kind Regards,
+
+{email_signature}

@@ -1,0 +1,11 @@
+Hello {lead_assigned}
+
+New lead is assigned to you.
+
+Lead Name: {lead_name}
+Lead Email: {lead_email}
+
+You can view the lead on the following link: {lead_name}
+
+Kind Regards,
+{email_signature}

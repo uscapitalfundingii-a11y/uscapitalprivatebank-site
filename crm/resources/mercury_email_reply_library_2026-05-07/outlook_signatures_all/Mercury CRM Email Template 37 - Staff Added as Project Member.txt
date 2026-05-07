@@ -1,0 +1,7 @@
+Hi {staff_firstname}
+
+New project has been assigned to you.
+
+You can view the project on the following link {project_name}
+
+{email_signature}

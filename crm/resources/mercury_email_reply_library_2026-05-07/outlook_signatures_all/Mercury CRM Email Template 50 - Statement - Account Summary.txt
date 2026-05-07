@@ -1,0 +1,12 @@
+Dear {contact_firstname} {contact_lastname},
+
+Its been a great experience working with you.
+
+Attached with this email is a list of all transactions for the period between {statement_from} to {statement_to}
+
+For your information your account balance due is total: {statement_balance_due}
+
+Please contact us if you need more information.
+
+Kind Regards,
+{email_signature}

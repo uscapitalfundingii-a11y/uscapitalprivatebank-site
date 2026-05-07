@@ -1,0 +1,11 @@
+Hello {contact_firstname} {contact_lastname}
+
+This is a reminder to review and sign the contract:{contract_subject}
+
+You can view and sign by visiting: {contract_subject}
+
+We are looking forward working with you.
+
+Kind Regards,
+
+{email_signature}

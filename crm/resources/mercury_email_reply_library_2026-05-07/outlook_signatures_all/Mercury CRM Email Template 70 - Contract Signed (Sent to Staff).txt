@@ -1,0 +1,7 @@
+Hi {staff_firstname}
+
+A contract with subject {contract_subject} has been successfully signed by the customer.
+
+You can view the contract at the following link: {contract_subject} or from the admin area.
+
+{email_signature}

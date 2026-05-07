@@ -1,0 +1,12 @@
+Dear {contact_firstname} {contact_lastname}
+
+Please find the attached estimate # {estimate_number}
+
+Estimate status: {estimate_status}
+
+You can view the estimate on the following link: {estimate_number}
+
+We look forward to your communication.
+
+Kind Regards,
+{email_signature}

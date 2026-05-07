@@ -145,6 +145,116 @@ function pr_chat_add_head_components()
     echo '<link href="' . base_url('modules/prchat/assets/css/lity.css' . '?v=' . VERSIONING . '') . '"  rel="stylesheet" type="text/css" />';
     echo '<link href="' . base_url('modules/prchat/assets/css/chat_statuses.css') . '" rel="stylesheet" type="text/css"/>';
     echo '<link href="' . base_url('modules/prchat/assets/css/mentions.css') . '" rel="stylesheet" type="text/css"/>';
+    echo '<style id="uscap-prchat-layout-fixes">
+        body.modal-open #wrapper,
+        body.modal-open #frame {
+            min-height: 100vh;
+        }
+
+        #_staffAnnouncementModal .modal-dialog,
+        #_clientsAnnouncementModal .modal-dialog,
+        #quickMentionsModal .modal-dialog,
+        #chat_groups_custom_modal .modal-dialog,
+        #add_members_modal .modal-dialog {
+            width: min(720px, calc(100vw - 32px));
+            max-width: calc(100vw - 32px);
+            margin: 24px auto;
+        }
+
+        #_staffAnnouncementModal .modal-content,
+        #_clientsAnnouncementModal .modal-content,
+        #quickMentionsModal .modal-content,
+        #chat_groups_custom_modal .modal-content,
+        #add_members_modal .modal-content {
+            display: flex;
+            flex-direction: column;
+            max-height: calc(100vh - 48px);
+            overflow: hidden;
+            border: 0;
+            border-radius: 18px;
+            box-shadow: 0 28px 80px rgba(15, 23, 42, .28);
+        }
+
+        #_staffAnnouncementModal .modal-body,
+        #_clientsAnnouncementModal .modal-body,
+        #quickMentionsModal .modal-body,
+        #chat_groups_custom_modal .modal-body,
+        #add_members_modal .modal-body {
+            overflow-y: auto;
+            max-height: calc(100vh - 178px);
+        }
+
+        #_staffAnnouncementModal .bootstrap-select,
+        #_clientsAnnouncementModal .bootstrap-select {
+            width: 100% !important;
+        }
+
+        #_staffAnnouncementModal .bootstrap-select .dropdown-menu,
+        #_clientsAnnouncementModal .bootstrap-select .dropdown-menu {
+            max-height: min(62vh, 560px) !important;
+            overflow: hidden !important;
+            border-radius: 14px;
+        }
+
+        #_staffAnnouncementModal .bootstrap-select .bs-actionsbox,
+        #_clientsAnnouncementModal .bootstrap-select .bs-actionsbox {
+            position: sticky;
+            top: 0;
+            z-index: 4;
+            display: block !important;
+            padding: 10px;
+            border-bottom: 1px solid #dbe5f1;
+            background: #fff;
+        }
+
+        #_staffAnnouncementModal .bootstrap-select .bs-actionsbox .btn-group,
+        #_clientsAnnouncementModal .bootstrap-select .bs-actionsbox .btn-group {
+            display: flex;
+            gap: 8px;
+            width: 100%;
+        }
+
+        #_staffAnnouncementModal .bootstrap-select .bs-actionsbox .btn,
+        #_clientsAnnouncementModal .bootstrap-select .bs-actionsbox .btn {
+            flex: 1;
+            border-radius: 9px;
+            font-weight: 700;
+        }
+
+        #_staffAnnouncementModal .bootstrap-select .inner,
+        #_clientsAnnouncementModal .bootstrap-select .inner {
+            max-height: calc(min(62vh, 560px) - 110px) !important;
+            overflow-y: auto !important;
+        }
+
+        @media (max-width: 767px) {
+            #_staffAnnouncementModal .modal-dialog,
+            #_clientsAnnouncementModal .modal-dialog,
+            #quickMentionsModal .modal-dialog,
+            #chat_groups_custom_modal .modal-dialog,
+            #add_members_modal .modal-dialog {
+                width: calc(100vw - 18px);
+                max-width: calc(100vw - 18px);
+                margin: 9px auto;
+            }
+
+            #_staffAnnouncementModal .modal-content,
+            #_clientsAnnouncementModal .modal-content,
+            #quickMentionsModal .modal-content,
+            #chat_groups_custom_modal .modal-content,
+            #add_members_modal .modal-content {
+                max-height: calc(100vh - 18px);
+            }
+
+            #_staffAnnouncementModal .modal-body,
+            #_clientsAnnouncementModal .modal-body,
+            #quickMentionsModal .modal-body,
+            #chat_groups_custom_modal .modal-body,
+            #add_members_modal .modal-body {
+                max-height: calc(100vh - 148px);
+            }
+        }
+    </style>';
 }
 
 /**

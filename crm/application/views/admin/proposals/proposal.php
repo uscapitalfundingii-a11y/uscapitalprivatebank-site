@@ -37,7 +37,7 @@ if ($this->input->get('estimate_request_id')) {
                     <div class="panel-body">
                         <div class="row">
                             <div class="col-md-6 border-right">
-                                <?php $value = (isset($proposal) ? $proposal->subject : ''); ?>
+                                <?php $value = (isset($proposal) ? $proposal->subject : (isset($proposal_template_subject) ? $proposal_template_subject : '')); ?>
                                 <?php $attrs = (isset($proposal) ? [] : ['autofocus' => true]); ?>
                                 <?= render_input('subject', 'proposal_subject', $value, 'text', $attrs); ?>
                                 <div class="form-group select-placeholder">
@@ -273,6 +273,26 @@ echo render_select('assigned', $staff, ['staffid', ['firstname', 'lastname']], '
                                         <?= render_input('phone', 'proposal_phone', $value); ?>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+                        <?php
+                            $proposal_content = isset($proposal) ? $proposal->content : (isset($proposal_template_content) ? $proposal_template_content : '{proposal_items}');
+                        ?>
+                        <?php if (isset($selected_proposal_template)) { ?>
+                        <div class="alert alert-info mtop15">
+                            <strong>Template loaded:</strong>
+                            <?= e($selected_proposal_template['title']); ?>
+                            <span class="text-muted">
+                                Personalize this proposal before sending and keep restricted banking, legal, KYC, wire, deposit, funding, approval, and return language out of customer-facing text.
+                            </span>
+                        </div>
+                        <?php } ?>
+                        <div class="row mtop15">
+                            <div class="col-md-12">
+                                <?= render_textarea('content', 'Proposal Content', $proposal_content, ['rows' => 18], [], '', 'tinymce'); ?>
+                                <p class="text-muted">
+                                    Keep <strong>{proposal_items}</strong> where line items should appear in the generated proposal.
+                                </p>
                             </div>
                         </div>
                         <div

@@ -1,0 +1,10 @@
+Hi {contact_firstname} {contact_lastname}
+
+At your request, here is the invoice with number # {invoice_number}
+
+You can view the invoice on the following link: {invoice_number}
+
+Please contact us for more information.
+
+Kind Regards,
+{email_signature}

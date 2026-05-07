@@ -1102,13 +1102,25 @@ function handle_staff_profile_image_upload($staff_id = '')
                 $CI->image_lib->clear();
 
                 if (!$thumbResized || !$smallResized || !file_exists($thumbFilePath) || !file_exists($smallFilePath)) {
-                    @unlink($newFilePath);
-                    @unlink($thumbFilePath);
-                    @unlink($smallFilePath);
+                    log_message('error', 'Staff profile image resize failed for staff ID ' . $staff_id . ': ' . $resizeError);
 
-                    set_alert('warning', _l('error_uploading_file') . ($resizeError ? ': ' . $resizeError : ''));
+                    if (!file_exists($thumbFilePath)) {
+                        @copy($newFilePath, $thumbFilePath);
+                    }
 
-                    return false;
+                    if (!file_exists($smallFilePath)) {
+                        @copy($newFilePath, $smallFilePath);
+                    }
+
+                    if (!file_exists($thumbFilePath) || !file_exists($smallFilePath)) {
+                        @unlink($newFilePath);
+                        @unlink($thumbFilePath);
+                        @unlink($smallFilePath);
+
+                        set_alert('warning', _l('error_uploading_file') . ($resizeError ? ': ' . $resizeError : ''));
+
+                        return false;
+                    }
                 }
 
                 $CI->db->where('staffid', $staff_id);
@@ -1233,13 +1245,25 @@ function handle_contact_profile_image_upload($contact_id = '')
                 $CI->image_lib->clear();
 
                 if (!$thumbResized || !$smallResized || !file_exists($thumbFilePath) || !file_exists($smallFilePath)) {
-                    @unlink($newFilePath);
-                    @unlink($thumbFilePath);
-                    @unlink($smallFilePath);
+                    log_message('error', 'Contact profile image resize failed for contact ID ' . $contact_id . ': ' . $resizeError);
 
-                    set_alert('warning', _l('error_uploading_file') . ($resizeError ? ': ' . $resizeError : ''));
+                    if (!file_exists($thumbFilePath)) {
+                        @copy($newFilePath, $thumbFilePath);
+                    }
 
-                    return false;
+                    if (!file_exists($smallFilePath)) {
+                        @copy($newFilePath, $smallFilePath);
+                    }
+
+                    if (!file_exists($thumbFilePath) || !file_exists($smallFilePath)) {
+                        @unlink($newFilePath);
+                        @unlink($thumbFilePath);
+                        @unlink($smallFilePath);
+
+                        set_alert('warning', _l('error_uploading_file') . ($resizeError ? ': ' . $resizeError : ''));
+
+                        return false;
+                    }
                 }
 
                 $CI->db->where('id', $contact_id);

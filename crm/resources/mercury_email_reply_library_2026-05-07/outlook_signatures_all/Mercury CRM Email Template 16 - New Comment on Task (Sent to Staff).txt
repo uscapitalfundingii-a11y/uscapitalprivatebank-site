@@ -1,0 +1,11 @@
+Dear {staff_firstname}
+
+A comment has been made on the following task:
+
+Name: {task_name}
+Comment: {task_comment}
+
+You can view the task on the following link: {task_name}
+
+Kind Regards,
+{email_signature}

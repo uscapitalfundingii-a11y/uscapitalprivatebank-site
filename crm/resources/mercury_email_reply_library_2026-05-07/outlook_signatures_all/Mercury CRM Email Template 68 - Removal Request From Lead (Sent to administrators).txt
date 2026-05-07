@@ -1,0 +1,7 @@
+Hello {staff_firstname} {staff_lastname}
+
+Data removal has been requested by {lead_name}
+
+You can review this request and take proper actions directly from the admin area.
+
+To view the lead inside the admin area click here: {lead_link}

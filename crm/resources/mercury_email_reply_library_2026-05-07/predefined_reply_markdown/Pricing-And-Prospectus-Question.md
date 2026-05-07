@@ -1,0 +1,11 @@
+# USCPB Safe - Pricing And Prospectus Question
+
+Hi [Client Name],
+
+Pricing depends on the transaction structure, requested wording, risk profile, collateral, tenor, delivery method, and compliance status. Please provide the requested transaction details through the portal so the team can review and advise the appropriate next steps.
+
+Portal:
+https://uscapitalprivatebank.com/crm/
+
+We cannot quote final pricing, approval, or issuance terms in chat.
+

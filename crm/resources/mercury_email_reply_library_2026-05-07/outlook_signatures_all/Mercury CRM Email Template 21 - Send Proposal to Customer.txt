@@ -1,0 +1,13 @@
+Dear {proposal_proposal_to}
+
+Please find our attached proposal.
+
+This proposal is valid until: {proposal_open_till}
+You can view the proposal on the following link: {proposal_number}
+
+Please don't hesitate to comment online if you have any questions.
+
+We look forward to your communication.
+
+Kind Regards,
+{email_signature}

@@ -1,0 +1,14 @@
+Dear {contact_firstname} {contact_lastname}
+
+Thank you for registering on the {companyname} CRM System.
+
+We just wanted to say welcome.
+
+Please contact us if you need any help.
+
+Click here to view your profile: {crm_url}
+
+Kind Regards,
+{email_signature}
+
+(This is an automated email, so please don't reply to this email address)

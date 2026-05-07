@@ -1,0 +1,10 @@
+Hello.
+
+New customer registration on your customer portal:
+
+Firstname: {contact_firstname}
+Lastname: {contact_lastname}
+Company: {client_company}
+Email: {contact_email}
+
+Best Regards

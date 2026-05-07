@@ -1,0 +1,12 @@
+Dear {contact_firstname} {contact_lastname}
+
+We just wanted to let you know that your registration at {companyname} is successfully confirmed and your account is now active.
+
+You can login at {crm_url} with the email and password you provided during registration.
+
+Please contact us if you need any help.
+
+Kind Regards,
+{email_signature}
+
+(This is an automated email, so please don't reply to this email address)

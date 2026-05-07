@@ -1,0 +1,8 @@
+Hi {contact_firstname} {contact_lastname}
+
+You invoice # {invoice_number} will be due on {invoice_duedate}
+
+You can view the invoice on the following link: {invoice_number}
+
+Kind Regards,
+{email_signature}

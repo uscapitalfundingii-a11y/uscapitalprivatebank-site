@@ -234,15 +234,17 @@ function app_init_admin_sidebar_menu_items()
         'badge'    => [],
     ]);
 
-    if (staff_can('create', 'customers')) {
+    if (is_admin() || staff_can('create', 'customers')) {
         $CI->app_menu->add_sidebar_children_item('utilities', [
             'slug'     => 'import-csv-customers',
-            'name'     => _l('utility_import_csv'),
+            'name'     => _l('import_customers'),
             'href'     => admin_url('clients/import'),
             'position' => 8,
             'badge'    => [],
         ]);
+    }
 
+    if (staff_can('create', 'customers')) {
         $CI->app_menu->add_sidebar_children_item('utilities', [
             'slug'     => 'email-marketing',
             'name'     => _l('email_marketing'),
@@ -429,6 +431,13 @@ function app_init_admin_sidebar_menu_items()
             'name'     => _l('spam_filters'),
             'href'     => admin_url('spam_filters/view/tickets'),
             'position' => 30,
+            'badge'    => [],
+        ]);
+        $CI->app_menu->add_setup_children_item('support', [
+            'slug'     => 'chat-history',
+            'name'     => 'Chat History',
+            'href'     => admin_url('chat_history'),
+            'position' => 35,
             'badge'    => [],
         ]);
 
