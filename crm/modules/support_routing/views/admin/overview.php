@@ -24,11 +24,22 @@
                             <div class="clearfix"></div>
                         </div>
                         <?= form_open(admin_url('support_routing'), ['method' => 'get', 'class' => 'row']); ?>
+                            <div class="col-md-2">
+                                <label for="company_id">Company group</label>
+                                <select class="form-control selectpicker" id="company_id" name="company_id" data-live-search="true" data-none-selected-text="Any">
+                                    <option value=""></option>
+                                    <?php foreach ($companies as $company) { ?>
+                                        <option value="<?= e($company['id']); ?>" <?= (string) $filters['company_id'] === (string) $company['id'] ? 'selected' : ''; ?>>
+                                            <?= e($company['name']); ?>
+                                        </option>
+                                    <?php } ?>
+                                </select>
+                            </div>
                             <div class="col-md-3">
                                 <label for="source_site">Source site</label>
                                 <input type="text" class="form-control" id="source_site" name="source_site" value="<?= e($filters['source_site']); ?>">
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 <label for="specialist">Assigned specialist</label>
                                 <input type="text" class="form-control" id="specialist" name="specialist" value="<?= e($filters['specialist']); ?>">
                             </div>
@@ -43,7 +54,7 @@
                                     <?php } ?>
                                 </select>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 <label for="search">Search</label>
                                 <input type="text" class="form-control" id="search" name="search" value="<?= e($filters['search']); ?>">
                             </div>
@@ -100,6 +111,9 @@
                                             <td>
                                                 <?php if (!empty($item['has_routing_metadata'])) { ?>
                                                     <strong><?= e($routing['source_site']); ?></strong>
+                                                    <?php if (!empty($routing['source_brand']) || !empty($routing['source_company'])) { ?>
+                                                        <div><span class="label label-info"><?= e($routing['source_brand'] ?: $routing['source_company']); ?></span></div>
+                                                    <?php } ?>
                                                     <div class="text-muted"><?= e($routing['source_path']); ?></div>
                                                 <?php } else { ?>
                                                     <span class="label label-warning">Not captured</span>

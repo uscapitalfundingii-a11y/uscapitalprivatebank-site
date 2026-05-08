@@ -23,6 +23,8 @@ hooks()->add_action('admin_init', 'support_routing_admin_menu');
 function support_routing_fields()
 {
     return [
+        'source_company',
+        'source_brand',
         'source_site',
         'source_path',
         'intent',
@@ -36,18 +38,26 @@ function support_routing_fields()
 function support_routing_field_aliases()
 {
     return [
+        'source_company'     => ['company', 'company_slug', 'brand', 'source_brand'],
+        'source_brand'       => ['brand', 'company_name', 'source_company'],
         'intent'            => ['support_intent', 'entry_type'],
         'category'          => ['support_category', 'specialist_group'],
         'department'        => ['assigned_department'],
         'assigned_specialist'=> ['specialist', 'agent'],
         'specialist_title'  => ['assigned_specialist_title', 'agent_title'],
-        'source_site'       => ['source_brand', 'brand'],
+        'source_site'       => ['site', 'domain'],
         'source_path'       => ['source_url', 'source_page'],
     ];
 }
 
 function support_routing_capture_query_params()
 {
+    static $captured = false;
+    if ($captured) {
+        return;
+    }
+    $captured = true;
+
     $CI = &get_instance();
     $metadata = [];
 
@@ -356,8 +366,35 @@ function support_routing_ticket_created($ticketId)
     $payload['captured_at'] = date('Y-m-d H:i:s');
 
     support_routing_insert_ticket_note($ticketId, $payload, 'Support routing metadata captured and routed in real time.');
+    support_routing_upsert_company_context_map($ticketId, $payload);
 
     $CI->session->unset_userdata(SUPPORT_ROUTING_SESSION_KEY);
+}
+
+function support_routing_upsert_company_context_map($ticketId, $metadata)
+{
+    $CI = &get_instance();
+    $ticketId = (int) $ticketId;
+    if ($ticketId <= 0 || !file_exists(APPPATH . '../modules/company_context/models/Company_context_model.php')) {
+        return;
+    }
+
+    if (!$CI->db->table_exists(db_prefix() . 'company_context_companies')
+        || !$CI->db->table_exists(db_prefix() . 'company_context_record_map')) {
+        return;
+    }
+
+    $CI->load->model('company_context/company_context_model');
+    $company = $CI->company_context_model->resolve_company_from_metadata($metadata);
+    if (!$company) {
+        return;
+    }
+
+    $CI->company_context_model->upsert_record_map((int) $company['id'], 'ticket', $ticketId, [
+        'source_site' => isset($metadata['source_site']) ? $metadata['source_site'] : '',
+        'source_path' => isset($metadata['source_path']) ? $metadata['source_path'] : '',
+        'origin'      => !empty($metadata['intent']) ? $metadata['intent'] : 'support_ticket',
+    ]);
 }
 
 function support_routing_ticket_has_note($ticketId)
