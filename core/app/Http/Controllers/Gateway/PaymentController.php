@@ -126,6 +126,36 @@ class PaymentController extends Controller
 
     public static function userDataUpdate($deposit, $isManual = null)
     {
+        if (!$isManual) {
+            if ($deposit->status == Status::PAYMENT_INITIATE) {
+                $deposit->status = Status::PAYMENT_PENDING;
+                $deposit->save();
+
+                $user = User::find($deposit->user_id);
+                $methodName = $deposit->methodName();
+
+                if ($user) {
+                    $adminNotification = new AdminNotification();
+                    $adminNotification->user_id = $user->id;
+                    $adminNotification->title = 'Deposit awaiting admin approval from ' . $user->username;
+                    $adminNotification->click_url = urlPath('admin.deposit.details', $deposit->id);
+                    $adminNotification->save();
+
+                    notify($user, 'DEPOSIT_REQUEST', [
+                        'method_name' => $methodName,
+                        'method_currency' => $deposit->method_currency,
+                        'method_amount' => showAmount($deposit->final_amount, currencyFormat: false),
+                        'amount' => showAmount($deposit->amount, currencyFormat: false),
+                        'charge' => showAmount($deposit->charge, currencyFormat: false),
+                        'rate' => showAmount($deposit->rate, currencyFormat: false),
+                        'trx' => $deposit->trx
+                    ]);
+                }
+            }
+
+            return;
+        }
+
         if ($deposit->status == Status::PAYMENT_INITIATE || $deposit->status == Status::PAYMENT_PENDING) {
             $deposit->status = Status::PAYMENT_SUCCESS;
             $deposit->save();

@@ -83,12 +83,12 @@ class Deposit extends Model
 
     public function scopePending($query)
     {
-        return $query->where('deposits.method_code', '>=', 1000)->where('deposits.status', Status::PAYMENT_PENDING);
+        return $query->where('deposits.status', Status::PAYMENT_PENDING);
     }
 
     public function scopeRejected($query)
     {
-        return $query->where('deposits.method_code', '>=', 1000)->where('deposits.status', Status::PAYMENT_REJECT);
+        return $query->where('deposits.status', Status::PAYMENT_REJECT);
     }
 
     public function scopeApproved($query)

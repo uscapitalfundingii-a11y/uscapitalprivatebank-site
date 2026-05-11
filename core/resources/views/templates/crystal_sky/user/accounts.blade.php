@@ -36,7 +36,7 @@
                                     @endif
                                 </td>
                                 <td>
-                                    <div class="d-flex flex-wrap gap-2">
+                                    <div class="account-action-buttons d-flex flex-wrap gap-2">
                                         <a href="{{ route('user.accounts.show', $account->id) }}" class="btn btn-sm btn--base">@lang('View Ledger')</a>
                                         @if(!$account->is_primary)
                                             <form action="{{ route('user.profile.account.switch', $account->id) }}" method="POST">
@@ -69,3 +69,29 @@
         </div>
     </div>
 @endsection
+
+@push('style')
+    <style>
+        .account-action-buttons .btn,
+        .account-action-buttons form,
+        .account-action-buttons .text-muted {
+            min-width: 112px;
+        }
+
+        .account-action-buttons .btn,
+        .account-action-buttons .text-muted {
+            align-items: center;
+            display: inline-flex;
+            height: 34px;
+            justify-content: center;
+            line-height: 1.2;
+            padding-left: 12px;
+            padding-right: 12px;
+            text-align: center;
+        }
+
+        .account-action-buttons form .btn {
+            width: 100%;
+        }
+    </style>
+@endpush

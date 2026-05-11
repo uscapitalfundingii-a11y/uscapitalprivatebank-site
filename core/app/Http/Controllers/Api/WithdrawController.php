@@ -8,7 +8,6 @@ use App\Lib\FormProcessor;
 use App\Lib\OTPManager;
 use App\Models\AdminNotification;
 use App\Models\OtpVerification;
-use App\Models\Transaction;
 use App\Models\Withdrawal;
 use App\Models\WithdrawMethod;
 use Illuminate\Http\Request;
@@ -160,20 +159,6 @@ class WithdrawController extends Controller {
         $withdraw->status               = Status::PAYMENT_PENDING;
         $withdraw->withdraw_information = $userData;
         $withdraw->save();
-
-        $user->balance -= $withdraw->amount;
-        $user->save();
-
-        $transaction               = new Transaction();
-        $transaction->user_id      = $withdraw->user_id;
-        $transaction->amount       = $withdraw->amount;
-        $transaction->post_balance = $user->balance;
-        $transaction->charge       = $withdraw->charge;
-        $transaction->trx_type     = '-';
-        $transaction->details      = showAmount($withdraw->final_amount, currencyFormat: false) . ' ' . $withdraw->currency . ' Withdraw Via ' . $withdraw->method->name;
-        $transaction->trx          = $withdraw->trx;
-        $transaction->remark       = 'withdraw';
-        $transaction->save();
 
         $adminNotification            = new AdminNotification();
         $adminNotification->user_id   = $user->id;

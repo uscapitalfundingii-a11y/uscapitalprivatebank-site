@@ -144,7 +144,48 @@ class WithdrawalController extends Controller {
 
     public function approve(Request $request) {
         $request->validate(['id' => 'required|integer']);
-        $withdraw = Withdrawal::where('id', $request->id)->where('status', Status::PAYMENT_PENDING)->with('user')->firstOrFail();
+        $withdraw = Withdrawal::where('id', $request->id)->where('status', Status::PAYMENT_PENDING)->with('user.activeAccount')->firstOrFail();
+        $user = $withdraw->user;
+        $existingDebit = Transaction::where('trx', $withdraw->trx)
+            ->where('remark', 'withdraw')
+            ->where('trx_type', '-')
+            ->first();
+
+        if (!$existingDebit) {
+            $account = $user->activeAccount;
+            $availableBalance = $account?->balance ?? $user->balance;
+
+            if ($withdraw->amount > $availableBalance) {
+                $notify[] = ['error', 'Insufficient account balance. This withdrawal remains pending and was not approved.'];
+                return back()->withNotify($notify);
+            }
+
+            if ($account) {
+                $account->balance -= $withdraw->amount;
+                $account->save();
+                $account->syncLegacyUserBalance();
+                $user->refresh();
+            } else {
+                $user->balance -= $withdraw->amount;
+                $user->save();
+            }
+
+            $postBalance = $account?->fresh()->balance ?? $user->balance;
+
+            $transaction               = new Transaction();
+            $transaction->user_id      = $withdraw->user_id;
+            $transaction->user_account_id = $account?->id;
+            $transaction->account_number = $account?->account_number ?: $user->account_number;
+            $transaction->amount       = $withdraw->amount;
+            $transaction->post_balance = $postBalance;
+            $transaction->charge       = $withdraw->charge;
+            $transaction->trx_type     = '-';
+            $transaction->details      = showAmount($withdraw->final_amount, currencyFormat: false) . ' ' . $withdraw->currency . ' Withdraw Via ' . $withdraw->method->name;
+            $transaction->trx          = $withdraw->trx;
+            $transaction->remark       = 'withdraw';
+            $transaction->save();
+        }
+
         $withdraw->status = Status::PAYMENT_SUCCESS;
         $withdraw->admin_feedback = $request->details;
         $withdraw->save();
@@ -167,26 +208,46 @@ class WithdrawalController extends Controller {
 
     public function reject(Request $request) {
         $request->validate(['id' => 'required|integer']);
-        $withdraw = Withdrawal::where('id', $request->id)->where('status', Status::PAYMENT_PENDING)->with('user')->firstOrFail();
+        $withdraw = Withdrawal::where('id', $request->id)->where('status', Status::PAYMENT_PENDING)->with('user.activeAccount')->firstOrFail();
 
         $withdraw->status = Status::PAYMENT_REJECT;
         $withdraw->admin_feedback = $request->details;
         $withdraw->save();
 
         $user = $withdraw->user;
-        $user->balance += $withdraw->amount;
-        $user->save();
+        $existingDebit = Transaction::where('trx', $withdraw->trx)
+            ->where('remark', 'withdraw')
+            ->where('trx_type', '-')
+            ->first();
 
-        $transaction = new Transaction();
-        $transaction->user_id = $withdraw->user_id;
-        $transaction->amount = $withdraw->amount;
-        $transaction->post_balance = $user->balance;
-        $transaction->charge = 0;
-        $transaction->trx_type = '+';
-        $transaction->remark = 'withdraw_refund';
-        $transaction->details = 'Refunded for withdrawal rejection';
-        $transaction->trx = $withdraw->trx;
-        $transaction->save();
+        if ($existingDebit) {
+            $account = $existingDebit->account ?: $user->activeAccount;
+
+            if ($account) {
+                $account->balance += $withdraw->amount;
+                $account->save();
+                $account->syncLegacyUserBalance();
+                $user->refresh();
+            } else {
+                $user->balance += $withdraw->amount;
+                $user->save();
+            }
+
+            $postBalance = $account?->fresh()->balance ?? $user->balance;
+
+            $transaction = new Transaction();
+            $transaction->user_id = $withdraw->user_id;
+            $transaction->user_account_id = $account?->id;
+            $transaction->account_number = $account?->account_number ?: $user->account_number;
+            $transaction->amount = $withdraw->amount;
+            $transaction->post_balance = $postBalance;
+            $transaction->charge = 0;
+            $transaction->trx_type = '+';
+            $transaction->remark = 'withdraw_refund';
+            $transaction->details = 'Refunded for withdrawal rejection';
+            $transaction->trx = $withdraw->trx;
+            $transaction->save();
+        }
 
         notify($user, 'WITHDRAW_REJECT', [
             'method_name' => $withdraw->method->name,
