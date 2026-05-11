@@ -73,6 +73,20 @@
                             </div>
                             <span class="fw-bold @if(auth()->user()->balance > @$setting->minimum_limit) text--info @else text--danger @endif">@lang('Current Balance'): {{ showAmount(auth()->user()->balance) }}</span>
                         </div>
+                        <div class="form-group">
+                            <label class="form-label">@lang('Receiving Bank Coordinates')</label>
+                            <select class="form--control select2 wire-bank-coordinate">
+                                <option value="" selected>@lang('Type bank name or SWIFT/BIC')</option>
+                                @foreach ($bankCoordinates as $coordinate)
+                                    @php
+                                        $searchText = trim(($coordinate['name'] ?? '') . ' ' . ($coordinate['swift_code'] ?? '') . ' ' . ($coordinate['country'] ?? '') . ' ' . ($coordinate['city'] ?? '') . ' ' . ($coordinate['address'] ?? ''));
+                                    @endphp
+                                    <option value="{{ $coordinate['swift_code'] }}" data-search="{{ $searchText }}" data-coordinate='@json($coordinate)'>
+                                        {{ $coordinate['name'] }} ({{ $coordinate['swift_code'] }}) - {{ $coordinate['country'] }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
                         <x-viser-form identifier="act" identifierValue="wire_transfer" />
                         @include($activeTemplate . 'partials.otp_field')
                         <button type="submit" class="btn btn--base w-100 ">@lang('Submit')</button>
@@ -82,3 +96,50 @@
         </div>
     </div>
 @endsection
+
+@push('script')
+    <script>
+        'use strict';
+        (function($) {
+            const bankSelect = $('.wire-bank-coordinate');
+
+            if ($.fn.select2) {
+                bankSelect.select2({
+                    width: '100%',
+                    matcher: function(params, data) {
+                        if ($.trim(params.term) === '') {
+                            return data;
+                        }
+
+                        let search = ($(data.element).data('search') || data.text || '').toString().toLowerCase();
+                        return search.includes(params.term.toLowerCase()) ? data : null;
+                    }
+                });
+            }
+
+            bankSelect.on('change', function() {
+                let coordinate = $(this).find(':selected').data('coordinate');
+
+                if (!coordinate) {
+                    return;
+                }
+
+                const values = {
+                    swift_bic: coordinate.swift_code,
+                    bank_country: coordinate.country,
+                    bank_city: coordinate.city,
+                    bank_address: coordinate.address,
+                    bank_phone: coordinate.phone,
+                };
+
+                Object.keys(values).forEach(function(name) {
+                    let field = $(`[name="${name}"]`);
+
+                    if (field.length && !field.val()) {
+                        field.val(values[name]);
+                    }
+                });
+            });
+        })(jQuery);
+    </script>
+@endpush

@@ -11,6 +11,7 @@ use App\Models\BalanceTransfer;
 use App\Models\Form;
 use App\Models\OtpVerification;
 use App\Models\WireTransferSetting;
+use App\Support\BankCoordinateDirectory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -29,8 +30,9 @@ class WireTransferController extends Controller {
 
         $notify[] = 'Wire Transfer';
         return responseSuccess('wire_transfer', $notify, [
-            'setting' => $setting,
-            'form'    => $form,
+            'setting'          => $setting,
+            'form'             => $form,
+            'bank_coordinates' => BankCoordinateDirectory::all()->values(),
         ]);
     }
 

@@ -343,11 +343,13 @@ class MoneyTransferController extends Controller
             'sender'       => $sender->username,
             'recipient'    => $recipient->username,
             'recipient_account' => $transfer->beneficiary->account_number,
+            'bank_name'    => gs('site_name'),
             'amount'       => showAmount($transfer->amount, currencyFormat: false),
             'charge'       => showAmount($transfer->charge, currencyFormat: false),
             'final_amount' => showAmount($transfer->final_amount, currencyFormat: false),
             'trx'          => $transfer->trx,
             'post_balance' => showAmount($postBalance, currencyFormat: false),
+            'reject_reason' => $transfer->reject_reason,
         ];
     }
 
