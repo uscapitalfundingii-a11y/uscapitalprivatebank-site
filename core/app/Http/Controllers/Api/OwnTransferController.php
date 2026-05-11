@@ -5,10 +5,10 @@ namespace App\Http\Controllers\Api;
 use App\Constants\Status;
 use App\Http\Controllers\Controller;
 use App\Lib\OTPManager;
+use App\Models\AdminNotification;
 use App\Models\BalanceTransfer;
 use App\Models\Beneficiary;
 use App\Models\OtpVerification;
-use App\Models\Transaction;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -58,9 +58,7 @@ class OwnTransferController extends Controller {
         $amount = $verification->additional_data->amount;
         $this->checkTransferAvailability($amount, $validator);
 
-        $general     = gs();
         $charge      = $this->charge($amount);
-        $finalAmount = $amount + $charge;
 
         $transfer                 = new BalanceTransfer();
         $transfer->user_id        = $sender->id;
@@ -68,28 +66,17 @@ class OwnTransferController extends Controller {
         $transfer->beneficiary_id = $beneficiary->id;
         $transfer->amount         = $amount;
         $transfer->charge         = $charge;
-        $transfer->status         = Status::TRANSFER_COMPLETED;
+        $transfer->status         = Status::TRANSFER_PENDING;
         $transfer->save();
 
-        $sender->balance -= $finalAmount;
-        $sender->save();
+        $adminNotification            = new AdminNotification();
+        $adminNotification->user_id   = $sender->id;
+        $adminNotification->title     = 'New ledger-to-ledger transfer request';
+        $adminNotification->click_url = urlPath('admin.transfers.details', $transfer->id);
+        $adminNotification->save();
 
-        $this->sendingTransaction($transfer, $sender); // Insert Sending Transaction
-
-        $recipient = $beneficiary->beneficiaryOf;
-        $recipient->balance += $transfer->amount;
-        $recipient->save();
-
-        $this->receivingTransaction($transfer, $recipient); // Insert Receiving Transaction
-
-        $shortCodes = $this->shortCodes($transfer, $sender, $recipient, $sender->balance);
-        notify($sender, 'OWN_BANK_TRANSFER_MONEY_SEND', $shortCodes);
-
-        $shortCodes = $this->shortCodes($transfer, $sender, $recipient, $recipient->balance);
-        notify($recipient, 'OWN_BANK_TRANSFER_MONEY_RECEIVE', $shortCodes);
-
-        $notify[] = "$transfer->amount $general->cur_text transferred successfully";
-        return responseSuccess('own_transferred', $notify);
+        $notify[] = 'Transfer request submitted for admin approval';
+        return responseSuccess('own_transfer_requested', $notify);
     }
     private function validation($request, $beneficiary) {
         $rules     = ['amount' => "required|numeric|gt:0"];
@@ -134,31 +121,6 @@ class OwnTransferController extends Controller {
         return $general->fixed_transfer_charge + $percentCharge;
     }
 
-    private function sendingTransaction($transfer, $user) {
-        $transaction               = new Transaction();
-        $transaction->user_id      = $user->id;
-        $transaction->amount       = $transfer->final_amount;
-        $transaction->post_balance = $user->balance;
-        $transaction->charge       = $transfer->charge;
-        $transaction->trx_type     = '-';
-        $transaction->details      = 'Own bank transfer';
-        $transaction->trx          = $transfer->trx;
-        $transaction->remark       = "own_bank_transfer";
-        $transaction->save();
-    }
-
-    private function receivingTransaction($transfer, $user) {
-        $transaction               = new Transaction();
-        $transaction->user_id      = $user->id;
-        $transaction->amount       = $transfer->amount;
-        $transaction->post_balance = $user->balance;
-        $transaction->charge       = 0;
-        $transaction->trx_type     = '+';
-        $transaction->details      = 'Received transferred money';
-        $transaction->remark       = 'received_money';
-        $transaction->trx          = $transfer->trx;
-        $transaction->save();
-    }
     private function shortCodes($transfer, $sender, $recipient, $postBalance) {
         return [
             'sender'       => $sender->username,

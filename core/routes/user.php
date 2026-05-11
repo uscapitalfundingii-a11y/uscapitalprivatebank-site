@@ -181,6 +181,7 @@ Route::middleware('auth')->name('user.')->group(function () {
                 Route::post('own-bank/add', 'addOwnBeneficiary')->name('own.add')->middleware('checkModule:own_bank');
                 Route::post('other-bank/add', 'addOtherBeneficiary')->name('other.add')->middleware('checkModule:other_bank');
                 Route::get('other-bank/form-data/{bankId}', 'otherBankForm')->name('other.bank.form.data');
+                Route::get('other-bank/coordinates', 'bankCoordinates')->name('other.bank.coordinates');
                 Route::get('account-number/check', 'checkAccountNumber')->name('check.account');
                 Route::get('check-duplicate', 'checkDuplicate')->name('check.duplicate');
                 Route::get('details/{id}', 'details')->name('details');

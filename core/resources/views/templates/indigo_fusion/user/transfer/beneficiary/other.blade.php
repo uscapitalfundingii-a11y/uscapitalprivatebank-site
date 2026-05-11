@@ -18,10 +18,16 @@
                         <input type="hidden" name="id">
                         <div class="form-group">
                             <label>@lang('Select Bank')</label>
-                            <select class="form--control" name="bank" required>
+                            <select class="form--control select2 bank-coordinate-select" name="bank" required>
                                 <option value="" disabled selected>@lang('Select One')</option>
                                 @foreach ($otherBanks as $bank)
-                                    <option value="{{ $bank->id }}">{{ $bank->name }}</option>
+                                    @php
+                                        $coordinate = $bankCoordinates[$bank->name] ?? null;
+                                        $searchText = trim($bank->name . ' ' . ($coordinate['swift_code'] ?? '') . ' ' . ($coordinate['country'] ?? '') . ' ' . ($coordinate['city'] ?? '') . ' ' . ($coordinate['address'] ?? ''));
+                                    @endphp
+                                    <option value="{{ $bank->id }}" data-search="{{ $searchText }}" data-coordinate='@json($coordinate)'>
+                                        {{ $bank->name }} @if($coordinate) ({{ $coordinate['swift_code'] }}) @endif
+                                    </option>
                                 @endforeach
                             </select>
                         </div>
@@ -107,6 +113,21 @@
         'use strict';
         (function($) {
             const addForm = $('#addForm');
+            const bankSelect = addForm.find('select[name=bank]');
+
+            if ($.fn.select2) {
+                bankSelect.select2({
+                    width: '100%',
+                    matcher: function(params, data) {
+                        if ($.trim(params.term) === '') {
+                            return data;
+                        }
+
+                        let search = ($(data.element).data('search') || data.text || '').toString().toLowerCase();
+                        return search.includes(params.term.toLowerCase()) ? data : null;
+                    }
+                });
+            }
 
             $('.add-btn').on('click', function() {
                 $(this).parent().hide();
@@ -122,7 +143,7 @@
                 $('.add-btn').removeClass('d-none').hide().fadeIn(500);
             });
 
-            addForm.find('select[name=bank]').on('change', function() {
+            bankSelect.on('change', function() {
                 let bankId = $(this).val();
                 bankFormProcess(bankId)
             });
@@ -163,12 +184,37 @@
                     success: function(response) {
                         if (response.success) {
                             $('#user-fields').html(response.html).hide().fadeIn(500);
+                            fillBankCoordinateFields();
                         } else {
                             notify('error', response.message || `@lang('Something went the wrong')`)
                         }
                     },
                     error: function(e) {
                         notify(`@lang('Something went the wrong')`)
+                    }
+                });
+            }
+
+            function fillBankCoordinateFields() {
+                let coordinate = bankSelect.find(':selected').data('coordinate');
+
+                if (!coordinate) {
+                    return;
+                }
+
+                const values = {
+                    swift_bic: coordinate.swift_code,
+                    bank_country: coordinate.country,
+                    bank_city: coordinate.city,
+                    bank_address: coordinate.address,
+                    bank_phone: coordinate.phone,
+                };
+
+                Object.keys(values).forEach(function(name) {
+                    let field = addForm.find(`[name="${name}"]`);
+
+                    if (field.length && !field.val()) {
+                        field.val(values[name]);
                     }
                 });
             }

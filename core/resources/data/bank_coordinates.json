@@ -1,0 +1,1037 @@
+[
+  {
+    "name": "JPMorgan Chase Bank",
+    "swift_code": "CHASUS33",
+    "country": "United States",
+    "city": "New York",
+    "address": "383 Madison Avenue, New York, NY 10179",
+    "phone": "+1 212-270-6000",
+    "status": "Active"
+  },
+  {
+    "name": "Bank of America",
+    "swift_code": "BOFAUS3N",
+    "country": "United States",
+    "city": "Charlotte",
+    "address": "100 North Tryon Street, Charlotte, NC 28255",
+    "phone": "+1 704-386-5681",
+    "status": "Active"
+  },
+  {
+    "name": "Wells Fargo Bank",
+    "swift_code": "WFBIUS6S",
+    "country": "United States",
+    "city": "San Francisco",
+    "address": "420 Montgomery Street, San Francisco, CA 94104",
+    "phone": "+1 866-249-3302",
+    "status": "Active"
+  },
+  {
+    "name": "Citibank",
+    "swift_code": "CITIUS33",
+    "country": "United States",
+    "city": "New York",
+    "address": "388 Greenwich Street, New York, NY 10013",
+    "phone": "+1 212-559-1000",
+    "status": "Active"
+  },
+  {
+    "name": "U.S. Bank",
+    "swift_code": "USBKUS44",
+    "country": "United States",
+    "city": "Minneapolis",
+    "address": "800 Nicollet Mall, Minneapolis, MN 55402",
+    "phone": "+1 651-466-3000",
+    "status": "Active"
+  },
+  {
+    "name": "PNC Bank",
+    "swift_code": "PNCCUS33",
+    "country": "United States",
+    "city": "Pittsburgh",
+    "address": "300 Fifth Avenue, Pittsburgh, PA 15222",
+    "phone": "+1 888-762-2265",
+    "status": "Active"
+  },
+  {
+    "name": "Capital One",
+    "swift_code": "NFBKUS33",
+    "country": "United States",
+    "city": "McLean",
+    "address": "1680 Capital One Drive, McLean, VA 22102",
+    "phone": "+1 703-720-1000",
+    "status": "Active"
+  },
+  {
+    "name": "TD Bank",
+    "swift_code": "NRTHUS33",
+    "country": "United States",
+    "city": "Cherry Hill",
+    "address": "2035 Limestone Road, Wilmington, DE 19808",
+    "phone": "+1 888-751-9000",
+    "status": "Active"
+  },
+  {
+    "name": "Goldman Sachs Bank",
+    "swift_code": "GSCMUS33",
+    "country": "United States",
+    "city": "New York",
+    "address": "200 West Street, New York, NY 10282",
+    "phone": "+1 212-902-1000",
+    "status": "Active"
+  },
+  {
+    "name": "Morgan Stanley Bank",
+    "swift_code": "MSTNUS33",
+    "country": "United States",
+    "city": "New York",
+    "address": "1585 Broadway, New York, NY 10036",
+    "phone": "+1 212-761-4000",
+    "status": "Active"
+  },
+  {
+    "name": "HSBC UK Bank",
+    "swift_code": "HBUKGB4B",
+    "country": "United Kingdom",
+    "city": "London",
+    "address": "8 Canada Square, London E14 5HQ",
+    "phone": "+44 20 7991 8888",
+    "status": "Active"
+  },
+  {
+    "name": "Barclays Bank",
+    "swift_code": "BARCGB22",
+    "country": "United Kingdom",
+    "city": "London",
+    "address": "1 Churchill Place, London E14 5HP",
+    "phone": "+44 20 7116 1000",
+    "status": "Active"
+  },
+  {
+    "name": "Lloyds Bank",
+    "swift_code": "LOYDGB2L",
+    "country": "United Kingdom",
+    "city": "London",
+    "address": "25 Gresham Street, London EC2V 7HN",
+    "phone": "+44 20 7626 1500",
+    "status": "Active"
+  },
+  {
+    "name": "NatWest Bank",
+    "swift_code": "NWBKGB2L",
+    "country": "United Kingdom",
+    "city": "Edinburgh",
+    "address": "36 St Andrew Square, Edinburgh EH2 2YB",
+    "phone": "+44 131 556 8555",
+    "status": "Active"
+  },
+  {
+    "name": "Santander UK",
+    "swift_code": "ABBYGB2L",
+    "country": "United Kingdom",
+    "city": "London",
+    "address": "2 Triton Square, Regent's Place, London NW1 3AN",
+    "phone": "+44 800 389 7000",
+    "status": "Active"
+  },
+  {
+    "name": "Standard Chartered UK",
+    "swift_code": "SCBLGB2L",
+    "country": "United Kingdom",
+    "city": "London",
+    "address": "1 Basinghall Avenue, London EC2V 5DD",
+    "phone": "+44 20 7885 8888",
+    "status": "Active"
+  },
+  {
+    "name": "Metro Bank",
+    "swift_code": "MYMBGB2L",
+    "country": "United Kingdom",
+    "city": "London",
+    "address": "One Southampton Row, London WC1B 5HA",
+    "phone": "+44 20 3402 8000",
+    "status": "Active"
+  },
+  {
+    "name": "Deutsche Bank",
+    "swift_code": "DEUTDEFF",
+    "country": "Germany",
+    "city": "Frankfurt",
+    "address": "Taunusanlage 12, 60325 Frankfurt am Main",
+    "phone": "+49 69 910 00",
+    "status": "Active"
+  },
+  {
+    "name": "Commerzbank",
+    "swift_code": "COBADEFF",
+    "country": "Germany",
+    "city": "Frankfurt",
+    "address": "Kaiserstraße 16, 60311 Frankfurt am Main",
+    "phone": "+49 69 136 20",
+    "status": "Active"
+  },
+  {
+    "name": "DZ Bank",
+    "swift_code": "GENODEFF",
+    "country": "Germany",
+    "city": "Frankfurt",
+    "address": "Platz der Republik, 60325 Frankfurt am Main",
+    "phone": "+49 69 7447 01",
+    "status": "Active"
+  },
+  {
+    "name": "KfW Bank",
+    "swift_code": "KFWIDEFF",
+    "country": "Germany",
+    "city": "Frankfurt",
+    "address": "Palmengartenstraße 5-9, 60325 Frankfurt am Main",
+    "phone": "+49 69 7431 0",
+    "status": "Active"
+  },
+  {
+    "name": "Landesbank Baden-Württemberg",
+    "swift_code": "SOLADEST",
+    "country": "Germany",
+    "city": "Stuttgart",
+    "address": "Am Hauptbahnhof 2, 70173 Stuttgart",
+    "phone": "+49 711 127 0",
+    "status": "Active"
+  },
+  {
+    "name": "BNP Paribas",
+    "swift_code": "BNPAFRPP",
+    "country": "France",
+    "city": "Paris",
+    "address": "16 Boulevard des Italiens, 75009 Paris",
+    "phone": "+33 1 40 14 45 46",
+    "status": "Active"
+  },
+  {
+    "name": "Crédit Agricole",
+    "swift_code": "AGRIFRPP",
+    "country": "France",
+    "city": "Paris",
+    "address": "12 Place des États-Unis, 92120 Montrouge",
+    "phone": "+33 1 43 23 52 02",
+    "status": "Active"
+  },
+  {
+    "name": "Société Générale",
+    "swift_code": "SOGEFRPP",
+    "country": "France",
+    "city": "Paris",
+    "address": "29 Boulevard Haussmann, 75009 Paris",
+    "phone": "+33 1 42 14 20 00",
+    "status": "Active"
+  },
+  {
+    "name": "Groupe BPCE",
+    "swift_code": "CEPAFRPP",
+    "country": "France",
+    "city": "Paris",
+    "address": "50 Avenue Pierre Mendès France, 75013 Paris",
+    "phone": "+33 1 58 40 41 42",
+    "status": "Active"
+  },
+  {
+    "name": "Crédit Mutuel",
+    "swift_code": "CMCIFRPP",
+    "country": "France",
+    "city": "Strasbourg",
+    "address": "4 Rue Frédéric Guillaume Raiffeisen, 67000 Strasbourg",
+    "phone": "+33 3 88 11 88 11",
+    "status": "Active"
+  },
+  {
+    "name": "UBS Switzerland",
+    "swift_code": "UBSWCHZH80A",
+    "country": "Switzerland",
+    "city": "Zurich",
+    "address": "Bahnhofstrasse 45, 8001 Zurich",
+    "phone": "+41 44 234 1111",
+    "status": "Active"
+  },
+  {
+    "name": "Credit Suisse",
+    "swift_code": "CRESCHZZ80A",
+    "country": "Switzerland",
+    "city": "Zurich",
+    "address": "Paradeplatz 8, 8001 Zurich",
+    "phone": "+41 44 333 1111",
+    "status": "Active"
+  },
+  {
+    "name": "Julius Baer",
+    "swift_code": "BAERCHZZ",
+    "country": "Switzerland",
+    "city": "Zurich",
+    "address": "Bahnhofstrasse 36, 8001 Zurich",
+    "phone": "+41 58 888 1111",
+    "status": "Active"
+  },
+  {
+    "name": "Pictet & Cie",
+    "swift_code": "PICTCHGG",
+    "country": "Switzerland",
+    "city": "Geneva",
+    "address": "Route des Acacias 60, 1211 Geneva",
+    "phone": "+41 58 323 2323",
+    "status": "Active"
+  },
+  {
+    "name": "Zürcher Kantonalbank",
+    "swift_code": "ZKBKCHZZ80A",
+    "country": "Switzerland",
+    "city": "Zurich",
+    "address": "Bahnhofstrasse 9, 8001 Zurich",
+    "phone": "+41 44 293 93 93",
+    "status": "Active"
+  },
+  {
+    "name": "Royal Bank of Canada",
+    "swift_code": "ROYCCAT2",
+    "country": "Canada",
+    "city": "Toronto",
+    "address": "200 Bay Street, Toronto, ON M5J 2J5",
+    "phone": "+1 416-974-5151",
+    "status": "Active"
+  },
+  {
+    "name": "Toronto-Dominion Bank",
+    "swift_code": "TDOMCATTTOR",
+    "country": "Canada",
+    "city": "Toronto",
+    "address": "66 Wellington Street West, Toronto, ON M5K 1A2",
+    "phone": "+1 416-982-8222",
+    "status": "Active"
+  },
+  {
+    "name": "Bank of Montreal",
+    "swift_code": "BOFMCAM2",
+    "country": "Canada",
+    "city": "Montreal",
+    "address": "129 Saint-Jacques Street, Montreal, QC H2Y 1L6",
+    "phone": "+1 514-877-7110",
+    "status": "Active"
+  },
+  {
+    "name": "Scotiabank",
+    "swift_code": "NOSCCATT",
+    "country": "Canada",
+    "city": "Toronto",
+    "address": "40 King Street West, Toronto, ON M5H 1H1",
+    "phone": "+1 416-866-6161",
+    "status": "Active"
+  },
+  {
+    "name": "Canadian Imperial Bank",
+    "swift_code": "CIBCCATT",
+    "country": "Canada",
+    "city": "Toronto",
+    "address": "81 Bay Street, Toronto, ON M5J 0E7",
+    "phone": "+1 416-980-2211",
+    "status": "Active"
+  },
+  {
+    "name": "Commonwealth Bank",
+    "swift_code": "CTBAAU2S",
+    "country": "Australia",
+    "city": "Sydney",
+    "address": "Tower 1, 201 Sussex Street, Sydney NSW 2000",
+    "phone": "+61 2 9378 2000",
+    "status": "Active"
+  },
+  {
+    "name": "Westpac Banking Corp",
+    "swift_code": "WPACAU2S",
+    "country": "Australia",
+    "city": "Sydney",
+    "address": "275 Kent Street, Sydney NSW 2000",
+    "phone": "+61 2 9293 9270",
+    "status": "Active"
+  },
+  {
+    "name": "ANZ Bank",
+    "swift_code": "ANZBAU3M",
+    "country": "Australia",
+    "city": "Melbourne",
+    "address": "833 Collins Street, Docklands VIC 3008",
+    "phone": "+61 3 9273 5555",
+    "status": "Active"
+  },
+  {
+    "name": "National Australia Bank",
+    "swift_code": "NATAAU3303M",
+    "country": "Australia",
+    "city": "Melbourne",
+    "address": "800 Bourke Street, Docklands VIC 3008",
+    "phone": "+61 3 8641 9470",
+    "status": "Active"
+  },
+  {
+    "name": "Macquarie Bank",
+    "swift_code": "MACQAU2S",
+    "country": "Australia",
+    "city": "Sydney",
+    "address": "50 Martin Place, Sydney NSW 2000",
+    "phone": "+61 2 8232 3333",
+    "status": "Active"
+  },
+  {
+    "name": "DBS Bank",
+    "swift_code": "DBSSSGSG",
+    "country": "Singapore",
+    "city": "Singapore",
+    "address": "12 Marina Boulevard, Marina Bay Financial Centre, Singapore 018982",
+    "phone": "+65 6878 8888",
+    "status": "Active"
+  },
+  {
+    "name": "OCBC Bank",
+    "swift_code": "OCBCSGSG",
+    "country": "Singapore",
+    "city": "Singapore",
+    "address": "65 Chulia Street, OCBC Centre, Singapore 049513",
+    "phone": "+65 6363 3333",
+    "status": "Active"
+  },
+  {
+    "name": "United Overseas Bank",
+    "swift_code": "UOVBSGSG",
+    "country": "Singapore",
+    "city": "Singapore",
+    "address": "80 Raffles Place, UOB Plaza, Singapore 048624",
+    "phone": "+65 6533 9898",
+    "status": "Active"
+  },
+  {
+    "name": "Standard Chartered Singapore",
+    "swift_code": "SCBLSG22",
+    "country": "Singapore",
+    "city": "Singapore",
+    "address": "8 Marina Boulevard, Marina Bay Financial Centre, Singapore 018981",
+    "phone": "+65 6225 8888",
+    "status": "Active"
+  },
+  {
+    "name": "Citibank Singapore",
+    "swift_code": "CITISGSX",
+    "country": "Singapore",
+    "city": "Singapore",
+    "address": "8 Marina View, Asia Square Tower 1, Singapore 018960",
+    "phone": "+65 6225 5225",
+    "status": "Active"
+  },
+  {
+    "name": "Mitsubishi UFJ Bank",
+    "swift_code": "BOTKJPJT",
+    "country": "Japan",
+    "city": "Tokyo",
+    "address": "2-7-1 Marunouchi, Chiyoda-ku, Tokyo 100-8388",
+    "phone": "+81 3 3240 1111",
+    "status": "Active"
+  },
+  {
+    "name": "Sumitomo Mitsui Bank",
+    "swift_code": "SMBCJPJT",
+    "country": "Japan",
+    "city": "Tokyo",
+    "address": "1-1-2 Marunouchi, Chiyoda-ku, Tokyo 100-0005",
+    "phone": "+81 3 3282 1111",
+    "status": "Active"
+  },
+  {
+    "name": "Mizuho Bank",
+    "swift_code": "MHCBJPJT",
+    "country": "Japan",
+    "city": "Tokyo",
+    "address": "1-5-5 Otemachi, Chiyoda-ku, Tokyo 100-8176",
+    "phone": "+81 3 3214 1111",
+    "status": "Active"
+  },
+  {
+    "name": "Resona Bank",
+    "swift_code": "DIWAJPJT",
+    "country": "Japan",
+    "city": "Tokyo",
+    "address": "2-2-1 Kyobashi, Chuo-ku, Tokyo 104-8610",
+    "phone": "+81 3 6704 3111",
+    "status": "Active"
+  },
+  {
+    "name": "Nomura Bank",
+    "swift_code": "NOMUJPJT",
+    "country": "Japan",
+    "city": "Tokyo",
+    "address": "1-9-1 Nihonbashi, Chuo-ku, Tokyo 103-8645",
+    "phone": "+81 3 5255 1000",
+    "status": "Active"
+  },
+  {
+    "name": "Industrial & Commercial Bank of China",
+    "swift_code": "ICBKCNBJ",
+    "country": "China",
+    "city": "Beijing",
+    "address": "55 Fuxingmennei Avenue, Xicheng District, Beijing 100140",
+    "phone": "+86 10 6610 6114",
+    "status": "Active"
+  },
+  {
+    "name": "China Construction Bank",
+    "swift_code": "PCBCCNBJ",
+    "country": "China",
+    "city": "Beijing",
+    "address": "25 Finance Street, Xicheng District, Beijing 100033",
+    "phone": "+86 10 6759 5096",
+    "status": "Active"
+  },
+  {
+    "name": "Agricultural Bank of China",
+    "swift_code": "ABOCCNBJ",
+    "country": "China",
+    "city": "Beijing",
+    "address": "69 Jianguomennei Avenue, Dongcheng District, Beijing 100005",
+    "phone": "+86 10 8510 9999",
+    "status": "Active"
+  },
+  {
+    "name": "Bank of China",
+    "swift_code": "BKCHCNBJ",
+    "country": "China",
+    "city": "Beijing",
+    "address": "1 Fuxingmennei Avenue, Xicheng District, Beijing 100818",
+    "phone": "+86 10 6659 6688",
+    "status": "Active"
+  },
+  {
+    "name": "Bank of Communications",
+    "swift_code": "COMMCNSH",
+    "country": "China",
+    "city": "Shanghai",
+    "address": "188 Yincheng Road Central, Pudong New Area, Shanghai 200120",
+    "phone": "+86 21 5878 1234",
+    "status": "Active"
+  },
+  {
+    "name": "HSBC Hong Kong",
+    "swift_code": "HSBCHKHHHKH",
+    "country": "Hong Kong",
+    "city": "Hong Kong",
+    "address": "1 Queen's Road Central, Hong Kong",
+    "phone": "+852 2822 1111",
+    "status": "Active"
+  },
+  {
+    "name": "Hang Seng Bank",
+    "swift_code": "HASEHKHH",
+    "country": "Hong Kong",
+    "city": "Hong Kong",
+    "address": "83 Des Voeux Road Central, Hong Kong",
+    "phone": "+852 2198 8000",
+    "status": "Active"
+  },
+  {
+    "name": "Bank of East Asia",
+    "swift_code": "BEASHKHH",
+    "country": "Hong Kong",
+    "city": "Hong Kong",
+    "address": "10 Des Voeux Road Central, Hong Kong",
+    "phone": "+852 3608 3608",
+    "status": "Active"
+  },
+  {
+    "name": "Standard Chartered Hong Kong",
+    "swift_code": "SCBLHKHH",
+    "country": "Hong Kong",
+    "city": "Hong Kong",
+    "address": "32/F, Standard Chartered Bank Building, 4-4A Des Voeux Road Central",
+    "phone": "+852 2820 3030",
+    "status": "Active"
+  },
+  {
+    "name": "Citibank Hong Kong",
+    "swift_code": "CITIHKHX",
+    "country": "Hong Kong",
+    "city": "Hong Kong",
+    "address": "50/F, Champion Tower, 3 Garden Road, Hong Kong",
+    "phone": "+852 2860 0333",
+    "status": "Active"
+  },
+  {
+    "name": "State Bank of India",
+    "swift_code": "SBININBB",
+    "country": "India",
+    "city": "Mumbai",
+    "address": "Madame Cama Road, Mumbai 400021",
+    "phone": "+91 22 2202 0056",
+    "status": "Active"
+  },
+  {
+    "name": "HDFC Bank",
+    "swift_code": "HDFCINBB",
+    "country": "India",
+    "city": "Mumbai",
+    "address": "HDFC Bank House, Senapati Bapat Marg, Mumbai 400013",
+    "phone": "+91 22 6171 6000",
+    "status": "Active"
+  },
+  {
+    "name": "ICICI Bank",
+    "swift_code": "ICICINBB",
+    "country": "India",
+    "city": "Mumbai",
+    "address": "ICICI Bank Towers, Bandra-Kurla Complex, Mumbai 400051",
+    "phone": "+91 22 2653 1414",
+    "status": "Active"
+  },
+  {
+    "name": "Axis Bank",
+    "swift_code": "AXISINBB",
+    "country": "India",
+    "city": "Mumbai",
+    "address": "Axis House, C-2 Wadia International Centre, Mumbai 400025",
+    "phone": "+91 22 2425 2525",
+    "status": "Active"
+  },
+  {
+    "name": "Punjab National Bank",
+    "swift_code": "PUNBINBB",
+    "country": "India",
+    "city": "New Delhi",
+    "address": "7 Bhikaji Cama Place, New Delhi 110066",
+    "phone": "+91 11 2617 1000",
+    "status": "Active"
+  },
+  {
+    "name": "Banco Santander",
+    "swift_code": "BSCHESMM",
+    "country": "Spain",
+    "city": "Madrid",
+    "address": "Paseo de Pereda 9-12, 39004 Santander",
+    "phone": "+34 942 20 61 00",
+    "status": "Active"
+  },
+  {
+    "name": "BBVA",
+    "swift_code": "BBVAESMM",
+    "country": "Spain",
+    "city": "Madrid",
+    "address": "Plaza de San Nicolás 4, 48005 Bilbao",
+    "phone": "+34 94 487 60 00",
+    "status": "Active"
+  },
+  {
+    "name": "CaixaBank",
+    "swift_code": "CAIXESBB",
+    "country": "Spain",
+    "city": "Barcelona",
+    "address": "Avinguda Diagonal 621-629, 08028 Barcelona",
+    "phone": "+34 93 404 60 00",
+    "status": "Active"
+  },
+  {
+    "name": "Banco Sabadell",
+    "swift_code": "BSABESBB",
+    "country": "Spain",
+    "city": "Alicante",
+    "address": "Avenida Óscar Esplá 37, 03007 Alicante",
+    "phone": "+34 96 510 81 00",
+    "status": "Active"
+  },
+  {
+    "name": "Intesa Sanpaolo",
+    "swift_code": "BCITITMM",
+    "country": "Italy",
+    "city": "Turin",
+    "address": "Piazza San Carlo 156, 10121 Turin",
+    "phone": "+39 011 555 1",
+    "status": "Active"
+  },
+  {
+    "name": "UniCredit",
+    "swift_code": "UNCRITMM",
+    "country": "Italy",
+    "city": "Milan",
+    "address": "Piazza Gae Aulenti 3, Tower A, 20154 Milan",
+    "phone": "+39 02 8862 1",
+    "status": "Active"
+  },
+  {
+    "name": "Banco BPM",
+    "swift_code": "BAPPIT21",
+    "country": "Italy",
+    "city": "Milan",
+    "address": "Piazza F. Meda 4, 20121 Milan",
+    "phone": "+39 02 7700 1",
+    "status": "Active"
+  },
+  {
+    "name": "Monte dei Paschi di Siena",
+    "swift_code": "PASCITM1",
+    "country": "Italy",
+    "city": "Siena",
+    "address": "Piazza Salimbeni 3, 53100 Siena",
+    "phone": "+39 0577 294111",
+    "status": "Active"
+  },
+  {
+    "name": "ING Bank",
+    "swift_code": "INGBNL2A",
+    "country": "Netherlands",
+    "city": "Amsterdam",
+    "address": "Bijlmerplein 888, 1102 MG Amsterdam",
+    "phone": "+31 20 563 9111",
+    "status": "Active"
+  },
+  {
+    "name": "ABN AMRO Bank",
+    "swift_code": "ABNANL2A",
+    "country": "Netherlands",
+    "city": "Amsterdam",
+    "address": "Gustav Mahlerlaan 10, 1082 PP Amsterdam",
+    "phone": "+31 20 628 9393",
+    "status": "Active"
+  },
+  {
+    "name": "Rabobank",
+    "swift_code": "RABONL2U",
+    "country": "Netherlands",
+    "city": "Utrecht",
+    "address": "Croeselaan 18, 3521 CB Utrecht",
+    "phone": "+31 30 216 0000",
+    "status": "Active"
+  },
+  {
+    "name": "de Volksbank",
+    "swift_code": "SNSBNL2A",
+    "country": "Netherlands",
+    "city": "Utrecht",
+    "address": "Croeselaan 1, 3521 BJ Utrecht",
+    "phone": "+31 30 291 5200",
+    "status": "Active"
+  },
+  {
+    "name": "KBC Bank",
+    "swift_code": "KREDBEBB",
+    "country": "Belgium",
+    "city": "Brussels",
+    "address": "Havenlaan 2, 1080 Brussels",
+    "phone": "+32 2 429 11 11",
+    "status": "Active"
+  },
+  {
+    "name": "Belfius Bank",
+    "swift_code": "GKCCBEBB",
+    "country": "Belgium",
+    "city": "Brussels",
+    "address": "Boulevard Pacheco 44, 1000 Brussels",
+    "phone": "+32 2 222 11 11",
+    "status": "Active"
+  },
+  {
+    "name": "BNP Paribas Fortis",
+    "swift_code": "GEBABEBBXXX",
+    "country": "Belgium",
+    "city": "Brussels",
+    "address": "Montagne du Parc 3, 1000 Brussels",
+    "phone": "+32 2 433 11 11",
+    "status": "Active"
+  },
+  {
+    "name": "Nordea Bank",
+    "swift_code": "NDEASESS",
+    "country": "Sweden",
+    "city": "Stockholm",
+    "address": "Smålandsgatan 17, 105 71 Stockholm",
+    "phone": "+46 10 154 90 00",
+    "status": "Active"
+  },
+  {
+    "name": "Swedbank",
+    "swift_code": "SWEDSESS",
+    "country": "Sweden",
+    "city": "Stockholm",
+    "address": "Landsvägen 40, 105 34 Stockholm",
+    "phone": "+46 8 585 900 00",
+    "status": "Active"
+  },
+  {
+    "name": "SEB Bank",
+    "swift_code": "ESSESESS",
+    "country": "Sweden",
+    "city": "Stockholm",
+    "address": "Kungsträdgårdsgatan 8, 106 40 Stockholm",
+    "phone": "+46 771 365 365",
+    "status": "Active"
+  },
+  {
+    "name": "Handelsbanken",
+    "swift_code": "HANDSESS",
+    "country": "Sweden",
+    "city": "Stockholm",
+    "address": "Blasieholmstorg 11, 106 70 Stockholm",
+    "phone": "+46 8 701 10 00",
+    "status": "Active"
+  },
+  {
+    "name": "DNB Bank",
+    "swift_code": "DNBANOKK",
+    "country": "Norway",
+    "city": "Oslo",
+    "address": "Dronning Eufemias gate 30, 0191 Oslo",
+    "phone": "+47 915 04800",
+    "status": "Active"
+  },
+  {
+    "name": "Nordea Bank Norway",
+    "swift_code": "NDEANOKK",
+    "country": "Norway",
+    "city": "Oslo",
+    "address": "Essendrops gate 7, 0368 Oslo",
+    "phone": "+47 22 48 50 00",
+    "status": "Active"
+  },
+  {
+    "name": "SpareBank 1",
+    "swift_code": "SPRONO22",
+    "country": "Norway",
+    "city": "Oslo",
+    "address": "Olav Vs gate 5, 0161 Oslo",
+    "phone": "+47 915 05555",
+    "status": "Active"
+  },
+  {
+    "name": "Danske Bank",
+    "swift_code": "DABADKKK",
+    "country": "Denmark",
+    "city": "Copenhagen",
+    "address": "Holmens Kanal 2-12, 1092 Copenhagen",
+    "phone": "+45 33 44 00 00",
+    "status": "Active"
+  },
+  {
+    "name": "Nordea Bank Denmark",
+    "swift_code": "NDEADKKK",
+    "country": "Denmark",
+    "city": "Copenhagen",
+    "address": "Grønjordsvej 10, 2300 Copenhagen",
+    "phone": "+45 33 33 33 33",
+    "status": "Active"
+  },
+  {
+    "name": "Jyske Bank",
+    "swift_code": "JYBADKKK",
+    "country": "Denmark",
+    "city": "Silkeborg",
+    "address": "Vestergade 8-16, 8600 Silkeborg",
+    "phone": "+45 89 89 89 89",
+    "status": "Active"
+  },
+  {
+    "name": "Erste Group Bank",
+    "swift_code": "GIBAATWW",
+    "country": "Austria",
+    "city": "Vienna",
+    "address": "Am Belvedere 1, 1100 Vienna",
+    "phone": "+43 5 0100 10100",
+    "status": "Active"
+  },
+  {
+    "name": "Raiffeisen Bank International",
+    "swift_code": "RZBAATWW",
+    "country": "Austria",
+    "city": "Vienna",
+    "address": "Am Stadtpark 9, 1030 Vienna",
+    "phone": "+43 1 71707 0",
+    "status": "Active"
+  },
+  {
+    "name": "UniCredit Bank Austria",
+    "swift_code": "BKAUATWW",
+    "country": "Austria",
+    "city": "Vienna",
+    "address": "Schottengasse 6-8, 1010 Vienna",
+    "phone": "+43 5 05 05 05",
+    "status": "Active"
+  },
+  {
+    "name": "Emirates NBD",
+    "swift_code": "EBILAEAD",
+    "country": "UAE",
+    "city": "Dubai",
+    "address": "Baniyas Road, Deira, Dubai",
+    "phone": "+971 4 316 0316",
+    "status": "Active"
+  },
+  {
+    "name": "First Abu Dhabi Bank",
+    "swift_code": "NBADAEAA",
+    "country": "UAE",
+    "city": "Abu Dhabi",
+    "address": "Khalifa Business Park, Al Qurm District, Abu Dhabi",
+    "phone": "+971 600 566223",
+    "status": "Active"
+  },
+  {
+    "name": "Dubai Islamic Bank",
+    "swift_code": "DUIBAEAD",
+    "country": "UAE",
+    "city": "Dubai",
+    "address": "Al Muraqqabat, Deira, Dubai",
+    "phone": "+971 4 609 2222",
+    "status": "Active"
+  },
+  {
+    "name": "Abu Dhabi Commercial Bank",
+    "swift_code": "ADCBAEAA",
+    "country": "UAE",
+    "city": "Abu Dhabi",
+    "address": "Al Salam Street, Abu Dhabi",
+    "phone": "+971 2 696 2222",
+    "status": "Active"
+  },
+  {
+    "name": "KB Kookmin Bank",
+    "swift_code": "CZNBKRSE",
+    "country": "South Korea",
+    "city": "Seoul",
+    "address": "84 Namdaemun-ro, Jung-gu, Seoul 04533",
+    "phone": "+82 2 2073 7777",
+    "status": "Active"
+  },
+  {
+    "name": "Shinhan Bank",
+    "swift_code": "SHBKKRSE",
+    "country": "South Korea",
+    "city": "Seoul",
+    "address": "20 Sejong-daero 9-gil, Jung-gu, Seoul 04513",
+    "phone": "+82 2 756 0505",
+    "status": "Active"
+  },
+  {
+    "name": "Woori Bank",
+    "swift_code": "HVBKKRSEXXX",
+    "country": "South Korea",
+    "city": "Seoul",
+    "address": "51 Sogong-ro, Jung-gu, Seoul 04632",
+    "phone": "+82 2 2002 3000",
+    "status": "Active"
+  },
+  {
+    "name": "Hana Bank",
+    "swift_code": "KOEXKRSE",
+    "country": "South Korea",
+    "city": "Seoul",
+    "address": "35 Eulji-ro, Jung-gu, Seoul 04539",
+    "phone": "+82 2 1588 1111",
+    "status": "Active"
+  },
+  {
+    "name": "Banco do Brasil",
+    "swift_code": "BRASBRRJ",
+    "country": "Brazil",
+    "city": "Brasília",
+    "address": "SBS Quadra 1 Bloco G, Brasília DF 70073-900",
+    "phone": "+55 61 3493 9002",
+    "status": "Active"
+  },
+  {
+    "name": "Itaú Unibanco",
+    "swift_code": "ITAUBRSP",
+    "country": "Brazil",
+    "city": "São Paulo",
+    "address": "Praça Alfredo Egydio de Souza Aranha 100, São Paulo SP 04344-902",
+    "phone": "+55 11 5019 1000",
+    "status": "Active"
+  },
+  {
+    "name": "Bradesco",
+    "swift_code": "BBDEBRSP",
+    "country": "Brazil",
+    "city": "Osasco",
+    "address": "Cidade de Deus, Vila Yara, Osasco SP 06029-900",
+    "phone": "+55 11 2194 0922",
+    "status": "Active"
+  },
+  {
+    "name": "Caixa Econômica Federal",
+    "swift_code": "CEFXBRSP",
+    "country": "Brazil",
+    "city": "Brasília",
+    "address": "SBS Quadra 4 Lotes 3/4, Brasília DF 70092-900",
+    "phone": "+55 61 3206 9999",
+    "status": "Active"
+  },
+  {
+    "name": "BBVA México",
+    "swift_code": "BCMRMXMM",
+    "country": "Mexico",
+    "city": "Mexico City",
+    "address": "Paseo de la Reforma 510, Cuauhtémoc, 06600 Mexico City",
+    "phone": "+52 55 5621 3434",
+    "status": "Active"
+  },
+  {
+    "name": "Citibanamex",
+    "swift_code": "BNMXMXMM",
+    "country": "Mexico",
+    "city": "Mexico City",
+    "address": "Av. Paseo de la Reforma 390, Cuauhtémoc, 06500 Mexico City",
+    "phone": "+52 55 5723 2121",
+    "status": "Active"
+  },
+  {
+    "name": "Santander México",
+    "swift_code": "BMSXMXMM",
+    "country": "Mexico",
+    "city": "Mexico City",
+    "address": "Av. Prolongación Paseo de la Reforma 500, Mexico City",
+    "phone": "+52 55 5169 4300",
+    "status": "Active"
+  },
+  {
+    "name": "Banorte",
+    "swift_code": "MENOMXMT",
+    "country": "Mexico",
+    "city": "Monterrey",
+    "address": "Av. Revolución 3000, San Pedro Garza García, Nuevo León",
+    "phone": "+52 81 8319 5555",
+    "status": "Active"
+  },
+  {
+    "name": "Standard Bank",
+    "swift_code": "SBZAZAJJ",
+    "country": "South Africa",
+    "city": "Johannesburg",
+    "address": "5 Simmonds Street, Johannesburg 2001",
+    "phone": "+27 11 636 9111",
+    "status": "Active"
+  },
+  {
+    "name": "FirstRand Bank",
+    "swift_code": "FIRNZAJJ",
+    "country": "South Africa",
+    "city": "Johannesburg",
+    "address": "4 Merchant Place, Corner Fredman Drive and Rivonia Road, Sandton 2196",
+    "phone": "+27 11 371 2000",
+    "status": "Active"
+  },
+  {
+    "name": "Nedbank",
+    "swift_code": "NEDSZAJJ",
+    "country": "South Africa",
+    "city": "Johannesburg",
+    "address": "135 Rivonia Road, Sandown, Sandton 2196",
+    "phone": "+27 860 555 111",
+    "status": "Active"
+  },
+  {
+    "name": "Absa Bank",
+    "swift_code": "ABSAZAJJ",
+    "country": "South Africa",
+    "city": "Johannesburg",
+    "address": "15 Troye Street, Johannesburg 2001",
+    "phone": "+27 11 350 4000",
+    "status": "Active"
+  }
+]

@@ -5,12 +5,11 @@ namespace App\Http\Controllers\User;
 use App\Constants\Status;
 use App\Http\Controllers\Controller;
 use App\Lib\OTPManager;
+use App\Models\AdminNotification;
 use App\Models\BalanceTransfer;
 use App\Models\Beneficiary;
 use App\Models\OtpVerification;
-use App\Models\Transaction;
 use App\Models\User;
-use App\Models\UserAccount;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
@@ -56,9 +55,7 @@ class OwnBankTransferController extends Controller
 
         $this->checkTransferAvailability($amount);
 
-        $general     = gs();
         $charge      = $this->charge($amount);
-        $finalAmount = $amount + $charge;
 
         $transfer                 = new BalanceTransfer();
         $transfer->user_id        = $sender->id;
@@ -66,76 +63,20 @@ class OwnBankTransferController extends Controller
         $transfer->beneficiary_id = $beneficiary->id;
         $transfer->amount         = $amount;
         $transfer->charge         = $charge;
-        $transfer->status         = Status::TRANSFER_COMPLETED;
+        $transfer->status         = Status::TRANSFER_PENDING;
         $transfer->save();
 
-        $sender->balance -= $finalAmount;
-        $sender->save();
-
-        $this->sendingTransaction($transfer, $sender); // Insert Sending Transaction
-
-        $recipient = $beneficiary->beneficiaryOf;
-        $recipientAccount = UserAccount::where('account_number', $beneficiary->account_number)->first();
-
-        if ($recipientAccount) {
-            $recipientAccount->balance += $transfer->amount;
-            $recipientAccount->save();
-            $recipientAccount->syncLegacyUserBalance();
-        } else {
-            $recipient->balance += $transfer->amount;
-            $recipient->save();
-        }
-
-        $recipientPostBalance = $recipientAccount?->balance ?? $recipient->balance;
-        $this->receivingTransaction($transfer, $recipient, $recipientPostBalance); // Insert Receiving Transaction
-
-        $shortCodes = $this->shortCodes($transfer, $sender, $recipient, $sender->balance, $beneficiary->account_number);
-        notify($sender, 'OWN_BANK_TRANSFER_MONEY_SEND', $shortCodes);
-
-        $shortCodes = $this->shortCodes($transfer, $sender, $recipient, $recipientPostBalance, $beneficiary->account_number);
-        notify($recipient, 'OWN_BANK_TRANSFER_MONEY_RECEIVE', $shortCodes);
+        $adminNotification            = new AdminNotification();
+        $adminNotification->user_id   = $sender->id;
+        $adminNotification->title     = 'New ledger-to-ledger transfer request';
+        $adminNotification->click_url = urlPath('admin.transfers.details', $transfer->id);
+        $adminNotification->save();
 
         session()->forget('otp_id');
 
-        $notify[] = ['success', "$transfer->amount " . gs('cur_text') . " transferred successfully"];
+        $notify[] = ['success', 'Transfer request submitted for admin approval'];
 
         return to_route('user.transfer.details', $transfer->trx)->withNotify($notify);
-    }
-
-    private function sendingTransaction($transfer, $user)
-    {
-        $activeAccount = $user->activeAccount;
-        $transaction               = new Transaction();
-        $transaction->user_id      = $user->id;
-        $transaction->user_account_id = $activeAccount?->id;
-        $transaction->account_number = $activeAccount?->account_number ?: $user->account_number;
-        $transaction->amount       = $transfer->final_amount;
-        $transaction->post_balance = $user->balance;
-        $transaction->charge       = $transfer->charge;
-        $transaction->trx_type     = '-';
-        $transaction->details      = 'Own bank transfer';
-        $transaction->trx          = $transfer->trx;
-        $transaction->remark       = "own_bank_transfer";
-        $transaction->save();
-    }
-
-    private function receivingTransaction($transfer, $user, $postBalance)
-    {
-        $recipientAccount = UserAccount::where('user_id', $user->id)
-            ->where('account_number', $transfer->beneficiary->account_number)
-            ->first();
-        $transaction               = new Transaction();
-        $transaction->user_id      = $user->id;
-        $transaction->user_account_id = $recipientAccount?->id;
-        $transaction->account_number = $recipientAccount?->account_number ?: $user->account_number;
-        $transaction->amount       = $transfer->amount;
-        $transaction->post_balance = $postBalance;
-        $transaction->charge       = 0;
-        $transaction->trx_type     = '+';
-        $transaction->details      = 'Received transferred money';
-        $transaction->remark       = 'received_money';
-        $transaction->trx          = $transfer->trx;
-        $transaction->save();
     }
 
     private function checkTransferAvailability($amount)

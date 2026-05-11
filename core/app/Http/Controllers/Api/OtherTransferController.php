@@ -10,7 +10,6 @@ use App\Models\BalanceTransfer;
 use App\Models\Beneficiary;
 use App\Models\OtherBank;
 use App\Models\OtpVerification;
-use App\Models\Transaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -154,20 +153,6 @@ class OtherTransferController extends Controller {
         $transfer->charge         = $charge;
         $transfer->status         = Status::TRANSFER_PENDING;
         $transfer->save();
-
-        $sender->balance -= $finalAmount;
-        $sender->save();
-
-        $transaction               = new Transaction();
-        $transaction->user_id      = $sender->id;
-        $transaction->post_balance = $sender->balance;
-        $transaction->amount       = $transfer->amount;
-        $transaction->charge       = $transfer->charge;
-        $transaction->trx          = $transfer->trx;
-        $transaction->trx_type     = '-';
-        $transaction->remark       = "other_bank_transfer";
-        $transaction->details      = 'Other bank transfer';
-        $transaction->save();
 
         $adminNotification            = new AdminNotification();
         $adminNotification->user_id   = $sender->id;

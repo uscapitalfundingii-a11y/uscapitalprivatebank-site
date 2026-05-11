@@ -9,6 +9,7 @@ use App\Models\Beneficiary;
 use App\Models\OtherBank;
 use App\Models\User;
 use App\Models\UserAccount;
+use App\Support\BankCoordinateDirectory;
 use Illuminate\Http\Request;
 
 class BeneficiaryController extends Controller
@@ -25,8 +26,9 @@ class BeneficiaryController extends Controller
     {
         $pageTitle = 'Other Bank Beneficiaries';
         $otherBanks = OtherBank::active()->get();
+        $bankCoordinates = BankCoordinateDirectory::all()->keyBy('name');
         $beneficiaries = Beneficiary::otherBank()->where('user_id', auth()->id())->with('beneficiaryOf')->paginate(getPaginate());
-        return view('Template::user.transfer.beneficiary.other', compact('pageTitle', 'beneficiaries', 'otherBanks'));
+        return view('Template::user.transfer.beneficiary.other', compact('pageTitle', 'beneficiaries', 'otherBanks', 'bankCoordinates'));
     }
 
     public function addOwnBeneficiary(Request $request)
@@ -172,6 +174,14 @@ class BeneficiaryController extends Controller
         return response()->json([
             'success' => true,
             'html' => $html,
+        ]);
+    }
+
+    public function bankCoordinates(Request $request)
+    {
+        return response()->json([
+            'success' => true,
+            'data'    => BankCoordinateDirectory::search($request->q)->values(),
         ]);
     }
 

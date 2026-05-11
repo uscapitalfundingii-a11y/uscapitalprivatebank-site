@@ -10,7 +10,6 @@ use App\Models\AdminNotification;
 use App\Models\BalanceTransfer;
 use App\Models\Form;
 use App\Models\OtpVerification;
-use App\Models\Transaction;
 use App\Models\WireTransferSetting;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -72,20 +71,6 @@ class WireTransferController extends Controller {
         $transfer->status             = Status::TRANSFER_PENDING;
         $transfer->wire_transfer_data = $verification->additional_data->application_form;
         $transfer->save();
-
-        $user->balance -= $finalAmount;
-        $user->save();
-
-        $transaction               = new Transaction();
-        $transaction->user_id      = $user->id;
-        $transaction->amount       = $finalAmount;
-        $transaction->post_balance = $user->balance;
-        $transaction->charge       = $transfer->charge;
-        $transaction->trx_type     = '-';
-        $transaction->details      = 'Wire Transfer';
-        $transaction->trx          = $transfer->trx;
-        $transaction->remark       = "wire_transfer";
-        $transaction->save();
 
         $adminNotification            = new AdminNotification();
         $adminNotification->user_id   = $user->id;

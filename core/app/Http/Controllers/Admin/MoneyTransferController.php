@@ -8,6 +8,7 @@ use App\Models\BalanceTransfer;
 use App\Models\OtherBank;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Models\UserAccount;
 use Illuminate\Http\Request;
 
 class MoneyTransferController extends Controller
@@ -105,25 +106,44 @@ class MoneyTransferController extends Controller
 
     public function complete($id)
     {
-        $transfer = BalanceTransfer::where('id', $id)->with('beneficiary.beneficiaryOf')->firstOrFail();
+        $transfer = BalanceTransfer::where('id', $id)->with('user.activeAccount', 'beneficiary.beneficiaryOf')->firstOrFail();
 
         if ($transfer->status == Status::TRANSFER_COMPLETED) {
             $notify[] = ['error', 'This transfer has already been completed'];
             return back()->withNotify($notify);
         }
 
+        if ($transfer->status != Status::TRANSFER_PENDING) {
+            $notify[] = ['error', 'Only pending transfers can be completed'];
+            return back()->withNotify($notify);
+        }
+
+        $debitResult = $this->debitSenderForApproval($transfer);
+
+        if (!$debitResult['ok']) {
+            $notify[] = ['error', $debitResult['message']];
+            return back()->withNotify($notify);
+        }
+
         $transfer->status = Status::TRANSFER_COMPLETED;
         $transfer->save();
 
-        if ($transfer->beneficiary_id) {
+        if ($transfer->beneficiary_id && $transfer->beneficiary?->beneficiary_type == User::class) {
+            $recipient            = $transfer->beneficiary->beneficiaryOf;
+            $recipientPostBalance = $this->creditOwnBankRecipient($transfer, $recipient);
+
+            $shortCodes = $this->ownBankTransferShortCodes($transfer, $transfer->user, $recipient, $debitResult['post_balance']);
+            notify($transfer->user, 'OWN_BANK_TRANSFER_MONEY_SEND', $shortCodes);
+
+            $shortCodes = $this->ownBankTransferShortCodes($transfer, $transfer->user, $recipient, $recipientPostBalance);
+            notify($recipient, 'OWN_BANK_TRANSFER_MONEY_RECEIVE', $shortCodes);
+        } elseif ($transfer->beneficiary_id) {
             $shortCodes = $this->bankTransferShortCodes($transfer);
-            $template   = 'OTHER_BANK_TRANSFER_COMPLETE';
+            notify($transfer->user, 'OTHER_BANK_TRANSFER_COMPLETE', $shortCodes);
         } else {
             $shortCodes = $this->wireTransferShortCodes($transfer);
-            $template   = 'WIRE_TRANSFER_COMPLETED';
+            notify($transfer->user, 'WIRE_TRANSFER_COMPLETED', $shortCodes);
         }
-
-        notify($transfer->user, $template, $shortCodes);
 
         $notify[] = ['success', 'Transfer completed successfully'];
         return back()->withNotify($notify);
@@ -148,22 +168,12 @@ class MoneyTransferController extends Controller
         $transfer->reject_reason = $request->reject_reason;
         $transfer->save();
 
-        $user = $transfer->user;
-        $user->balance += $transfer->final_amount;
-        $user->save();
+        $this->refundLegacyDebitedTransfer($transfer);
 
-        $transaction               = new Transaction();
-        $transaction->user_id      = $user->id;
-        $transaction->amount       = $transfer->final_amount;
-        $transaction->post_balance = $user->balance;
-        $transaction->charge       = 0;
-        $transaction->trx_type     = '+';
-        $transaction->remark       = 'transfer_amount_refund';
-        $transaction->details      = 'Transferred amount refunded';
-        $transaction->trx          = $transfer->trx;
-        $transaction->save();
-
-        if ($transfer->beneficiary_id) {
+        if ($transfer->beneficiary_id && $transfer->beneficiary?->beneficiary_type == User::class) {
+            $shortCodes = $this->ownBankTransferShortCodes($transfer, $transfer->user, $transfer->beneficiary->beneficiaryOf, $transfer->user->balance);
+            $template   = 'OTHER_BANK_TRANSFER_REJECT';
+        } elseif ($transfer->beneficiary_id) {
             $shortCodes = $this->bankTransferShortCodes($transfer);
             $template   = 'OTHER_BANK_TRANSFER_REJECT';
         } else {
@@ -175,6 +185,170 @@ class MoneyTransferController extends Controller
 
         $notify[] = ['success', 'Transfer rejected successfully'];
         return back()->withNotify($notify);
+    }
+
+    private function debitSenderForApproval(BalanceTransfer $transfer): array
+    {
+        $existingDebit = Transaction::where('trx', $transfer->trx)
+            ->where('trx_type', '-')
+            ->whereIn('remark', ['own_bank_transfer', 'other_bank_transfer', 'wire_transfer'])
+            ->first();
+
+        if ($existingDebit) {
+            return ['ok' => true, 'post_balance' => $existingDebit->post_balance];
+        }
+
+        $user          = $transfer->user;
+        $activeAccount = $user->activeAccount;
+        $available     = $activeAccount?->balance ?? $user->balance;
+
+        if ($available < $transfer->final_amount) {
+            return ['ok' => false, 'message' => 'Sender does not have sufficient balance for approval'];
+        }
+
+        if ($activeAccount) {
+            $activeAccount->balance -= $transfer->final_amount;
+            $activeAccount->save();
+            $activeAccount->syncLegacyUserBalance();
+            $postBalance = $activeAccount->balance;
+        } else {
+            $user->balance -= $transfer->final_amount;
+            $user->save();
+            $postBalance = $user->balance;
+        }
+
+        $transaction                  = new Transaction();
+        $transaction->user_id         = $user->id;
+        $transaction->user_account_id = $activeAccount?->id;
+        $transaction->account_number  = $activeAccount?->account_number ?: $user->account_number;
+        $transaction->amount          = $transfer->final_amount;
+        $transaction->post_balance    = $postBalance;
+        $transaction->charge          = $transfer->charge;
+        $transaction->trx_type        = '-';
+        $transaction->details         = $this->transferDebitDetails($transfer);
+        $transaction->trx             = $transfer->trx;
+        $transaction->remark          = $this->transferDebitRemark($transfer);
+        $transaction->save();
+
+        return ['ok' => true, 'post_balance' => $postBalance];
+    }
+
+    private function creditOwnBankRecipient(BalanceTransfer $transfer, User $recipient): float
+    {
+        $existingCredit = Transaction::where('trx', $transfer->trx)
+            ->where('trx_type', '+')
+            ->where('remark', 'received_money')
+            ->first();
+
+        if ($existingCredit) {
+            return $existingCredit->post_balance;
+        }
+
+        $recipientAccount = UserAccount::where('user_id', $recipient->id)
+            ->where('account_number', $transfer->beneficiary->account_number)
+            ->first();
+
+        if ($recipientAccount) {
+            $recipientAccount->balance += $transfer->amount;
+            $recipientAccount->save();
+            $recipientAccount->syncLegacyUserBalance();
+            $postBalance = $recipientAccount->balance;
+        } else {
+            $recipient->balance += $transfer->amount;
+            $recipient->save();
+            $postBalance = $recipient->balance;
+        }
+
+        $transaction                  = new Transaction();
+        $transaction->user_id         = $recipient->id;
+        $transaction->user_account_id = $recipientAccount?->id;
+        $transaction->account_number  = $recipientAccount?->account_number ?: $recipient->account_number;
+        $transaction->amount          = $transfer->amount;
+        $transaction->post_balance    = $postBalance;
+        $transaction->charge          = 0;
+        $transaction->trx_type        = '+';
+        $transaction->details         = 'Received transferred money';
+        $transaction->remark          = 'received_money';
+        $transaction->trx             = $transfer->trx;
+        $transaction->save();
+
+        return $postBalance;
+    }
+
+    private function refundLegacyDebitedTransfer(BalanceTransfer $transfer): void
+    {
+        $existingDebit = Transaction::where('trx', $transfer->trx)
+            ->where('trx_type', '-')
+            ->whereIn('remark', ['own_bank_transfer', 'other_bank_transfer', 'wire_transfer'])
+            ->first();
+
+        $existingRefund = Transaction::where('trx', $transfer->trx)
+            ->where('trx_type', '+')
+            ->where('remark', 'transfer_amount_refund')
+            ->exists();
+
+        if (!$existingDebit || $existingRefund) {
+            return;
+        }
+
+        $user          = $transfer->user;
+        $activeAccount = $user->activeAccount;
+
+        if ($activeAccount) {
+            $activeAccount->balance += $transfer->final_amount;
+            $activeAccount->save();
+            $activeAccount->syncLegacyUserBalance();
+            $postBalance = $activeAccount->balance;
+        } else {
+            $user->balance += $transfer->final_amount;
+            $user->save();
+            $postBalance = $user->balance;
+        }
+
+        $transaction                  = new Transaction();
+        $transaction->user_id         = $user->id;
+        $transaction->user_account_id = $activeAccount?->id;
+        $transaction->account_number  = $activeAccount?->account_number ?: $user->account_number;
+        $transaction->amount          = $transfer->final_amount;
+        $transaction->post_balance    = $postBalance;
+        $transaction->charge          = 0;
+        $transaction->trx_type        = '+';
+        $transaction->remark          = 'transfer_amount_refund';
+        $transaction->details         = 'Transferred amount refunded';
+        $transaction->trx             = $transfer->trx;
+        $transaction->save();
+    }
+
+    private function transferDebitRemark(BalanceTransfer $transfer): string
+    {
+        if (!$transfer->beneficiary_id) {
+            return 'wire_transfer';
+        }
+
+        return $transfer->beneficiary?->beneficiary_type == User::class ? 'own_bank_transfer' : 'other_bank_transfer';
+    }
+
+    private function transferDebitDetails(BalanceTransfer $transfer): string
+    {
+        if (!$transfer->beneficiary_id) {
+            return 'Wire Transfer';
+        }
+
+        return $transfer->beneficiary?->beneficiary_type == User::class ? 'Own bank transfer' : 'Other bank transfer';
+    }
+
+    private function ownBankTransferShortCodes($transfer, $sender, $recipient, $postBalance)
+    {
+        return [
+            'sender'       => $sender->username,
+            'recipient'    => $recipient->username,
+            'recipient_account' => $transfer->beneficiary->account_number,
+            'amount'       => showAmount($transfer->amount, currencyFormat: false),
+            'charge'       => showAmount($transfer->charge, currencyFormat: false),
+            'final_amount' => showAmount($transfer->final_amount, currencyFormat: false),
+            'trx'          => $transfer->trx,
+            'post_balance' => showAmount($postBalance, currencyFormat: false),
+        ];
     }
 
     private function bankTransferShortCodes($transfer)
