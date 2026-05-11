@@ -1,0 +1,143 @@
+name: Deploy to DreamHost over SSH
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      deploy_all:
+        description: "Upload all tracked files instead of only the latest changed files"
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+      delete_removed_files:
+        description: "Also remove files deleted from Git on DreamHost"
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+
+concurrency:
+  group: dreamhost-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Upload changed files to DreamHost
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      DREAMHOST_HOST: ${{ vars.DREAMHOST_HOST }}
+      DREAMHOST_USER: ${{ vars.DREAMHOST_USER }}
+      DREAMHOST_PORT: ${{ vars.DREAMHOST_PORT }}
+      DREAMHOST_PATH: ${{ vars.DREAMHOST_PATH }}
+      DEPLOY_ALL: ${{ github.event.inputs.deploy_all || 'false' }}
+      DELETE_REMOVED_FILES: ${{ github.event.inputs.delete_removed_files || 'false' }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+          lfs: false
+
+      - name: Prepare SSH
+        shell: bash
+        env:
+          DREAMHOST_SSH_KEY: ${{ secrets.DREAMHOST_SSH_KEY }}
+        run: |
+          set -euo pipefail
+
+          : "${DREAMHOST_HOST:=iad1-shared-e1-24.dreamhost.com}"
+          : "${DREAMHOST_USER:=dh_9a4ezr}"
+          : "${DREAMHOST_PORT:=22}"
+          : "${DREAMHOST_PATH:=/home/dh_9a4ezr/uscapitalprivatebank.com}"
+
+          if [ -z "$DREAMHOST_SSH_KEY" ]; then
+            echo "DREAMHOST_SSH_KEY secret is required." >&2
+            exit 1
+          fi
+
+          mkdir -p "$HOME/.ssh"
+          chmod 700 "$HOME/.ssh"
+          printf '%s\n' "$DREAMHOST_SSH_KEY" > "$HOME/.ssh/dreamhost_deploy_key"
+          chmod 600 "$HOME/.ssh/dreamhost_deploy_key"
+          ssh-keyscan -p "$DREAMHOST_PORT" "$DREAMHOST_HOST" >> "$HOME/.ssh/known_hosts"
+
+          {
+            echo "DREAMHOST_HOST=$DREAMHOST_HOST"
+            echo "DREAMHOST_USER=$DREAMHOST_USER"
+            echo "DREAMHOST_PORT=$DREAMHOST_PORT"
+            echo "DREAMHOST_PATH=$DREAMHOST_PATH"
+          } >> "$GITHUB_ENV"
+
+      - name: Build changed-file manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .deploy
+
+          BEFORE="${{ github.event.before }}"
+          AFTER="${{ github.sha }}"
+
+          if [ "$DEPLOY_ALL" = "true" ] || [ -z "$BEFORE" ] || [[ "$BEFORE" =~ ^0+$ ]]; then
+            git ls-files > .deploy/candidates.txt
+            : > .deploy/deleted-files.txt
+          else
+            git diff --name-only --diff-filter=ACMRT "$BEFORE" "$AFTER" > .deploy/candidates.txt
+            git diff --name-only --diff-filter=D "$BEFORE" "$AFTER" > .deploy/deleted-candidates.txt
+          fi
+
+          grep -vE '(^\.git$|^\.git/|^\.github/|^\.codex-sessions/|^\.dh-diag/|^DREAMHOST_GITHUB_DEPLOY\.md$|^dreamhost_deploy_manifest.*\.txt$|^\.env($|\.)|^node_modules/|/node_modules/|^vendor/|/vendor/|^storage/|/storage/|^build/|^backups?/|/backups?/|^temp/|/temp/|^tmp/|/tmp/|\.log$|\.sql$|\.bak$|\.zip$|\.7z$|\.rar$|\.tar$|\.gz$|\.pdf$|\.mp4$|\.mov$|\.avi$|\.mkv$|\.iso$)' .deploy/candidates.txt > .deploy/changed-files.txt || true
+
+          if [ -f .deploy/deleted-candidates.txt ]; then
+            grep -vE '(^\.git$|^\.git/|^\.github/|^\.codex-sessions/|^\.dh-diag/|^DREAMHOST_GITHUB_DEPLOY\.md$|^dreamhost_deploy_manifest.*\.txt$|^\.env($|\.)|^node_modules/|/node_modules/|^vendor/|/vendor/|^storage/|/storage/|^build/|^backups?/|/backups?/|^temp/|/temp/|^tmp/|/tmp/|\.log$|\.sql$|\.bak$|\.zip$|\.7z$|\.rar$|\.tar$|\.gz$|\.pdf$|\.mp4$|\.mov$|\.avi$|\.mkv$|\.iso$)' .deploy/deleted-candidates.txt > .deploy/deleted-files.txt || true
+          fi
+
+          echo "Files selected for upload:"
+          sed 's/^/  - /' .deploy/changed-files.txt || true
+
+          if [ ! -s .deploy/changed-files.txt ]; then
+            echo "No deployable changed files found."
+          fi
+
+      - name: Upload changed files
+        if: hashFiles('.deploy/changed-files.txt') != ''
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ ! -s .deploy/changed-files.txt ]; then
+            exit 0
+          fi
+
+          SSH_CMD="ssh -i $HOME/.ssh/dreamhost_deploy_key -p $DREAMHOST_PORT -o IdentitiesOnly=yes"
+          $SSH_CMD "$DREAMHOST_USER@$DREAMHOST_HOST" "mkdir -p '$DREAMHOST_PATH'"
+
+          rsync -az --relative --files-from=.deploy/changed-files.txt \
+            --chmod=Du=rwx,Dg=rx,Do=rx,Fu=rw,Fg=r,Fo=r \
+            -e "$SSH_CMD" ./ "$DREAMHOST_USER@$DREAMHOST_HOST:$DREAMHOST_PATH/"
+
+      - name: Optionally delete removed files
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.delete_removed_files == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ ! -s .deploy/deleted-files.txt ]; then
+            echo "No deleted files to remove."
+            exit 0
+          fi
+
+          SSH_CMD="ssh -i $HOME/.ssh/dreamhost_deploy_key -p $DREAMHOST_PORT -o IdentitiesOnly=yes"
+          while IFS= read -r file; do
+            [ -n "$file" ] || continue
+            $SSH_CMD "$DREAMHOST_USER@$DREAMHOST_HOST" "rm -f -- '$DREAMHOST_PATH/$file'"
+          done < .deploy/deleted-files.txt

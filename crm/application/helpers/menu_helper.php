@@ -162,10 +162,12 @@ function app_init_admin_sidebar_menu_items()
             'badge'    => [],
         ]);
 
-        $CI->load->model('tickets_model');
-        $statuses = $CI->tickets_model->get_ticket_status();
+        $isTicketsArea = ($CI->router->fetch_class() === 'tickets');
 
-        if ($enable_badge) {
+        if ($enable_badge && $isTicketsArea) {
+            $CI->load->model('tickets_model');
+            $statuses = $CI->tickets_model->get_ticket_status();
+
             foreach ($statuses as $status) {
                 $CI->app_menu->add_sidebar_children_item('support', [
                     'slug'     => 'support-' . $status['ticketstatusid'],

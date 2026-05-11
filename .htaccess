@@ -5,6 +5,10 @@
 
     RewriteEngine On
 
+    # Legacy public verification/legal identity link now resolves to the CRM
+    # regulatory notice page.
+    RewriteRule ^corporate-identity-legal-independence/?$ /crm/regulatorynotice [L,R=301,NE]
+
     # Keep the public site on one canonical hostname so sessions and OAuth
     # callbacks don't bounce between www and non-www.
     RewriteCond %{HTTP_HOST} ^www\.uscapitalprivatebank\.com$ [NC]
