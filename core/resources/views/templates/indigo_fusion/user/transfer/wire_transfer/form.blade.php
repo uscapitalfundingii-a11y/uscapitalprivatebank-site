@@ -85,6 +85,9 @@
                                     </option>
                                 @endforeach
                             </select>
+                            <small class="text-muted d-block mt-2">
+                                @lang('If your receiving bank is not listed, please open a CRM ticket or message a representative in chat so our team can add or verify the bank coordinates.')
+                            </small>
                         </div>
                         <x-viser-form identifier="act" identifierValue="wire_transfer" />
                         @include($activeTemplate . 'partials.otp_field')
