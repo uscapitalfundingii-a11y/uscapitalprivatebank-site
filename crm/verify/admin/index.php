@@ -21,7 +21,7 @@ if (!empty($_SESSION['upload_authenticated']) && verify_has_any_permission([
 const VERIFY_ROLE_OPTIONS = [
     'admin' => 'Admin',
     'trustee' => 'Trustee',
-    'client' => 'Client',
+    'client' => 'Representative',
     'customer' => 'Customer',
     'bank_officer' => 'Bank Officer',
 ];
@@ -51,7 +51,7 @@ function verify_send_approval_email(string $username, array $entry, string $role
     $roleLabel = match ($role) {
         'admin' => 'Verification Administrator',
         'trustee' => 'Trustee Reviewer',
-        'client' => 'Client',
+        'client' => 'Representative',
         'customer' => 'Customer',
         'bank_officer' => 'Bank Officer',
         default => verify_role_label($role),

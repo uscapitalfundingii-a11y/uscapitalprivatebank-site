@@ -12,7 +12,15 @@ if (empty($_SESSION['upload_authenticated']) || empty($_SESSION['username'])) {
 }
 
 $username = (string) $_SESSION['username'];
-$currentRole = ucwords(str_replace('_', ' ', verify_current_role()));
+$roleLabels = [
+    'admin' => 'Admin',
+    'trustee' => 'Trustee',
+    'client' => 'Representative',
+    'customer' => 'Customer',
+    'bank_officer' => 'Bank Officer',
+];
+$currentRoleKey = verify_current_role();
+$currentRole = $roleLabels[$currentRoleKey] ?? ucwords(str_replace('_', ' ', $currentRoleKey));
 $canViewRepository = verify_has_permission('view_repository');
 $canReviewDocuments = verify_has_permission('review_documents');
 $canApproveDocuments = verify_has_permission('approve_documents');
@@ -364,7 +372,7 @@ usort($entries, static function ($a, $b) {
                                         <?php if ($entry['notes'] !== ''): ?>
                                             <div style="margin-top:6px; color:var(--verify-muted);"><?= htmlspecialchars($entry['notes'], ENT_QUOTES, 'UTF-8') ?></div>
                                         <?php endif; ?>
-                                        <div style="margin-top:6px; color:var(--verify-muted);"><strong>Access groups:</strong> <?= htmlspecialchars(empty($entry['allowed_roles']) ? 'All approved groups' : implode(', ', array_map(static fn($role) => ucwords(str_replace('_', ' ', $role)), $entry['allowed_roles'])), ENT_QUOTES, 'UTF-8') ?></div>
+                                        <div style="margin-top:6px; color:var(--verify-muted);"><strong>Access groups:</strong> <?= htmlspecialchars(empty($entry['allowed_roles']) ? 'All approved groups' : implode(', ', array_map(static fn($role) => $roleLabels[$role] ?? ucwords(str_replace('_', ' ', $role)), $entry['allowed_roles'])), ENT_QUOTES, 'UTF-8') ?></div>
                                         <div style="margin-top:6px; color:var(--verify-muted);"><strong>Allowed users:</strong> <?= htmlspecialchars(empty($entry['allowed_users']) ? 'No user-only list' : implode(', ', $entry['allowed_users']), ENT_QUOTES, 'UTF-8') ?></div>
                                         <?php if ($entry['rejection_note'] !== ''): ?>
                                             <div style="margin-top:6px; color:var(--verify-danger);"><strong>Admin note:</strong> <?= htmlspecialchars($entry['rejection_note'], ENT_QUOTES, 'UTF-8') ?></div>
@@ -449,7 +457,7 @@ usort($entries, static function ($a, $b) {
                                                             <label style="display:flex; gap:10px; align-items:flex-start; min-width:180px; padding:12px 14px; border-radius:16px; border:1px solid rgba(148, 163, 184, 0.16); background:rgba(15, 23, 42, 0.28);">
                                                                 <input type="checkbox" name="allowed_roles[]" value="<?= htmlspecialchars($roleValue, ENT_QUOTES, 'UTF-8') ?>"<?= in_array($roleValue, $entry['allowed_roles'], true) ? ' checked' : '' ?> style="margin-top:4px;">
                                                                 <span>
-                                                                    <span style="display:block; font-weight:700; color:#f8fafc;"><?= htmlspecialchars(ucwords(str_replace('_', ' ', $roleValue)), ENT_QUOTES, 'UTF-8') ?></span>
+                                                                    <span style="display:block; font-weight:700; color:#f8fafc;"><?= htmlspecialchars($roleLabels[$roleValue] ?? ucwords(str_replace('_', ' ', $roleValue)), ENT_QUOTES, 'UTF-8') ?></span>
                                                                     <span style="display:block; margin-top:4px; font-size:13px; color:rgba(226, 232, 240, 0.72);"><?= htmlspecialchars($roleValue, ENT_QUOTES, 'UTF-8') ?></span>
                                                                 </span>
                                                             </label>
