@@ -243,6 +243,7 @@ if (is_dir($filesDir)) {
             'allowed_roles' => $allowedRoles,
             'allowed_users' => $allowedUsers,
             'view_url' => 'viewfile.php?file=' . rawurlencode($file),
+            'review_url' => 'reviewfile.php?file=' . rawurlencode($file),
             'print_url' => 'print.php?file=' . rawurlencode($file),
             'download_url' => 'download.php?file=' . rawurlencode($file),
             'verify_url' => 'verifycode.php?code=' . rawurlencode($code),
@@ -383,6 +384,9 @@ usort($entries, static function ($a, $b) {
                                     <td><?= htmlspecialchars($entry['uploaded_by'], ENT_QUOTES, 'UTF-8') ?></td>
                                     <td><?= htmlspecialchars(date('M j, Y g:i A', strtotime($entry['uploaded_at'])), ENT_QUOTES, 'UTF-8') ?></td>
                                     <td>
+                                        <?php if ($canReviewDocuments): ?>
+                                            <a class="verify-link" href="<?= htmlspecialchars($entry['review_url'], ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener">View File</a>
+                                        <?php endif; ?>
                                         <?php if ($entry['status'] === 'approved'): ?>
                                             <?php if ($canPrintDocuments): ?>
                                                 <a class="verify-link" href="<?= htmlspecialchars($entry['print_url'], ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener">Print</a>
