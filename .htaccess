@@ -9,6 +9,13 @@
     # regulatory notice page.
     RewriteRule ^corporate-identity-legal-independence/?$ /crm/regulatorynotice [L,R=301,NE]
 
+    # Recover common public bookmarks and search-result URLs after the site
+    # moved to the current Laravel route structure.
+    RewriteRule ^login/?$ /user/login [L,R=301,NE]
+    RewriteRule ^register/?$ /user/register [L,R=301,NE]
+    RewriteRule ^about/?$ /about-us [L,R=301,NE]
+    RewriteRule ^dashboard/?$ /user/dashboard [L,R=301,NE]
+
     # Keep the public site on one canonical hostname so sessions and OAuth
     # callbacks don't bounce between www and non-www.
     RewriteCond %{HTTP_HOST} ^www\.uscapitalprivatebank\.com$ [NC]
